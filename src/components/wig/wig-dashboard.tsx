@@ -7,7 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { WigForm } from './wig-form'
 import { WigList } from './wig-list'
+import { EngagementWidget } from '@/components/engagement/engagement-widget'
 import { getWigs } from '@/app/actions/wig'
+import { getEngagementsSummary } from '@/app/actions/engagement'
+import { getCurrentWeek } from '@/lib/week'
 import type { WigSummary } from '@/types'
 
 type WigDashboardProps = {
@@ -18,6 +21,8 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
   const [wigs, setWigs] = useState<WigSummary[]>(initialWigs || [])
   const [isLoading, setIsLoading] = useState(!initialWigs)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [engagementPending, setEngagementPending] = useState(0)
+  const currentWeek = getCurrentWeek()
 
   const fetchWigs = useCallback(async () => {
     setIsLoading(true)
@@ -28,11 +33,19 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
     setIsLoading(false)
   }, [])
 
+  const fetchEngagementsSummary = useCallback(async () => {
+    const result = await getEngagementsSummary(currentWeek.year, currentWeek.weekNumber)
+    if (result.success) {
+      setEngagementPending(result.data.pending)
+    }
+  }, [currentWeek.year, currentWeek.weekNumber])
+
   useEffect(() => {
     if (!initialWigs) {
       fetchWigs()
     }
-  }, [initialWigs, fetchWigs])
+    fetchEngagementsSummary()
+  }, [initialWigs, fetchWigs, fetchEngagementsSummary])
 
   const handleRefresh = () => {
     fetchWigs()
@@ -87,7 +100,7 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Engagements</CardDescription>
-            <CardTitle className="text-4xl">0</CardTitle>
+            <CardTitle className="text-4xl">{engagementPending}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
@@ -125,6 +138,9 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Section Engagements */}
+      <EngagementWidget />
 
       {/* Form Modal */}
       <WigForm
