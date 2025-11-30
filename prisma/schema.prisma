@@ -11,23 +11,15 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "multiSchema"]
-  // fullTextSearch : Permet la recherche texte PostgreSQL native
-  // multiSchema    : Permet d'utiliser le schema 'c4dence' au lieu de 'public'
-  // Utile pour : recherche de WIGs par nom, filtrage rapide
+  previewFeatures = ["fullTextSearchPostgres"]
+  // fullTextSearchPostgres : Recherche texte PostgreSQL native (renommé en Prisma 7)
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")      // Transaction pooler (port 6543)
-  directUrl = env("DIRECT_URL")        // Session pooler (port 5432) pour migrations
-  schemas   = ["c4dence"]              // Schema dédié (isolation du CRM)
-  // IMPORTANT : Supabase requiert les deux URLs
-  // - DATABASE_URL : Pour les queries via pgbouncer (connection pooling)
-  // - DIRECT_URL : Pour prisma migrate (connexion directe requise)
-  // 
-  // Le schema 'c4dence' isole complètement les tables de l'app CRM existante.
-  // Les deux apps partagent auth.users (Google Auth).
+  provider = "postgresql"
+  schemas  = ["c4dence"]
+  // Prisma 7: URLs configurées dans prisma.config.ts
+  // Le schema 'c4dence' isole les tables de l'app CRM existante.
 }
 
 // =============================================================================
@@ -43,6 +35,8 @@ enum WigStatus {
   ON_TRACK   // 🟢 En bonne voie
   AT_RISK    // 🟡 À risque
   OFF_TRACK  // 🔴 Hors piste
+
+  @@schema("c4dence")
 }
 
 /// Rôle d'un membre dans une organisation
@@ -51,6 +45,8 @@ enum MemberRole {
   OWNER   // Propriétaire : tous les droits, facturation, suppression org
   ADMIN   // Admin : gestion des membres, tous les WIGs
   MEMBER  // Membre : lecture/écriture sur WIGs assignés uniquement
+
+  @@schema("c4dence")
 }
 
 /// Statut d'un engagement pris lors d'une réunion de cadence
@@ -59,6 +55,8 @@ enum EngagementStatus {
   COMPLETED  // ✅ Complété — engagement réalisé dans les délais
   MISSED     // ❌ Manqué — engagement non réalisé à la date prévue
   CANCELLED  // 🚫 Annulé — engagement annulé (changement de priorité)
+
+  @@schema("c4dence")
 }
 
 /// Jour de la semaine pour la réunion de cadence
@@ -68,6 +66,8 @@ enum CadenceDay {
   WEDNESDAY
   THURSDAY
   FRIDAY
+
+  @@schema("c4dence")
 }
 
 // =============================================================================
