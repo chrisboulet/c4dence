@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 
@@ -25,10 +26,14 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl gradient-purple-cyan mb-4 glow-purple">
-            <span className="text-2xl font-bold text-white">C4</span>
-          </div>
-          <h1 className="text-4xl font-bold text-gradient mb-2">C4DENCE</h1>
+          <Image
+            src="/logo_icon_wordmark_dark.png"
+            alt="C4DENCE"
+            width={200}
+            height={52}
+            className="mx-auto mb-4"
+            priority
+          />
           <p className="text-muted-foreground">
             Exécution stratégique 4DX
           </p>

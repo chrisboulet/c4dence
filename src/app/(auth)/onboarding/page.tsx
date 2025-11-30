@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Rocket } from 'lucide-react'
+import Image from 'next/image'
+import { Rocket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -46,9 +47,14 @@ export default function OnboardingPage() {
 
       <Card className="w-full max-w-md relative">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-4 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan w-fit">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
+          <Image
+            src="/logo_icon_wordmark_dark.png"
+            alt="C4DENCE"
+            width={160}
+            height={42}
+            className="mx-auto mb-2"
+            priority
+          />
           <CardTitle className="text-2xl">Bienvenue sur C4DENCE</CardTitle>
           <CardDescription>
             Créez votre première organisation pour commencer à suivre vos objectifs 4DX.

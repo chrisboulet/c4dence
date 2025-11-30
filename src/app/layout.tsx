@@ -12,6 +12,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'C4DENCE — Exécution Stratégique 4DX',
   description: 'Gérez vos objectifs ambitieux (WIGs) et mesurez votre progression avec la méthodologie 4DX',
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon-64.png', sizes: '64x64', type: 'image/png' },
+      { url: '/favicon-128.png', sizes: '128x128', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+  },
 }
 
 export default function RootLayout({

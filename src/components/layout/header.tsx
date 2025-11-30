@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -40,13 +41,15 @@ export function Header({ userEmail }: HeaderProps) {
       <div className="flex h-16 items-center justify-between px-6">
         {/* Logo & Brand */}
         <div className="flex items-center gap-4 lg:gap-8">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="relative h-9 w-9 rounded-lg gradient-purple-cyan flex items-center justify-center">
-              <span className="text-lg font-bold text-white">C4</span>
-            </div>
-            <span className="text-xl font-bold text-gradient hidden sm:block">
-              C4DENCE
-            </span>
+          <Link href="/dashboard" className="flex items-center">
+            <Image
+              src="/logo_icon_wordmark_dark.png"
+              alt="C4DENCE"
+              width={140}
+              height={36}
+              className="h-9 w-auto"
+              priority
+            />
           </Link>
 
           {/* Organization Switcher */}
