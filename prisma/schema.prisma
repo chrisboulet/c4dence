@@ -1,0 +1,450 @@
+// =============================================================================
+// C4DENCE — Schema Prisma
+// =============================================================================
+// Application de gestion d'exécution stratégique basée sur la méthodologie 4DX
+// (The 4 Disciplines of Execution)
+//
+// Version : 1.0
+// Date    : 30 novembre 2025
+// Auteur  : Boulet Stratégies TI
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "multiSchema"]
+  // fullTextSearch : Permet la recherche texte PostgreSQL native
+  // multiSchema    : Permet d'utiliser le schema 'c4dence' au lieu de 'public'
+  // Utile pour : recherche de WIGs par nom, filtrage rapide
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")      // Transaction pooler (port 6543)
+  directUrl = env("DIRECT_URL")        // Session pooler (port 5432) pour migrations
+  schemas   = ["c4dence"]              // Schema dédié (isolation du CRM)
+  // IMPORTANT : Supabase requiert les deux URLs
+  // - DATABASE_URL : Pour les queries via pgbouncer (connection pooling)
+  // - DIRECT_URL : Pour prisma migrate (connexion directe requise)
+  // 
+  // Le schema 'c4dence' isole complètement les tables de l'app CRM existante.
+  // Les deux apps partagent auth.users (Google Auth).
+}
+
+// =============================================================================
+// ÉNUMÉRATIONS
+// =============================================================================
+
+/// Statut calculé d'un WIG basé sur la progression vs la cible
+/// Règle de calcul (voir lib/wig-status.ts) :
+/// - ON_TRACK  : progression >= 90% de la cible attendue à cette date
+/// - AT_RISK   : progression entre 70% et 90%
+/// - OFF_TRACK : progression < 70%
+enum WigStatus {
+  ON_TRACK   // 🟢 En bonne voie
+  AT_RISK    // 🟡 À risque
+  OFF_TRACK  // 🔴 Hors piste
+}
+
+/// Rôle d'un membre dans une organisation
+/// Détermine les permissions dans l'application
+enum MemberRole {
+  OWNER   // Propriétaire : tous les droits, facturation, suppression org
+  ADMIN   // Admin : gestion des membres, tous les WIGs
+  MEMBER  // Membre : lecture/écriture sur WIGs assignés uniquement
+}
+
+/// Statut d'un engagement pris lors d'une réunion de cadence
+enum EngagementStatus {
+  PENDING    // ⏳ En attente — engagement pris, pas encore réalisé
+  COMPLETED  // ✅ Complété — engagement réalisé dans les délais
+  MISSED     // ❌ Manqué — engagement non réalisé à la date prévue
+  CANCELLED  // 🚫 Annulé — engagement annulé (changement de priorité)
+}
+
+/// Jour de la semaine pour la réunion de cadence
+enum CadenceDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+
+// =============================================================================
+// MODÈLES PRINCIPAUX
+// =============================================================================
+
+/// Profile utilisateur — Lié à Supabase Auth (auth.users)
+/// 
+/// IMPORTANT : Ce modèle est synchronisé avec Supabase Auth via un trigger.
+/// Le trigger `on_auth_user_created` dans Supabase crée automatiquement
+/// un Profile quand un utilisateur s'inscrit.
+/// 
+/// Ne JAMAIS créer de Profile manuellement — utiliser Supabase Auth.
+model Profile {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // --- Champs synchronisés depuis Supabase Auth ---
+  email     String   @unique
+  fullName  String?  @map("full_name")
+  avatarUrl String?  @map("avatar_url")
+
+  // --- Préférences utilisateur ---
+  timezone  String   @default("America/Toronto")
+  locale    String   @default("fr-CA")
+
+  // --- Relations ---
+  memberships  Membership[]   // Organisations dont l'utilisateur est membre
+  engagements  Engagement[]   // Engagements pris par l'utilisateur
+  
+  @@schema("c4dence")
+  @@map("profiles")
+}
+
+/// Organisation — Entité principale de regroupement
+/// 
+/// Représente une entreprise, une équipe, ou un département.
+/// Tous les WIGs appartiennent à une organisation.
+/// Multi-tenant : les données sont isolées par organisation via RLS.
+/// 
+/// Exemples :
+/// - "FLB Solutions Alimentaires"
+/// - "Équipe Marketing — Bergeron"
+/// - "Division Est — Distribution XYZ"
+model Organization {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // --- Identification ---
+  name      String                        // Nom affiché : "FLB Solutions Alimentaires"
+  slug      String   @unique              // URL-friendly : "flb-solutions"
+  
+  // --- Paramètres de cadence (Discipline 4) ---
+  cadenceDay  CadenceDay @default(MONDAY) @map("cadence_day")  // Jour de la réunion hebdo
+  cadenceTime String     @default("09:00") @map("cadence_time") // Heure (format HH:mm)
+
+  // --- Branding (optionnel) ---
+  logoUrl   String?  @map("logo_url")
+
+  // --- Relations ---
+  memberships Membership[]
+  wigs        Wig[]
+
+  @@schema("c4dence")
+  @@map("organizations")
+}
+
+/// Membership — Relation many-to-many entre Profile et Organization
+/// 
+/// Un utilisateur peut être membre de plusieurs organisations.
+/// Le rôle détermine les permissions :
+/// - OWNER  : 1 seul par org, gère facturation et suppression
+/// - ADMIN  : Gère membres et tous les WIGs
+/// - MEMBER : Accès lecture/écriture aux WIGs assignés
+model Membership {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // --- Relations ---
+  profileId      String       @map("profile_id")
+  profile        Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Rôle dans l'organisation ---
+  role           MemberRole   @default(MEMBER)
+
+  // Un utilisateur ne peut être membre qu'une fois par organisation
+  @@unique([profileId, organizationId])
+  @@index([profileId])
+  @@index([organizationId])
+  @@schema("c4dence")
+  @@map("memberships")
+}
+
+// =============================================================================
+// MODÈLES 4DX
+// =============================================================================
+
+/// WIG — Wildly Important Goal (Objectif Absolument Prioritaire)
+/// 
+/// Discipline 1 : Se concentrer sur l'essentiel
+/// Un WIG est un objectif stratégique mesurable avec une échéance.
+/// 
+/// Format recommandé : "De X à Y d'ici [date]"
+/// Exemples :
+/// - "Augmenter le CA de 2.5M$ à 3.2M$ d'ici le 31 décembre 2025"
+/// - "Réduire le taux de retour de 8% à 3% d'ici le 30 juin 2025"
+/// - "Atteindre 150 clients actifs (actuellement 89) d'ici le 31 mars 2025"
+/// 
+/// Règles 4DX :
+/// - Maximum 2-3 WIGs actifs par équipe
+/// - Doit être mesurable objectivement
+/// - L'échéance crée l'urgence
+model Wig {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // --- Relation organisation ---
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Définition du WIG ---
+  name           String       // Nom court : "Croissance CA 2025"
+  description    String?      // Description complète avec contexte
+  
+  // --- Métriques (Lag Measure / Mesure de résultat) ---
+  // La mesure de résultat = ce qu'on veut atteindre
+  // Exemple : Chiffre d'affaires, Taux de satisfaction, Nombre de clients
+  startValue     Float        @map("start_value")   // Valeur de départ : 2500000
+  targetValue    Float        @map("target_value")  // Valeur cible : 3200000
+  currentValue   Float        @default(0) @map("current_value") // Valeur actuelle : 2750000
+  unit           String       @default("")          // Unité : "$", "%", "clients"
+
+  // --- Période ---
+  startDate      DateTime     @map("start_date")    // Date de début du WIG
+  endDate        DateTime     @map("end_date")      // Date d'échéance
+
+  // --- Statut ---
+  // IMPORTANT : Ce champ est dénormalisé pour performance.
+  // Il est recalculé par un job CRON ou lors de la mise à jour des mesures.
+  // Voir lib/wig-status.ts pour l'algorithme de calcul.
+  status         WigStatus    @default(AT_RISK)
+
+  // --- Archivage ---
+  isArchived     Boolean      @default(false) @map("is_archived")
+  archivedAt     DateTime?    @map("archived_at")
+
+  // --- Relations ---
+  leadMeasures   LeadMeasure[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([isArchived])
+  @@schema("c4dence")
+  @@map("wigs")
+}
+
+/// LeadMeasure — Mesure Prédictive
+/// 
+/// Discipline 2 : Agir sur les mesures prédictives
+/// Une mesure prédictive est une action INFLUENÇABLE et PRÉDICTIVE du résultat.
+/// 
+/// Caractéristiques :
+/// - INFLUENÇABLE : L'équipe peut agir directement dessus
+/// - PRÉDICTIVE : Corrélée avec l'atteinte du WIG
+/// 
+/// Exemples pour WIG "Augmenter CA de 2.5M$ à 3.2M$" :
+/// - "Nombre d'appels de prospection par semaine" (cible: 50)
+/// - "Nombre de démos produit par semaine" (cible: 10)
+/// - "Nombre de propositions envoyées par semaine" (cible: 5)
+/// 
+/// Anti-exemples (NON prédictifs) :
+/// - "Nombre de ventes" (c'est le résultat, pas l'action)
+/// - "CA généré" (c'est le WIG lui-même)
+/// 
+/// Règles 4DX :
+/// - Maximum 2-3 mesures prédictives par WIG
+/// - Doit être mesurable chaque semaine
+/// - L'équipe doit pouvoir influencer directement
+model LeadMeasure {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // --- Relation WIG ---
+  wigId     String   @map("wig_id")
+  wig       Wig      @relation(fields: [wigId], references: [id], onDelete: Cascade)
+
+  // --- Définition ---
+  name           String       // "Appels de prospection"
+  description    String?      // "Appels sortants vers prospects qualifiés"
+  
+  // --- Cible hebdomadaire ---
+  // La cible représente l'objectif HEBDOMADAIRE à atteindre
+  targetPerWeek  Float        @map("target_per_week")  // Cible : 50 appels/semaine
+  unit           String       @default("")             // Unité : "appels", "démos", "$"
+
+  // --- Ordre d'affichage ---
+  sortOrder      Int          @default(0) @map("sort_order")
+
+  // --- Relations ---
+  weeklyMeasures WeeklyMeasure[]
+
+  @@index([wigId])
+  @@schema("c4dence")
+  @@map("lead_measures")
+}
+
+/// WeeklyMeasure — Mesure hebdomadaire d'une LeadMeasure
+/// 
+/// Discipline 3 : Tenir un tableau de résultats convaincant
+/// Chaque semaine, l'équipe enregistre sa performance sur chaque mesure prédictive.
+/// 
+/// Le numéro de semaine suit la norme ISO 8601 :
+/// - Semaine 1 = première semaine contenant un jeudi
+/// - Une année peut avoir 52 ou 53 semaines
+/// 
+/// Exemple :
+/// - LeadMeasure: "Appels de prospection" (cible: 50/semaine)
+/// - Semaine 48, 2025 : value = 47 (94% de la cible)
+/// - Semaine 49, 2025 : value = 52 (104% de la cible)
+model WeeklyMeasure {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // --- Relation LeadMeasure ---
+  leadMeasureId String      @map("lead_measure_id")
+  leadMeasure   LeadMeasure @relation(fields: [leadMeasureId], references: [id], onDelete: Cascade)
+
+  // --- Période (ISO 8601) ---
+  year          Int         // Année : 2025
+  weekNumber    Int         @map("week_number") // Semaine ISO : 1-53
+
+  // --- Valeur enregistrée ---
+  value         Float       // Valeur réelle : 47 (appels effectués)
+  
+  // --- Notes optionnelles ---
+  // Permet de contextualiser une semaine exceptionnelle
+  // Ex: "Semaine courte — 2 jours fériés"
+  notes         String?
+
+  // Une seule mesure par semaine par LeadMeasure
+  @@unique([leadMeasureId, year, weekNumber])
+  @@index([leadMeasureId])
+  @@index([year, weekNumber])
+  @@schema("c4dence")
+  @@map("weekly_measures")
+}
+
+/// Engagement — Engagement pris lors d'une réunion de cadence
+/// 
+/// Discipline 4 : Créer une cadence de responsabilisation
+/// Lors de la réunion hebdomadaire, chaque membre prend 1-2 engagements
+/// spécifiques pour la semaine à venir.
+/// 
+/// Format recommandé : Verbe d'action + Objet + Délai
+/// Exemples :
+/// - "Appeler les 10 prospects chauds de la liste avant mercredi"
+/// - "Finaliser la proposition ABC Corp avant vendredi 17h"
+/// - "Relancer les 3 devis en attente"
+/// 
+/// Règles 4DX :
+/// - 1-2 engagements par personne par semaine (pas plus!)
+/// - Doit être complétable en 1 semaine
+/// - Lié aux mesures prédictives (actions qui font avancer le score)
+/// 
+/// Lors de la réunion suivante :
+/// 1. Chacun rapporte sur ses engagements de la semaine passée
+/// 2. Statut : COMPLETED, MISSED, ou explication
+/// 3. Nouveaux engagements pour la semaine à venir
+model Engagement {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // --- Qui s'engage ---
+  profileId String   @map("profile_id")
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  // --- Pour quelle organisation (contexte multi-tenant) ---
+  // Note: On pourrait déduire via profile->membership->organization,
+  // mais on dénormalise pour simplifier les queries et RLS
+  organizationId String @map("organization_id")
+
+  // --- Période ---
+  year       Int      // Année : 2025
+  weekNumber Int      @map("week_number") // Semaine ISO : 48
+
+  // --- Contenu de l'engagement ---
+  description String  // "Appeler les 10 prospects chauds avant mercredi"
+  
+  // --- Suivi ---
+  status      EngagementStatus @default(PENDING)
+  completedAt DateTime?        @map("completed_at") // Quand marqué COMPLETED
+  
+  // --- Notes de suivi ---
+  // Rempli lors de la réunion suivante pour expliquer le résultat
+  // Ex: "8/10 appelés, 2 injoignables — replanifié semaine prochaine"
+  followUpNotes String?        @map("follow_up_notes")
+
+  @@index([profileId])
+  @@index([organizationId])
+  @@index([year, weekNumber])
+  @@index([status])
+  @@schema("c4dence")
+  @@map("engagements")
+}
+
+// =============================================================================
+// VUES ET INDEXES ADDITIONNELS
+// =============================================================================
+
+// Note : Les vues PostgreSQL et index avancés sont gérés via des migrations
+// SQL manuelles dans prisma/migrations/
+
+// Exemple de vue utile (à créer via migration SQL) :
+// 
+// CREATE VIEW wig_progress AS
+// SELECT 
+//   w.id as wig_id,
+//   w.name,
+//   w.start_value,
+//   w.target_value,
+//   w.current_value,
+//   w.start_date,
+//   w.end_date,
+//   -- Progression en pourcentage
+//   CASE 
+//     WHEN w.target_value = w.start_value THEN 100
+//     ELSE ROUND(((w.current_value - w.start_value) / (w.target_value - w.start_value)) * 100, 1)
+//   END as progress_percent,
+//   -- Jours écoulés vs total
+//   EXTRACT(DAY FROM (NOW() - w.start_date)) as days_elapsed,
+//   EXTRACT(DAY FROM (w.end_date - w.start_date)) as total_days,
+//   -- Progression temporelle en pourcentage
+//   ROUND(EXTRACT(DAY FROM (NOW() - w.start_date)) / NULLIF(EXTRACT(DAY FROM (w.end_date - w.start_date)), 0) * 100, 1) as time_progress_percent
+// FROM wigs w
+// WHERE w.is_archived = false;
+
+// =============================================================================
+// NOTES D'IMPLÉMENTATION
+// =============================================================================
+
+// 1. ROW LEVEL SECURITY (RLS)
+// ---------------------------
+// Supabase RLS policies doivent être créées pour :
+// - profiles : Lecture/écriture uniquement son propre profil
+// - organizations : Via membership
+// - memberships : OWNER/ADMIN peuvent gérer
+// - wigs, lead_measures, weekly_measures : Via organization membership
+// - engagements : Lecture org, écriture soi-même
+//
+// Voir le fichier SQL séparé : prisma/rls-policies.sql
+
+// 2. TRIGGERS SUPABASE
+// --------------------
+// - on_auth_user_created : Crée Profile quand user s'inscrit
+// - on_profile_updated : Sync avec auth.users si nécessaire
+//
+// Voir : supabase/migrations/
+
+// 3. CALCUL DU STATUT WIG
+// -----------------------
+// Le statut est recalculé :
+// - À chaque mise à jour de WeeklyMeasure (via Server Action)
+// - Via CRON job quotidien (pour rattraper les edge cases)
+//
+// Algorithme dans : lib/wig-status.ts
+
+// 4. SOFT DELETE
+// --------------
+// Les WIGs utilisent isArchived plutôt que suppression.
+// Les autres entités utilisent CASCADE via foreign keys.
+// Un WIG archivé reste visible en lecture seule.
