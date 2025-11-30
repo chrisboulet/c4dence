@@ -1,6 +1,7 @@
 'use client'
 
-import { Building2, Check, ChevronDown, Crown, Shield, User } from 'lucide-react'
+import { Building2, Check, ChevronDown, Crown, Shield, User, Plus } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -96,6 +97,14 @@ export function OrganizationSwitcher() {
             </DropdownMenuItem>
           )
         })}
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/onboarding" className="flex items-center gap-2 cursor-pointer">
+            <Plus className="h-4 w-4 text-brand-cyan" />
+            <span>Créer une organisation</span>
+          </Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

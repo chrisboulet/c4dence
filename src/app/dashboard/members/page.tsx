@@ -25,7 +25,8 @@ import { Badge } from '@/components/ui/badge'
 import { useOrganization } from '@/components/providers/organization-provider'
 import { getOrganizationMembers, getPendingInvitations, inviteMember, removeMember, cancelInvitation } from '@/app/actions/organization'
 import { getRoleLabel } from '@/lib/role-utils'
-import { Crown, Shield, User, UserPlus, Trash2, Mail, Clock, Loader2, AlertCircle } from 'lucide-react'
+import { Crown, Shield, User, UserPlus, Trash2, Mail, Clock, Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 import type { MemberRole } from '@prisma/client'
 
 type Member = {
@@ -171,6 +172,15 @@ export default function MembersPage() {
 
   return (
     <div className="space-y-8">
+      {/* Back Navigation */}
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Retour au tableau de bord
+      </Link>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
