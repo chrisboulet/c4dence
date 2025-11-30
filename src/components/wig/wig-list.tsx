@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MoreHorizontal, Pencil, Archive, TrendingUp } from 'lucide-react'
+import { MoreHorizontal, Pencil, Archive, TrendingUp, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -148,9 +149,17 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground">
-                  Échéance: {format(new Date(wig.endDate), 'd MMMM yyyy', { locale: fr })}
-                </p>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    Échéance: {format(new Date(wig.endDate), 'd MMMM yyyy', { locale: fr })}
+                  </p>
+                  <Link
+                    href={`/dashboard/wigs/${wig.id}`}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    Détails <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           )
