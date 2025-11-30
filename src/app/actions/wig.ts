@@ -3,54 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
+import { checkPermission, checkWigAccess } from '@/lib/permissions'
 import type { ActionResult, CreateWigInput, UpdateWigInput, WigSummary } from '@/types'
 import type { Wig, WigStatus } from '@prisma/client'
-
-/**
- * Récupère ou crée l'organisation par défaut de l'utilisateur
- */
-async function getOrCreateDefaultOrg(userId: string, userEmail: string) {
-  // Chercher une membership existante
-  const membership = await prisma.membership.findFirst({
-    where: { profileId: userId },
-    include: { organization: true },
-  })
-
-  if (membership) {
-    return membership.organization
-  }
-
-  // Créer le profil s'il n'existe pas
-  let profile = await prisma.profile.findUnique({
-    where: { id: userId },
-  })
-
-  if (!profile) {
-    profile = await prisma.profile.create({
-      data: {
-        id: userId,
-        email: userEmail,
-      },
-    })
-  }
-
-  // Créer une organisation par défaut
-  const slug = userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
-  const org = await prisma.organization.create({
-    data: {
-      name: 'Mon Organisation',
-      slug: `${slug}-${Date.now()}`,
-      memberships: {
-        create: {
-          profileId: userId,
-          role: 'OWNER',
-        },
-      },
-    },
-  })
-
-  return org
-}
 
 /**
  * Calcule le statut d'un WIG basé sur la progression vs le temps écoulé
@@ -79,9 +34,10 @@ function calculateWigStatus(wig: {
 }
 
 /**
- * Récupère tous les WIGs de l'utilisateur
+ * Récupère tous les WIGs d'une organisation
+ * @param organizationId - ID de l'organisation (optionnel, utilise la première membership si non fourni)
  */
-export async function getWigs(): Promise<ActionResult<WigSummary[]>> {
+export async function getWigs(organizationId?: string): Promise<ActionResult<WigSummary[]>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -90,17 +46,27 @@ export async function getWigs(): Promise<ActionResult<WigSummary[]>> {
       return { success: false, error: 'Non authentifié' }
     }
 
-    const membership = await prisma.membership.findFirst({
-      where: { profileId: user.id },
-    })
+    // Si pas d'organizationId, prendre la première membership
+    let orgId = organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: true, data: [] }
+      }
+      orgId = membership.organizationId
+    }
 
-    if (!membership) {
-      return { success: true, data: [] }
+    // Vérifier l'accès
+    const permission = await checkPermission(user.id, orgId, 'wig:read')
+    if (!permission.allowed) {
+      return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
     const wigs = await prisma.wig.findMany({
       where: {
-        organizationId: membership.organizationId,
+        organizationId: orgId,
         isArchived: false,
       },
       select: {
@@ -136,24 +102,17 @@ export async function getWig(id: string): Promise<ActionResult<Wig>> {
       return { success: false, error: 'Non authentifié' }
     }
 
+    const access = await checkWigAccess(user.id, id, 'wig:read')
+    if (!access.allowed) {
+      return { success: false, error: access.error || 'WIG non trouvé' }
+    }
+
     const wig = await prisma.wig.findUnique({
       where: { id },
     })
 
     if (!wig) {
       return { success: false, error: 'WIG non trouvé' }
-    }
-
-    // Vérifier l'accès
-    const membership = await prisma.membership.findFirst({
-      where: {
-        profileId: user.id,
-        organizationId: wig.organizationId,
-      },
-    })
-
-    if (!membership) {
-      return { success: false, error: 'Accès non autorisé' }
     }
 
     return { success: true, data: wig }
@@ -164,9 +123,11 @@ export async function getWig(id: string): Promise<ActionResult<Wig>> {
 }
 
 /**
- * Crée un nouveau WIG
+ * Crée un nouveau WIG (OWNER/ADMIN uniquement)
  */
-export async function createWig(input: Omit<CreateWigInput, 'organizationId'>): Promise<ActionResult<Wig>> {
+export async function createWig(
+  input: Omit<CreateWigInput, 'organizationId'> & { organizationId?: string }
+): Promise<ActionResult<Wig>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -175,11 +136,31 @@ export async function createWig(input: Omit<CreateWigInput, 'organizationId'>): 
       return { success: false, error: 'Non authentifié' }
     }
 
-    const org = await getOrCreateDefaultOrg(user.id, user.email!)
+    // Trouver l'organisation
+    let orgId = input.organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+        orderBy: { createdAt: 'asc' },
+      })
+      if (!membership) {
+        return { success: false, error: 'Aucune organisation trouvée' }
+      }
+      orgId = membership.organizationId
+    }
+
+    // Vérifier la permission de créer un WIG
+    const permission = await checkPermission(user.id, orgId, 'wig:create')
+    if (!permission.allowed) {
+      return {
+        success: false,
+        error: 'Seuls les propriétaires et administrateurs peuvent créer des WIGs',
+      }
+    }
 
     const wig = await prisma.wig.create({
       data: {
-        organizationId: org.id,
+        organizationId: orgId,
         name: input.name,
         description: input.description,
         startValue: input.startValue,
@@ -202,6 +183,9 @@ export async function createWig(input: Omit<CreateWigInput, 'organizationId'>): 
 
 /**
  * Met à jour un WIG existant
+ *
+ * MEMBER peut uniquement mettre à jour currentValue
+ * OWNER/ADMIN peuvent tout modifier
  */
 export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig>> {
   try {
@@ -212,7 +196,7 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       return { success: false, error: 'Non authentifié' }
     }
 
-    // Vérifier l'accès
+    // Vérifier l'accès au WIG
     const existingWig = await prisma.wig.findUnique({
       where: { id: input.id },
     })
@@ -221,29 +205,56 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       return { success: false, error: 'WIG non trouvé' }
     }
 
-    const membership = await prisma.membership.findFirst({
-      where: {
-        profileId: user.id,
-        organizationId: existingWig.organizationId,
-      },
-    })
+    // Déterminer si c'est une mise à jour de valeur uniquement
+    const isValueUpdateOnly =
+      input.currentValue !== undefined &&
+      input.name === undefined &&
+      input.description === undefined &&
+      input.startValue === undefined &&
+      input.targetValue === undefined &&
+      input.unit === undefined &&
+      input.startDate === undefined &&
+      input.endDate === undefined
 
-    if (!membership) {
-      return { success: false, error: 'Accès non autorisé' }
+    // Vérifier les permissions appropriées
+    const requiredPermission = isValueUpdateOnly ? 'wig:update-value' : 'wig:update'
+    const permission = await checkPermission(user.id, existingWig.organizationId, requiredPermission)
+
+    if (!permission.allowed) {
+      if (!isValueUpdateOnly) {
+        return {
+          success: false,
+          error: 'Seuls les propriétaires et administrateurs peuvent modifier les détails du WIG',
+        }
+      }
+      return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
     const { id, ...updateData } = input
 
     // Préparer les données de mise à jour
     const dataToUpdate: Record<string, unknown> = {}
-    if (updateData.name !== undefined) dataToUpdate.name = updateData.name
-    if (updateData.description !== undefined) dataToUpdate.description = updateData.description
-    if (updateData.startValue !== undefined) dataToUpdate.startValue = updateData.startValue
-    if (updateData.targetValue !== undefined) dataToUpdate.targetValue = updateData.targetValue
-    if (updateData.currentValue !== undefined) dataToUpdate.currentValue = updateData.currentValue
-    if (updateData.unit !== undefined) dataToUpdate.unit = updateData.unit
-    if (updateData.startDate !== undefined) dataToUpdate.startDate = updateData.startDate
-    if (updateData.endDate !== undefined) dataToUpdate.endDate = updateData.endDate
+
+    // MEMBER: seulement currentValue
+    if (permission.role === 'MEMBER') {
+      if (updateData.currentValue !== undefined) {
+        dataToUpdate.currentValue = updateData.currentValue
+      }
+    } else {
+      // OWNER/ADMIN: tout
+      if (updateData.name !== undefined) dataToUpdate.name = updateData.name
+      if (updateData.description !== undefined) dataToUpdate.description = updateData.description
+      if (updateData.startValue !== undefined) dataToUpdate.startValue = updateData.startValue
+      if (updateData.targetValue !== undefined) dataToUpdate.targetValue = updateData.targetValue
+      if (updateData.currentValue !== undefined) dataToUpdate.currentValue = updateData.currentValue
+      if (updateData.unit !== undefined) dataToUpdate.unit = updateData.unit
+      if (updateData.startDate !== undefined) dataToUpdate.startDate = updateData.startDate
+      if (updateData.endDate !== undefined) dataToUpdate.endDate = updateData.endDate
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return { success: true, data: existingWig }
+    }
 
     const wig = await prisma.wig.update({
       where: { id },
@@ -269,7 +280,7 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
 }
 
 /**
- * Archive un WIG (soft delete)
+ * Archive un WIG (soft delete) - OWNER/ADMIN uniquement
  */
 export async function archiveWig(id: string): Promise<ActionResult<void>> {
   try {
@@ -280,23 +291,12 @@ export async function archiveWig(id: string): Promise<ActionResult<void>> {
       return { success: false, error: 'Non authentifié' }
     }
 
-    const wig = await prisma.wig.findUnique({
-      where: { id },
-    })
-
-    if (!wig) {
-      return { success: false, error: 'WIG non trouvé' }
-    }
-
-    const membership = await prisma.membership.findFirst({
-      where: {
-        profileId: user.id,
-        organizationId: wig.organizationId,
-      },
-    })
-
-    if (!membership) {
-      return { success: false, error: 'Accès non autorisé' }
+    const access = await checkWigAccess(user.id, id, 'wig:delete')
+    if (!access.allowed) {
+      return {
+        success: false,
+        error: 'Seuls les propriétaires et administrateurs peuvent archiver des WIGs',
+      }
     }
 
     await prisma.wig.update({

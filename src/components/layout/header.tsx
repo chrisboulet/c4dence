@@ -11,7 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Target, BarChart3, Users, Calendar, LogOut, Settings, Menu } from 'lucide-react'
+import { Target, BarChart3, Calendar, LogOut, Settings, UserPlus } from 'lucide-react'
+import { OrganizationSwitcher } from './organization-switcher'
+import { useOrganization } from '@/components/providers/organization-provider'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
@@ -26,6 +28,7 @@ type HeaderProps = {
 export function Header({ userEmail }: HeaderProps) {
   const pathname = usePathname()
   const supabase = createClient()
+  const { isAdmin } = useOrganization()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -36,7 +39,7 @@ export function Header({ userEmail }: HeaderProps) {
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6">
         {/* Logo & Brand */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 lg:gap-8">
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="relative h-9 w-9 rounded-lg gradient-purple-cyan flex items-center justify-center">
               <span className="text-lg font-bold text-white">C4</span>
@@ -46,8 +49,11 @@ export function Header({ userEmail }: HeaderProps) {
             </span>
           </Link>
 
+          {/* Organization Switcher */}
+          <OrganizationSwitcher />
+
           {/* Main Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
@@ -98,6 +104,14 @@ export function Header({ userEmail }: HeaderProps) {
                 <p className="text-sm font-medium">{userEmail}</p>
               </div>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/members">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Gérer les membres
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 Paramètres

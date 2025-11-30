@@ -67,6 +67,14 @@ export type OrganizationWithRole = Organization & {
 }
 
 /**
+ * Membership avec l'organisation complète
+ * Utilisé dans : OrganizationProvider, switcher
+ */
+export type MembershipWithOrg = Membership & {
+  organization: Organization
+}
+
+/**
  * Membre d'une organisation avec son profil
  * Utilisé dans : Page membres, assignation
  */
@@ -202,6 +210,23 @@ export type UpdateEngagementStatusInput = {
   id: string
   status: EngagementStatus
   followUpNotes?: string
+}
+
+/**
+ * Input pour créer une organisation
+ */
+export type CreateOrganizationInput = {
+  name: string
+  slug?: string
+}
+
+/**
+ * Input pour inviter un membre
+ */
+export type InviteMemberInput = {
+  organizationId: string
+  email: string
+  role?: MemberRole
 }
 
 // =============================================================================

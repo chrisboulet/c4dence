@@ -132,6 +132,7 @@ model Organization {
   // --- Relations ---
   memberships Membership[]
   wigs        Wig[]
+  invitations Invitation[]
 
   @@schema("c4dence")
   @@map("organizations")
@@ -321,6 +322,31 @@ model WeeklyMeasure {
   @@index([year, weekNumber])
   @@schema("c4dence")
   @@map("weekly_measures")
+}
+
+/// Invitation — Invitation en attente pour rejoindre une organisation
+///
+/// Permet d'inviter des utilisateurs par email avant qu'ils ne s'inscrivent.
+/// L'invitation expire après 7 jours et contient un token unique.
+model Invitation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // --- Organisation cible ---
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Détails invitation ---
+  email     String       // Email de la personne invitée
+  role      MemberRole   @default(MEMBER) // Rôle qui sera attribué
+  token     String       @unique // Token unique pour le lien
+  expiresAt DateTime     @map("expires_at") // Date d'expiration
+  acceptedAt DateTime?   @map("accepted_at") // Null si pas encore acceptée
+
+  @@index([organizationId])
+  @@index([email])
+  @@schema("c4dence")
+  @@map("invitations")
 }
 
 /// Engagement — Engagement pris lors d'une réunion de cadence

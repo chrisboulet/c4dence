@@ -3,58 +3,18 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
+import { checkPermission } from '@/lib/permissions'
 import type { ActionResult, CreateEngagementInput, UpdateEngagementStatusInput, EngagementWithProfile } from '@/types'
-import type { Engagement, EngagementStatus } from '@prisma/client'
+import type { Engagement } from '@prisma/client'
 
 /**
- * Récupère ou crée l'organisation et le profil de l'utilisateur
- */
-async function getOrCreateUserContext(userId: string, userEmail: string) {
-  let profile = await prisma.profile.findUnique({
-    where: { id: userId },
-  })
-
-  if (!profile) {
-    profile = await prisma.profile.create({
-      data: {
-        id: userId,
-        email: userEmail,
-      },
-    })
-  }
-
-  const membership = await prisma.membership.findFirst({
-    where: { profileId: userId },
-    include: { organization: true },
-  })
-
-  if (!membership) {
-    // Créer une organisation par défaut
-    const slug = userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
-    const org = await prisma.organization.create({
-      data: {
-        name: 'Mon Organisation',
-        slug: `${slug}-${Date.now()}`,
-        memberships: {
-          create: {
-            profileId: userId,
-            role: 'OWNER',
-          },
-        },
-      },
-    })
-    return { profile, organizationId: org.id }
-  }
-
-  return { profile, organizationId: membership.organizationId }
-}
-
-/**
- * Récupère les engagements de la semaine courante
+ * Récupère les engagements de la semaine courante pour l'organisation
+ * Tous les membres peuvent voir les engagements de l'organisation
  */
 export async function getEngagements(
   year: number,
-  weekNumber: number
+  weekNumber: number,
+  organizationId?: string
 ): Promise<ActionResult<EngagementWithProfile[]>> {
   try {
     const supabase = await createClient()
@@ -64,17 +24,27 @@ export async function getEngagements(
       return { success: false, error: 'Non authentifié' }
     }
 
-    const membership = await prisma.membership.findFirst({
-      where: { profileId: user.id },
-    })
+    // Trouver l'organisation
+    let orgId = organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: true, data: [] }
+      }
+      orgId = membership.organizationId
+    }
 
-    if (!membership) {
-      return { success: true, data: [] }
+    // Vérifier l'accès
+    const permission = await checkPermission(user.id, orgId, 'engagement:read')
+    if (!permission.allowed) {
+      return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
     const engagements = await prisma.engagement.findMany({
       where: {
-        organizationId: membership.organizationId,
+        organizationId: orgId,
         year,
         weekNumber,
       },
@@ -98,11 +68,12 @@ export async function getEngagements(
 }
 
 /**
- * Récupère mes engagements (utilisateur courant)
+ * Récupère mes engagements (utilisateur courant) pour une organisation
  */
 export async function getMyEngagements(
   year: number,
-  weekNumber: number
+  weekNumber: number,
+  organizationId?: string
 ): Promise<ActionResult<Engagement[]>> {
   try {
     const supabase = await createClient()
@@ -112,9 +83,22 @@ export async function getMyEngagements(
       return { success: false, error: 'Non authentifié' }
     }
 
+    // Trouver l'organisation
+    let orgId = organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: true, data: [] }
+      }
+      orgId = membership.organizationId
+    }
+
     const engagements = await prisma.engagement.findMany({
       where: {
         profileId: user.id,
+        organizationId: orgId,
         year,
         weekNumber,
       },
@@ -130,9 +114,10 @@ export async function getMyEngagements(
 
 /**
  * Crée un nouvel engagement
+ * Tous les membres peuvent créer des engagements
  */
 export async function createEngagement(
-  input: Omit<CreateEngagementInput, 'organizationId'>
+  input: Omit<CreateEngagementInput, 'organizationId'> & { organizationId?: string }
 ): Promise<ActionResult<Engagement>> {
   try {
     const supabase = await createClient()
@@ -142,12 +127,28 @@ export async function createEngagement(
       return { success: false, error: 'Non authentifié' }
     }
 
-    const { organizationId } = await getOrCreateUserContext(user.id, user.email!)
+    // Trouver l'organisation
+    let orgId = input.organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: false, error: 'Aucune organisation trouvée' }
+      }
+      orgId = membership.organizationId
+    }
+
+    // Vérifier la permission
+    const permission = await checkPermission(user.id, orgId, 'engagement:create')
+    if (!permission.allowed) {
+      return { success: false, error: permission.error || 'Accès non autorisé' }
+    }
 
     const engagement = await prisma.engagement.create({
       data: {
         profileId: user.id,
-        organizationId,
+        organizationId: orgId,
         year: input.year,
         weekNumber: input.weekNumber,
         description: input.description,
@@ -156,6 +157,7 @@ export async function createEngagement(
     })
 
     revalidatePath('/dashboard')
+    revalidatePath('/dashboard/cadence')
     return { success: true, data: engagement }
   } catch (error) {
     console.error('createEngagement error:', error)
@@ -165,6 +167,7 @@ export async function createEngagement(
 
 /**
  * Met à jour le statut d'un engagement
+ * Seul le propriétaire de l'engagement peut le modifier (engagement:update-own)
  */
 export async function updateEngagementStatus(
   input: UpdateEngagementStatusInput
@@ -185,9 +188,15 @@ export async function updateEngagementStatus(
       return { success: false, error: 'Engagement non trouvé' }
     }
 
-    // Seul le propriétaire peut modifier
+    // Vérifier la permission sur l'organisation
+    const permission = await checkPermission(user.id, existing.organizationId, 'engagement:update-own')
+    if (!permission.allowed) {
+      return { success: false, error: permission.error || 'Accès non autorisé' }
+    }
+
+    // Seul le propriétaire peut modifier son engagement
     if (existing.profileId !== user.id) {
-      return { success: false, error: 'Non autorisé' }
+      return { success: false, error: 'Vous ne pouvez modifier que vos propres engagements' }
     }
 
     const engagement = await prisma.engagement.update({
@@ -200,6 +209,7 @@ export async function updateEngagementStatus(
     })
 
     revalidatePath('/dashboard')
+    revalidatePath('/dashboard/cadence')
     return { success: true, data: engagement }
   } catch (error) {
     console.error('updateEngagementStatus error:', error)
@@ -209,6 +219,7 @@ export async function updateEngagementStatus(
 
 /**
  * Supprime un engagement
+ * Seul le propriétaire peut supprimer son engagement
  */
 export async function deleteEngagement(id: string): Promise<ActionResult<void>> {
   try {
@@ -227,8 +238,21 @@ export async function deleteEngagement(id: string): Promise<ActionResult<void>> 
       return { success: false, error: 'Engagement non trouvé' }
     }
 
+    // Vérifier l'appartenance à l'organisation
+    const membership = await prisma.membership.findFirst({
+      where: {
+        profileId: user.id,
+        organizationId: existing.organizationId,
+      },
+    })
+
+    if (!membership) {
+      return { success: false, error: 'Accès non autorisé' }
+    }
+
+    // Seul le propriétaire peut supprimer
     if (existing.profileId !== user.id) {
-      return { success: false, error: 'Non autorisé' }
+      return { success: false, error: 'Vous ne pouvez supprimer que vos propres engagements' }
     }
 
     await prisma.engagement.delete({
@@ -236,6 +260,7 @@ export async function deleteEngagement(id: string): Promise<ActionResult<void>> 
     })
 
     revalidatePath('/dashboard')
+    revalidatePath('/dashboard/cadence')
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteEngagement error:', error)
@@ -244,11 +269,12 @@ export async function deleteEngagement(id: string): Promise<ActionResult<void>> 
 }
 
 /**
- * Résumé des engagements pour le dashboard
+ * Résumé des engagements pour le dashboard (utilisateur courant)
  */
 export async function getEngagementsSummary(
   year: number,
-  weekNumber: number
+  weekNumber: number,
+  organizationId?: string
 ): Promise<ActionResult<{ total: number; completed: number; pending: number; missed: number }>> {
   try {
     const supabase = await createClient()
@@ -258,9 +284,22 @@ export async function getEngagementsSummary(
       return { success: false, error: 'Non authentifié' }
     }
 
+    // Trouver l'organisation
+    let orgId = organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: true, data: { total: 0, completed: 0, pending: 0, missed: 0 } }
+      }
+      orgId = membership.organizationId
+    }
+
     const engagements = await prisma.engagement.findMany({
       where: {
         profileId: user.id,
+        organizationId: orgId,
         year,
         weekNumber,
       },
@@ -277,6 +316,69 @@ export async function getEngagementsSummary(
     return { success: true, data: summary }
   } catch (error) {
     console.error('getEngagementsSummary error:', error)
+    return { success: false, error: 'Erreur' }
+  }
+}
+
+/**
+ * Résumé des engagements de toute l'équipe pour le dashboard
+ */
+export async function getTeamEngagementsSummary(
+  year: number,
+  weekNumber: number,
+  organizationId?: string
+): Promise<ActionResult<{ total: number; completed: number; pending: number; missed: number; memberCount: number }>> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non authentifié' }
+    }
+
+    // Trouver l'organisation
+    let orgId = organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: true, data: { total: 0, completed: 0, pending: 0, missed: 0, memberCount: 0 } }
+      }
+      orgId = membership.organizationId
+    }
+
+    // Vérifier l'accès
+    const permission = await checkPermission(user.id, orgId, 'engagement:read')
+    if (!permission.allowed) {
+      return { success: false, error: permission.error || 'Accès non autorisé' }
+    }
+
+    const [engagements, memberCount] = await Promise.all([
+      prisma.engagement.findMany({
+        where: {
+          organizationId: orgId,
+          year,
+          weekNumber,
+        },
+        select: { status: true },
+      }),
+      prisma.membership.count({
+        where: { organizationId: orgId },
+      }),
+    ])
+
+    const summary = {
+      total: engagements.length,
+      completed: engagements.filter((e) => e.status === 'COMPLETED').length,
+      pending: engagements.filter((e) => e.status === 'PENDING').length,
+      missed: engagements.filter((e) => e.status === 'MISSED').length,
+      memberCount,
+    }
+
+    return { success: true, data: summary }
+  } catch (error) {
+    console.error('getTeamEngagementsSummary error:', error)
     return { success: false, error: 'Erreur' }
   }
 }

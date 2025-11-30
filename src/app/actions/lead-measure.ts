@@ -3,32 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
+import { checkWigAccess } from '@/lib/permissions'
 import type { ActionResult, CreateLeadMeasureInput, RecordWeeklyMeasureInput } from '@/types'
 import type { LeadMeasure, WeeklyMeasure } from '@prisma/client'
 
 /**
- * Vérifie l'accès de l'utilisateur au WIG
- */
-async function verifyWigAccess(wigId: string, userId: string): Promise<boolean> {
-  const wig = await prisma.wig.findUnique({
-    where: { id: wigId },
-    select: { organizationId: true },
-  })
-
-  if (!wig) return false
-
-  const membership = await prisma.membership.findFirst({
-    where: {
-      profileId: userId,
-      organizationId: wig.organizationId,
-    },
-  })
-
-  return !!membership
-}
-
-/**
  * Récupère les Lead Measures d'un WIG
+ * Tous les membres peuvent lire
  */
 export async function getLeadMeasures(wigId: string): Promise<ActionResult<(LeadMeasure & { weeklyMeasures: WeeklyMeasure[] })[]>> {
   try {
@@ -39,9 +20,9 @@ export async function getLeadMeasures(wigId: string): Promise<ActionResult<(Lead
       return { success: false, error: 'Non authentifié' }
     }
 
-    const hasAccess = await verifyWigAccess(wigId, user.id)
-    if (!hasAccess) {
-      return { success: false, error: 'Accès non autorisé' }
+    const access = await checkWigAccess(user.id, wigId, 'lead-measure:read')
+    if (!access.allowed) {
+      return { success: false, error: access.error || 'Accès non autorisé' }
     }
 
     const leadMeasures = await prisma.leadMeasure.findMany({
@@ -64,6 +45,7 @@ export async function getLeadMeasures(wigId: string): Promise<ActionResult<(Lead
 
 /**
  * Crée une nouvelle Lead Measure
+ * OWNER/ADMIN uniquement
  */
 export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<ActionResult<LeadMeasure>> {
   try {
@@ -74,9 +56,12 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
       return { success: false, error: 'Non authentifié' }
     }
 
-    const hasAccess = await verifyWigAccess(input.wigId, user.id)
-    if (!hasAccess) {
-      return { success: false, error: 'Accès non autorisé' }
+    const access = await checkWigAccess(user.id, input.wigId, 'lead-measure:create')
+    if (!access.allowed) {
+      return {
+        success: false,
+        error: 'Seuls les propriétaires et administrateurs peuvent créer des mesures',
+      }
     }
 
     // Obtenir le prochain sortOrder
@@ -106,6 +91,7 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
 
 /**
  * Met à jour une Lead Measure
+ * OWNER/ADMIN uniquement
  */
 export async function updateLeadMeasure(
   id: string,
@@ -121,16 +107,18 @@ export async function updateLeadMeasure(
 
     const existing = await prisma.leadMeasure.findUnique({
       where: { id },
-      include: { wig: true },
     })
 
     if (!existing) {
       return { success: false, error: 'Mesure non trouvée' }
     }
 
-    const hasAccess = await verifyWigAccess(existing.wigId, user.id)
-    if (!hasAccess) {
-      return { success: false, error: 'Accès non autorisé' }
+    const access = await checkWigAccess(user.id, existing.wigId, 'lead-measure:update')
+    if (!access.allowed) {
+      return {
+        success: false,
+        error: 'Seuls les propriétaires et administrateurs peuvent modifier les mesures',
+      }
     }
 
     const leadMeasure = await prisma.leadMeasure.update({
@@ -153,6 +141,7 @@ export async function updateLeadMeasure(
 
 /**
  * Supprime une Lead Measure
+ * OWNER/ADMIN uniquement
  */
 export async function deleteLeadMeasure(id: string): Promise<ActionResult<void>> {
   try {
@@ -171,9 +160,12 @@ export async function deleteLeadMeasure(id: string): Promise<ActionResult<void>>
       return { success: false, error: 'Mesure non trouvée' }
     }
 
-    const hasAccess = await verifyWigAccess(existing.wigId, user.id)
-    if (!hasAccess) {
-      return { success: false, error: 'Accès non autorisé' }
+    const access = await checkWigAccess(user.id, existing.wigId, 'lead-measure:delete')
+    if (!access.allowed) {
+      return {
+        success: false,
+        error: 'Seuls les propriétaires et administrateurs peuvent supprimer des mesures',
+      }
     }
 
     await prisma.leadMeasure.delete({
@@ -190,6 +182,7 @@ export async function deleteLeadMeasure(id: string): Promise<ActionResult<void>>
 
 /**
  * Enregistre une mesure hebdomadaire
+ * Tous les membres peuvent enregistrer (weekly-measure:record)
  */
 export async function recordWeeklyMeasure(input: RecordWeeklyMeasureInput): Promise<ActionResult<WeeklyMeasure>> {
   try {
@@ -208,9 +201,9 @@ export async function recordWeeklyMeasure(input: RecordWeeklyMeasureInput): Prom
       return { success: false, error: 'Mesure non trouvée' }
     }
 
-    const hasAccess = await verifyWigAccess(leadMeasure.wigId, user.id)
-    if (!hasAccess) {
-      return { success: false, error: 'Accès non autorisé' }
+    const access = await checkWigAccess(user.id, leadMeasure.wigId, 'weekly-measure:record')
+    if (!access.allowed) {
+      return { success: false, error: access.error || 'Accès non autorisé' }
     }
 
     // Upsert pour permettre la mise à jour
@@ -243,4 +236,3 @@ export async function recordWeeklyMeasure(input: RecordWeeklyMeasureInput): Prom
     return { success: false, error: "Erreur lors de l'enregistrement" }
   }
 }
-

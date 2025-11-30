@@ -66,6 +66,27 @@ Les 4 Disciplines de l'Exécution forment un cadre éprouvé pour atteindre des 
 - Gestion des engagements personnels
 - Agenda structuré en 5 étapes
 
+### Multi-Tenant
+- **Organisations isolées** - Chaque client a son espace dédié
+- **Système d'invitations** - Inviter des membres par email
+- **Rôles et permissions** - OWNER > ADMIN > MEMBER
+- **Organisation Switcher** - Basculer entre organisations
+
+#### Matrice des permissions
+
+| Action | OWNER | ADMIN | MEMBER |
+|--------|-------|-------|--------|
+| Créer WIG | ✅ | ✅ | ❌ |
+| Modifier WIG | ✅ | ✅ | ❌ |
+| Mettre à jour valeur WIG | ✅ | ✅ | ✅ |
+| Archiver WIG | ✅ | ✅ | ❌ |
+| Créer Lead Measure | ✅ | ✅ | ❌ |
+| Enregistrer mesure hebdo | ✅ | ✅ | ✅ |
+| Créer engagement | ✅ | ✅ | ✅ |
+| Modifier son engagement | ✅ | ✅ | ✅ |
+| Inviter membre | ✅ | ✅ | ❌ |
+| Retirer membre | ✅ | ❌ | ❌ |
+
 ## Stack Technique
 
 | Technologie | Version | Usage |
@@ -141,24 +162,36 @@ Ouvrir [http://localhost:3000](http://localhost:3000)
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── (auth)/            # Routes auth (login)
-│   ├── (dashboard)/       # Routes protégées
-│   │   └── dashboard/
-│   │       ├── page.tsx   # Dashboard principal
-│   │       ├── wigs/      # Liste et détail WIGs
-│   │       └── cadence/   # Page réunion cadence
+│   ├── (auth)/            # Routes auth
+│   │   ├── login/         # Page connexion
+│   │   ├── callback/      # OAuth callback
+│   │   ├── onboarding/    # Création 1ère org
+│   │   └── invite/[token] # Accepter invitation
+│   ├── dashboard/         # Routes protégées
+│   │   ├── page.tsx       # Dashboard principal
+│   │   ├── wigs/          # Liste et détail WIGs
+│   │   ├── cadence/       # Page réunion cadence
+│   │   └── members/       # Gestion membres
 │   └── actions/           # Server Actions
+│       ├── wig.ts         # CRUD WIGs + permissions
+│       ├── lead-measure.ts# CRUD Lead Measures
+│       ├── engagement.ts  # CRUD Engagements
+│       └── organization.ts# Orgs + invitations
 ├── components/
 │   ├── ui/                # shadcn/ui components
+│   ├── providers/         # React Context
+│   │   └── organization-provider.tsx
+│   ├── layout/            # Header, org-switcher
 │   ├── wig/               # Composants WIG
 │   ├── lead-measure/      # Composants Lead Measures
 │   ├── engagement/        # Composants Engagements
 │   ├── cadence/           # Composants Cadence
-│   ├── charts/            # Charts Tremor
-│   └── layout/            # Header, navigation
+│   └── charts/            # Charts Tremor
 ├── lib/                   # Utilitaires
 │   ├── prisma.ts          # Client Prisma
 │   ├── supabase/          # Clients Supabase
+│   ├── permissions.ts     # Matrice permissions
+│   ├── role-utils.ts      # Utilitaires rôles (client)
 │   └── week.ts            # Utilitaires semaine
 └── types/                 # Types TypeScript
 ```
@@ -168,10 +201,13 @@ src/
 | Route | Description |
 |-------|-------------|
 | `/login` | Page de connexion |
+| `/onboarding` | Création première organisation |
+| `/invite/[token]` | Accepter une invitation |
 | `/dashboard` | Vue d'ensemble avec KPIs |
 | `/dashboard/wigs` | Liste de tous les WIGs |
 | `/dashboard/wigs/[id]` | Détail WIG + charts |
 | `/dashboard/cadence` | Réunion de cadence hebdo |
+| `/dashboard/members` | Gestion des membres (OWNER/ADMIN) |
 
 ## Design System
 

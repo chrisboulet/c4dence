@@ -1,6 +1,7 @@
 'use client'
 
 import { QueryProvider } from './query-provider'
+import { OrganizationProvider } from './organization-provider'
 
 /**
  * Combine tous les providers de l'application
@@ -8,7 +9,9 @@ import { QueryProvider } from './query-provider'
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryProvider>
-      {children}
+      <OrganizationProvider>
+        {children}
+      </OrganizationProvider>
     </QueryProvider>
   )
 }
