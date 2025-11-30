@@ -61,6 +61,22 @@ function formatValue(value: number, unit: string): string {
   return `${value.toLocaleString('fr-CA')} ${unit}`
 }
 
+function generateLeadMeasureChartData(leadMeasure: LeadMeasure & { weeklyMeasures: WeeklyMeasure[] }) {
+  // Sort by week and take last 8 weeks
+  const sortedMeasures = [...leadMeasure.weeklyMeasures]
+    .sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year
+      return a.weekNumber - b.weekNumber
+    })
+    .slice(-8)
+
+  return sortedMeasures.map((wm) => ({
+    week: `S${wm.weekNumber}`,
+    Réalisé: wm.value,
+    Cible: leadMeasure.targetPerWeek,
+  }))
+}
+
 function generateProgressChartData(wig: Wig) {
   const startDate = new Date(wig.startDate)
   const endDate = new Date(wig.endDate)
@@ -231,6 +247,32 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Lead Measure Charts - Discipline 3: Scoreboard */}
+      {leadMeasures.length > 0 && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Tableau de bord</h2>
+            <p className="text-sm text-muted-foreground">
+              Discipline 3: Maintenir un tableau de bord engageant
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {leadMeasures.map((lm) => {
+              const chartData = generateLeadMeasureChartData(lm)
+              if (chartData.length === 0) return null
+              return (
+                <LeadMeasureChart
+                  key={lm.id}
+                  title={lm.name}
+                  data={chartData}
+                  unit={lm.unit}
+                />
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <WigForm
