@@ -1,31 +1,56 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(222.2 84% 4.9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222.2 84% 4.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222.2 84% 4.9%);
-  --color-primary: hsl(222.2 47.4% 11.2%);
-  --color-primary-foreground: hsl(210 40% 98%);
-  --color-secondary: hsl(210 40% 96.1%);
-  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
-  --color-muted: hsl(210 40% 96.1%);
-  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
-  --color-accent: hsl(210 40% 96.1%);
-  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
-  --color-destructive: hsl(0 84.2% 60.2%);
-  --color-destructive-foreground: hsl(210 40% 98%);
-  --color-border: hsl(214.3 31.8% 91.4%);
-  --color-input: hsl(214.3 31.8% 91.4%);
-  --color-ring: hsl(222.2 84% 4.9%);
-  --radius: 0.5rem;
+  /* Brand Colors - Boulet Stratégies */
+  --color-brand-purple: #684bf8;
+  --color-brand-cyan: #11e6ba;
+  --color-brand-gold: #fcdc76;
+  --color-brand-lime: #9bef8e;
 
-  /* 4DX Status colors */
-  --color-status-on-track: #22c55e;
-  --color-status-at-risk: #eab308;
-  --color-status-off-track: #ef4444;
+  /* Dark Theme Base */
+  --color-background: #0a0a0f;
+  --color-foreground: #f8fafc;
+  --color-card: #12121a;
+  --color-card-foreground: #f8fafc;
+  --color-popover: #12121a;
+  --color-popover-foreground: #f8fafc;
+
+  /* Primary = Brand Purple */
+  --color-primary: #684bf8;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary = Muted Purple */
+  --color-secondary: #1e1e2e;
+  --color-secondary-foreground: #a5b4fc;
+
+  /* Muted */
+  --color-muted: #1e1e2e;
+  --color-muted-foreground: #94a3b8;
+
+  /* Accent = Brand Cyan */
+  --color-accent: #11e6ba;
+  --color-accent-foreground: #0a0a0f;
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #2e2e3e;
+  --color-input: #1e1e2e;
+  --color-ring: #684bf8;
+  --radius: 0.75rem;
+
+  /* 4DX Status colors - Brand */
+  --color-status-on-track: #11e6ba;
+  --color-status-at-risk: #fcdc76;
+  --color-status-off-track: #f43f5e;
+
+  /* Warning = Gold */
+  --color-warning: #fcdc76;
+  --color-warning-foreground: #0a0a0f;
+
+  /* Success = Cyan */
+  --color-success: #11e6ba;
+  --color-success-foreground: #0a0a0f;
 }
 
 * {
@@ -35,4 +60,74 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Gradient backgrounds */
+.gradient-purple-cyan {
+  background: linear-gradient(135deg, #684bf8 0%, #11e6ba 100%);
+}
+
+.gradient-dark {
+  background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(145deg, #12121a 0%, #1a1a2e 100%);
+}
+
+/* Glow effects */
+.glow-purple {
+  box-shadow: 0 0 20px rgba(104, 75, 248, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(17, 230, 186, 0.3);
+}
+
+/* Text gradients */
+.text-gradient {
+  background: linear-gradient(135deg, #684bf8 0%, #11e6ba 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated gradient border */
+.border-gradient {
+  position: relative;
+}
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #684bf8 0%, #11e6ba 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2e2e3e;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #684bf8;
+}
+
+/* Selection */
+::selection {
+  background: rgba(104, 75, 248, 0.3);
+  color: #ffffff;
 }

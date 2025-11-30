@@ -17,11 +17,11 @@ const badgeVariants = cva(
         outline: 'text-foreground',
         // Statuts 4DX
         'on-track':
-          'border-transparent bg-status-on-track text-white',
+          'border-transparent bg-status-on-track/20 text-status-on-track font-semibold',
         'at-risk':
-          'border-transparent bg-status-at-risk text-white',
+          'border-transparent bg-status-at-risk/20 text-status-at-risk font-semibold',
         'off-track':
-          'border-transparent bg-status-off-track text-white',
+          'border-transparent bg-status-off-track/20 text-status-off-track font-semibold',
       },
     },
     defaultVariants: {

@@ -1,10 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { Header } from '@/components/layout/header'
 
-/**
- * Layout du dashboard — Vérifie l'authentification
- * TODO Sprint 1: Ajouter AppShell avec sidebar
- */
 export default async function DashboardLayout({
   children,
 }: {
@@ -19,8 +16,10 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* TODO: AppShell avec sidebar */}
-      <main className="p-6">{children}</main>
+      <Header userEmail={user.email} />
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {children}
+      </main>
     </div>
   )
 }

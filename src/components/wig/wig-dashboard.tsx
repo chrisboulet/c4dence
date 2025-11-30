@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Target, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -61,10 +61,16 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
     <div className="space-y-6">
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-brand-purple/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="pb-2">
-            <CardDescription>WIGs actifs</CardDescription>
-            <CardTitle className="text-4xl">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-purple/10">
+                <Target className="h-4 w-4 text-brand-purple" />
+              </div>
+              <CardDescription>WIGs actifs</CardDescription>
+            </div>
+            <CardTitle className="text-4xl mt-2">
               {isLoading ? <Skeleton className="h-10 w-16" /> : activeWigsCount}
             </CardTitle>
           </CardHeader>
@@ -75,18 +81,31 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-brand-cyan/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="pb-2">
-            <CardDescription>Statut des WIGs</CardDescription>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-cyan/10">
+                <TrendingUp className="h-4 w-4 text-brand-cyan" />
+              </div>
+              <CardDescription>Statut des WIGs</CardDescription>
+            </div>
             {isLoading ? (
-              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32 mt-2" />
             ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-green-600">{onTrackCount}</span>
-                <span className="text-xl text-muted-foreground">/</span>
-                <span className="text-2xl font-bold text-yellow-600">{atRiskCount}</span>
-                <span className="text-xl text-muted-foreground">/</span>
-                <span className="text-2xl font-bold text-red-600">{offTrackCount}</span>
+              <div className="flex items-baseline gap-3 mt-2">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-status-on-track" />
+                  <span className="text-2xl font-bold">{onTrackCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-status-at-risk" />
+                  <span className="text-2xl font-bold">{atRiskCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-status-off-track" />
+                  <span className="text-2xl font-bold">{offTrackCount}</span>
+                </div>
               </div>
             )}
           </CardHeader>
@@ -97,10 +116,16 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-brand-gold/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="pb-2">
-            <CardDescription>Engagements</CardDescription>
-            <CardTitle className="text-4xl">{engagementPending}</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-brand-gold/10">
+                <CheckCircle2 className="h-4 w-4 text-brand-gold" />
+              </div>
+              <CardDescription>Engagements</CardDescription>
+            </div>
+            <CardTitle className="text-4xl mt-2">{engagementPending}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
