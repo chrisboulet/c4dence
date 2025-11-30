@@ -13,7 +13,8 @@ import { Progress } from '@/components/ui/progress'
 import { WigForm } from './wig-form'
 import { LeadMeasureForm } from '@/components/lead-measure/lead-measure-form'
 import { LeadMeasureList } from '@/components/lead-measure/lead-measure-list'
-import { getLeadMeasures, getCurrentWeek } from '@/app/actions/lead-measure'
+import { getLeadMeasures } from '@/app/actions/lead-measure'
+import { getCurrentWeek } from '@/lib/week'
 import type { Wig, LeadMeasure, WeeklyMeasure, WigStatus } from '@prisma/client'
 
 type WigWithMeasures = Wig & {
