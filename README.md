@@ -79,6 +79,18 @@
 - Rôles : Propriétaire > Admin > Membre
 - Sélecteur d'organisation
 
+### Authentification
+- Google OAuth (comptes personnels et Workspace)
+- Microsoft 365 OAuth (multi-tenant Azure AD)
+- Connexion SSO pour entreprises
+
+### Super Admin
+- Module d'administration réservé à l'opérateur
+- Gestion de toutes les organisations (CRUD)
+- Activation/désactivation d'organisations
+- Envoi d'invitations administratives
+- Vue globale des utilisateurs
+
 ---
 
 ## Stack Technique
@@ -90,7 +102,7 @@
 | **TypeScript** | Typage statique |
 | **Tailwind CSS 4** | Styling utility-first |
 | **Prisma 7** | ORM avec adapter pattern |
-| **Supabase** | Auth (Google OAuth) + PostgreSQL |
+| **Supabase** | Auth (Google + Microsoft OAuth) + PostgreSQL |
 | **Tremor** | Charts et visualisations |
 | **shadcn/ui** | Composants UI accessibles |
 | **Resend** | Emails transactionnels |
@@ -175,10 +187,14 @@ Ouvrir [http://localhost:3000](http://localhost:3000)
 src/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/            # Routes authentification
-│   │   ├── login/         # Connexion Google OAuth
+│   │   ├── login/         # Connexion Google/Microsoft OAuth
 │   │   ├── callback/      # OAuth callback
 │   │   ├── onboarding/    # Création première org
 │   │   └── invite/[token] # Acceptation invitation
+│   ├── admin/             # Super Admin (accès restreint)
+│   │   ├── page.tsx       # Liste organisations
+│   │   ├── organizations/ # Détail organisation
+│   │   └── users/         # Liste utilisateurs
 │   ├── dashboard/         # Routes protégées
 │   │   ├── page.tsx       # Dashboard principal
 │   │   ├── wigs/          # Liste et détail WIGs
@@ -273,6 +289,8 @@ C4DENCE s'adapte à tous les écrans :
 - [x] Cadence meeting
 - [x] Multi-tenant avec invitations
 - [x] Emails d'invitation (Resend)
+- [x] Microsoft 365 OAuth (multi-tenant)
+- [x] Module Super Admin
 - [ ] Export PDF des rapports
 - [ ] Notifications (rappels cadence)
 - [ ] Intégration calendrier

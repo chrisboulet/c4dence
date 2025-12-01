@@ -68,6 +68,17 @@ src/components/
 └── charts/                   # Visualisations
     ├── progress-chart.tsx       # Progression WIG
     └── lead-measure-chart.tsx   # Barres mesures prédictives
+
+src/app/
+├── admin/                    # Super Admin Module
+│   ├── layout.tsx               # Layout avec protection email
+│   ├── page.tsx                 # Liste organisations
+│   ├── organizations/[id]/      # Détail organisation
+│   │   └── page.tsx
+│   └── users/                   # Liste utilisateurs
+│       └── page.tsx
+└── actions/
+    └── admin.ts                 # Server actions admin
 ```
 
 ---
@@ -514,6 +525,46 @@ Avant de créer un nouveau composant :
 □ Utiliser les couleurs de statut définies (pas de couleurs hardcodées)
 □ Ajouter le composant à ce catalogue après création
 ```
+
+---
+
+## 16. Module Super Admin
+
+### Accès
+- **URL** : `/admin`
+- **Protection** : Email hardcodé `christian@bouletstrategies.ca`
+- Redirection vers `/dashboard` si non autorisé
+
+### Pages
+
+#### /admin (Organizations List)
+- Stats : total orgs, actives, membres, WIGs
+- Liste des organisations avec actions
+- Création nouvelle organisation avec invitation owner
+
+#### /admin/organizations/[id]
+- Détail d'une organisation
+- Gestion des membres (rôle, suppression)
+- Invitations en attente
+- Vue des WIGs
+
+#### /admin/users
+- Liste de tous les utilisateurs
+- Recherche par email/nom
+- Lien vers leurs organisations
+
+### Server Actions (`app/actions/admin.ts`)
+- `adminGetAllOrganizations()` — Liste toutes les orgs
+- `adminCreateOrganization()` — Crée org + invitation owner
+- `adminUpdateOrganization()` — Modifie nom/isActive
+- `adminDeleteOrganization()` — Supprime org (cascade)
+- `adminToggleOrganization()` — Active/désactive
+- `adminGetOrganizationDetails()` — Détail avec membres/WIGs
+- `adminSendInvitation()` — Invite un membre
+- `adminCancelInvitation()` — Annule invitation
+- `adminUpdateMemberRole()` — Change rôle membre
+- `adminRemoveMember()` — Retire un membre
+- `adminGetAllUsers()` — Liste tous les utilisateurs
 
 ---
 
