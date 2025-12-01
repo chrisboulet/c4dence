@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState, useEffect } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createLeadMeasure, updateLeadMeasure } from '@/app/actions/lead-measure'
+import { getOrganizationMembers } from '@/app/actions/organization'
+import { useOrganization } from '@/components/providers/organization-provider'
 import type { LeadMeasure } from '@prisma/client'
 
 type LeadMeasureFormData = {
@@ -21,6 +30,12 @@ type LeadMeasureFormData = {
   description: string
   targetPerWeek: string
   unit: string
+  assignedToId: string
+}
+
+type OrgMember = {
+  id: string
+  profile: { id: string; email: string; fullName: string | null; avatarUrl: string | null }
 }
 
 type LeadMeasureFormProps = {
@@ -40,13 +55,30 @@ export function LeadMeasureForm({
 }: LeadMeasureFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [members, setMembers] = useState<OrgMember[]>([])
+  const { currentOrg } = useOrganization()
 
   const isEditing = !!leadMeasure
+
+  // Charger les membres de l'organisation
+  useEffect(() => {
+    async function fetchMembers() {
+      if (!currentOrg?.organizationId) return
+      const result = await getOrganizationMembers(currentOrg.organizationId)
+      if (result.success) {
+        setMembers(result.data)
+      }
+    }
+    if (open) {
+      fetchMembers()
+    }
+  }, [currentOrg?.organizationId, open])
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<LeadMeasureFormData>({
     defaultValues: leadMeasure
@@ -55,12 +87,14 @@ export function LeadMeasureForm({
           description: leadMeasure.description || '',
           targetPerWeek: String(leadMeasure.targetPerWeek),
           unit: leadMeasure.unit,
+          assignedToId: (leadMeasure as LeadMeasure & { assignedToId?: string | null }).assignedToId || '',
         }
       : {
           name: '',
           description: '',
           targetPerWeek: '0',
           unit: '',
+          assignedToId: '',
         },
   })
 
@@ -78,6 +112,7 @@ export function LeadMeasureForm({
       description: data.description || undefined,
       targetPerWeek: parseFloat(data.targetPerWeek) || 0,
       unit: data.unit,
+      assignedToId: data.assignedToId || undefined, // 4DX: Responsable
     }
 
     const result = isEditing
@@ -136,6 +171,32 @@ export function LeadMeasureForm({
                 placeholder="Appels sortants vers prospects qualifiés"
                 {...register('description')}
               />
+            </div>
+
+            {/* 4DX: Responsable de la mesure */}
+            <div className="grid gap-2">
+              <Label htmlFor="assignedToId">Assigné à</Label>
+              <Controller
+                name="assignedToId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un responsable" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.profile.id} value={member.profile.id}>
+                          {member.profile.fullName || member.profile.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                4DX : Chaque mesure doit avoir un responsable
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

@@ -28,19 +28,23 @@ type WigDetailProps = {
   wig: WigWithMeasures
 }
 
-function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-track' {
+function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-track' | 'achieved' {
   switch (status) {
+    case 'ACHIEVED': return 'achieved'
     case 'ON_TRACK': return 'on-track'
     case 'AT_RISK': return 'at-risk'
     case 'OFF_TRACK': return 'off-track'
+    default: return 'at-risk'
   }
 }
 
 function getStatusLabel(status: WigStatus): string {
   switch (status) {
+    case 'ACHIEVED': return 'Atteint'
     case 'ON_TRACK': return 'En bonne voie'
     case 'AT_RISK': return 'À risque'
     case 'OFF_TRACK': return 'Hors piste'
+    default: return status
   }
 }
 

@@ -35,6 +35,16 @@ enum WigStatus {
   ON_TRACK   // 🟢 En bonne voie
   AT_RISK    // 🟡 À risque
   OFF_TRACK  // 🔴 Hors piste
+  ACHIEVED   // 🏆 Objectif atteint
+
+  @@schema("c4dence")
+}
+
+/// Statut d'un obstacle/blocker signalé
+enum BlockerStatus {
+  OPEN       // 🔴 Ouvert — obstacle actif
+  ESCALATED  // 🟡 Escaladé — remonté à un supérieur
+  RESOLVED   // 🟢 Résolu — obstacle levé
 
   @@schema("c4dence")
 }
@@ -96,9 +106,12 @@ model Profile {
   locale    String   @default("fr-CA")
 
   // --- Relations ---
-  memberships  Membership[]   // Organisations dont l'utilisateur est membre
-  engagements  Engagement[]   // Engagements pris par l'utilisateur
-  
+  memberships    Membership[]   // Organisations dont l'utilisateur est membre
+  engagements    Engagement[]   // Engagements pris par l'utilisateur
+  ownedWigs      Wig[]          @relation("WigOwner") // WIGs dont l'utilisateur est responsable
+  assignedMeasures LeadMeasure[] @relation("MeasureAssignee") // Mesures assignées
+  reportedBlockers Blocker[]    @relation("BlockerReporter") // Obstacles signalés
+
   @@schema("c4dence")
   @@map("profiles")
 }
@@ -195,6 +208,11 @@ model Wig {
   organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  // --- Responsable du WIG (4DX: accountability) ---
+  // Note: Optionnel pour compatibilité avec WIGs existants, mais requis à la création
+  ownerId        String?      @map("owner_id")
+  owner          Profile?     @relation("WigOwner", fields: [ownerId], references: [id])
+
   // --- Définition du WIG ---
   name           String       // Nom court : "Croissance CA 2025"
   description    String?      // Description complète avec contexte
@@ -223,8 +241,10 @@ model Wig {
 
   // --- Relations ---
   leadMeasures   LeadMeasure[]
+  blockers       Blocker[]
 
   @@index([organizationId])
+  @@index([ownerId])
   @@index([status])
   @@index([isArchived])
   @@schema("c4dence")
@@ -262,6 +282,10 @@ model LeadMeasure {
   wigId     String   @map("wig_id")
   wig       Wig      @relation(fields: [wigId], references: [id], onDelete: Cascade)
 
+  // --- Responsable de la mesure (4DX: accountability) ---
+  assignedToId   String?      @map("assigned_to_id")
+  assignedTo     Profile?     @relation("MeasureAssignee", fields: [assignedToId], references: [id])
+
   // --- Définition ---
   name           String       // "Appels de prospection"
   description    String?      // "Appels sortants vers prospects qualifiés"
@@ -276,8 +300,10 @@ model LeadMeasure {
 
   // --- Relations ---
   weeklyMeasures WeeklyMeasure[]
+  engagements    Engagement[]   @relation("EngagementMeasure")
 
   @@index([wigId])
+  @@index([assignedToId])
   @@schema("c4dence")
   @@map("lead_measures")
 }
@@ -390,7 +416,11 @@ model Engagement {
 
   // --- Contenu de l'engagement ---
   description String  // "Appeler les 10 prospects chauds avant mercredi"
-  
+
+  // --- Lien optionnel vers une Lead Measure (4DX: impact sur le score) ---
+  leadMeasureId String?      @map("lead_measure_id")
+  leadMeasure   LeadMeasure? @relation("EngagementMeasure", fields: [leadMeasureId], references: [id])
+
   // --- Suivi ---
   status      EngagementStatus @default(PENDING)
   completedAt DateTime?        @map("completed_at") // Quand marqué COMPLETED
@@ -404,8 +434,48 @@ model Engagement {
   @@index([organizationId])
   @@index([year, weekNumber])
   @@index([status])
+  @@index([leadMeasureId])
   @@schema("c4dence")
   @@map("engagements")
+}
+
+/// Blocker — Obstacle signalé lors d'une réunion de cadence
+///
+/// Discipline 4 : Phase "Clear" de la WIG Session
+/// Les obstacles sont des problèmes qui bloquent l'avancement d'un WIG
+/// et qui nécessitent une action ou une escalade.
+///
+/// Exemples :
+/// - "Budget marketing gelé jusqu'à Q2"
+/// - "Ressource clé en congé maladie"
+/// - "Dépendance sur équipe IT bloquée"
+model Blocker {
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  // --- Quel WIG est impacté ---
+  wigId        String        @map("wig_id")
+  wig          Wig           @relation(fields: [wigId], references: [id], onDelete: Cascade)
+
+  // --- Qui a signalé l'obstacle ---
+  reportedById String        @map("reported_by_id")
+  reportedBy   Profile       @relation("BlockerReporter", fields: [reportedById], references: [id])
+
+  // --- Description de l'obstacle ---
+  description  String        // "Budget marketing gelé jusqu'à Q2"
+
+  // --- Suivi ---
+  status       BlockerStatus @default(OPEN)
+  escalatedTo  String?       @map("escalated_to") // Nom/email de la personne
+  resolvedAt   DateTime?     @map("resolved_at")
+  resolution   String?       // Comment l'obstacle a été résolu
+
+  @@index([wigId])
+  @@index([reportedById])
+  @@index([status])
+  @@schema("c4dence")
+  @@map("blockers")
 }
 
 // =============================================================================

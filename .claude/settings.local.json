@@ -15,7 +15,9 @@
       "Bash(npx prisma generate:*)",
       "Bash(npx prisma db push:*)",
       "Bash(npm run build:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx tsc:*)",
+      "Skill(webapp-testing)"
     ],
     "deny": [],
     "ask": []

@@ -32,6 +32,13 @@ export async function getLeadMeasures(wigId: string): Promise<ActionResult<(Lead
           orderBy: [{ year: 'desc' }, { weekNumber: 'desc' }],
           take: 12,
         },
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
       },
       orderBy: { sortOrder: 'asc' },
     })
@@ -78,6 +85,7 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
         targetPerWeek: input.targetPerWeek,
         unit: input.unit,
         sortOrder: (lastMeasure?.sortOrder ?? -1) + 1,
+        assignedToId: input.assignedToId, // 4DX: Responsable
       },
     })
 
@@ -95,7 +103,7 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
  */
 export async function updateLeadMeasure(
   id: string,
-  input: Partial<Omit<CreateLeadMeasureInput, 'wigId'>>
+  input: Partial<Omit<CreateLeadMeasureInput, 'wigId'>> & { assignedToId?: string }
 ): Promise<ActionResult<LeadMeasure>> {
   try {
     const supabase = await createClient()
@@ -128,6 +136,7 @@ export async function updateLeadMeasure(
         description: input.description,
         targetPerWeek: input.targetPerWeek,
         unit: input.unit,
+        assignedToId: input.assignedToId, // 4DX: Responsable
       },
     })
 

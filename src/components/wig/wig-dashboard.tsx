@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Target, TrendingUp, CheckCircle2 } from 'lucide-react'
+import { Plus, Target, TrendingUp, CheckCircle2, ExternalLink, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertIcon, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ConfettiCelebration } from '@/components/ui/confetti-celebration'
+import { WinningIndicator } from '@/components/ui/trend-arrow'
 import { WigForm } from './wig-form'
 import { WigList } from './wig-list'
 import { EngagementWidget } from '@/components/engagement/engagement-widget'
@@ -22,6 +25,8 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
   const [isLoading, setIsLoading] = useState(!initialWigs)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [engagementPending, setEngagementPending] = useState(0)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [previousAchievedCount, setPreviousAchievedCount] = useState(0)
   const currentWeek = getCurrentWeek()
 
   const fetchWigs = useCallback(async () => {
@@ -56,9 +61,50 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
   const onTrackCount = wigs.filter((w) => w.status === 'ON_TRACK').length
   const atRiskCount = wigs.filter((w) => w.status === 'AT_RISK').length
   const offTrackCount = wigs.filter((w) => w.status === 'OFF_TRACK').length
+  const achievedCount = wigs.filter((w) => w.status === 'ACHIEVED').length
+
+  // Déclencher confetti quand un nouveau WIG est ACHIEVED
+  useEffect(() => {
+    if (achievedCount > previousAchievedCount && previousAchievedCount > 0) {
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 100)
+    }
+    setPreviousAchievedCount(achievedCount)
+  }, [achievedCount, previousAchievedCount])
+
+  // Constante 4DX
+  const MAX_RECOMMENDED_WIGS = 3
 
   return (
     <div className="space-y-6">
+      {/* Indicateur WINNING/LOSING - 4DX Discipline 3 */}
+      {!isLoading && activeWigsCount > 0 && (
+        <div className="flex justify-center">
+          <WinningIndicator wigs={wigs} />
+        </div>
+      )}
+
+      {/* Warning 4DX - Trop de WIGs */}
+      {!isLoading && activeWigsCount > MAX_RECOMMENDED_WIGS && (
+        <Alert variant="warning">
+          <AlertIcon variant="warning" />
+          <AlertTitle>Attention : {activeWigsCount} WIGs actifs</AlertTitle>
+          <AlertDescription>
+            La méthodologie 4DX recommande de se concentrer sur{' '}
+            <strong>2-3 objectifs maximum</strong> pour maximiser les chances de
+            succès. Envisagez d'archiver ou de prioriser vos WIGs.
+            <a
+              href="https://www.franklincovey.com/the-4-disciplines/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 ml-2 underline hover:no-underline"
+            >
+              En savoir plus <ExternalLink className="h-3 w-3" />
+            </a>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="relative overflow-hidden">
@@ -94,6 +140,12 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
               <Skeleton className="h-10 w-32 mt-2" />
             ) : (
               <div className="flex items-baseline gap-3 mt-2">
+                {achievedCount > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Trophy className="w-3 h-3 text-status-on-track" />
+                    <span className="text-2xl font-bold text-status-on-track">{achievedCount}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-status-on-track" />
                   <span className="text-2xl font-bold">{onTrackCount}</span>
@@ -111,7 +163,7 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
-              En bonne voie / À risque / Hors piste
+              {achievedCount > 0 ? 'Atteints / ' : ''}En bonne voie / À risque / Hors piste
             </p>
           </CardContent>
         </Card>
@@ -173,6 +225,9 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
         onOpenChange={setIsFormOpen}
         onSuccess={handleRefresh}
       />
+
+      {/* Confetti pour célébrer les objectifs atteints */}
+      <ConfettiCelebration trigger={showConfetti} />
     </div>
   )
 }

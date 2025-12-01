@@ -9,6 +9,7 @@ import type { Wig, WigStatus } from '@prisma/client'
 
 /**
  * Calcule le statut d'un WIG basé sur la progression vs le temps écoulé
+ * 4DX: ACHIEVED quand l'objectif est atteint (currentValue >= targetValue)
  */
 function calculateWigStatus(wig: {
   startValue: number
@@ -17,15 +18,21 @@ function calculateWigStatus(wig: {
   startDate: Date
   endDate: Date
 }): WigStatus {
+  // 4DX: Vérifier si l'objectif est atteint
+  const valueRange = wig.targetValue - wig.startValue
+  const currentProgress = valueRange === 0 ? 1 : (wig.currentValue - wig.startValue) / valueRange
+
+  // Si l'objectif est atteint (100% ou plus), marquer comme ACHIEVED
+  if (currentProgress >= 1) {
+    return 'ACHIEVED'
+  }
+
   const now = new Date()
   const totalDuration = wig.endDate.getTime() - wig.startDate.getTime()
   const elapsed = now.getTime() - wig.startDate.getTime()
   const timeProgress = Math.min(elapsed / totalDuration, 1)
 
-  const valueRange = wig.targetValue - wig.startValue
-  const currentProgress = valueRange === 0 ? 1 : (wig.currentValue - wig.startValue) / valueRange
   const expectedProgress = timeProgress
-
   const ratio = expectedProgress === 0 ? 1 : currentProgress / expectedProgress
 
   if (ratio >= 0.9) return 'ON_TRACK'
@@ -79,6 +86,14 @@ export async function getWigs(organizationId?: string): Promise<ActionResult<Wig
         unit: true,
         startDate: true,
         endDate: true,
+        ownerId: true,
+        owner: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -170,6 +185,7 @@ export async function createWig(
         startDate: input.startDate,
         endDate: input.endDate,
         status: 'AT_RISK',
+        ownerId: input.ownerId, // 4DX: Responsable du WIG
       },
     })
 
@@ -214,7 +230,8 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       input.targetValue === undefined &&
       input.unit === undefined &&
       input.startDate === undefined &&
-      input.endDate === undefined
+      input.endDate === undefined &&
+      input.ownerId === undefined
 
     // Vérifier les permissions appropriées
     const requiredPermission = isValueUpdateOnly ? 'wig:update-value' : 'wig:update'
@@ -250,6 +267,7 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       if (updateData.unit !== undefined) dataToUpdate.unit = updateData.unit
       if (updateData.startDate !== undefined) dataToUpdate.startDate = updateData.startDate
       if (updateData.endDate !== undefined) dataToUpdate.endDate = updateData.endDate
+      if (updateData.ownerId !== undefined) dataToUpdate.ownerId = updateData.ownerId // 4DX Owner
     }
 
     if (Object.keys(dataToUpdate).length === 0) {

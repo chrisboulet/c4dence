@@ -1,118 +1,116 @@
 <p align="center">
-  <img src="public/logo-boulet-strategies-dark.svg" alt="C4DENCE Logo" width="200" />
-</p>
-
-<h1 align="center">C4DENCE</h1>
-
-<p align="center">
-  <strong>Exécution stratégique basée sur les 4 Disciplines de l'Exécution (4DX)</strong>
+  <img src="public/logo_icon_wordmark_dark.png" alt="C4DENCE" width="280" />
 </p>
 
 <p align="center">
-  <a href="#fonctionnalités">Fonctionnalités</a> •
-  <a href="#méthodologie-4dx">Méthodologie</a> •
-  <a href="#stack-technique">Stack</a> •
-  <a href="#démarrage-rapide">Démarrage</a>
+  <strong>Plateforme d'exécution stratégique basée sur les 4 Disciplines de l'Exécution</strong>
+</p>
+
+<p align="center">
+  <a href="https://c4dence.bouletstrategies.ca">Live Demo</a> •
+  <a href="docs/guide-utilisateur.md">Guide Utilisateur</a> •
+  <a href="docs/methodologie-4dx.md">Méthodologie 4DX</a> •
+  <a href="docs/guide-admin.md">Guide Admin</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178c6?style=flat-square&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat-square&logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Prisma-7-2d3748?style=flat-square&logo=prisma" alt="Prisma" />
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/images/02-dashboard-desktop.png" alt="C4DENCE Dashboard" width="800" />
 </p>
 
 ---
 
 ## Vue d'ensemble
 
-**C4DENCE** est une application web moderne conçue pour aider les équipes à exécuter leur stratégie avec discipline et focus. Basée sur la méthodologie **4DX** (4 Disciplines of Execution) de FranklinCovey, elle transforme vos objectifs ambitieux en résultats mesurables.
+**C4DENCE** transforme vos objectifs stratégiques en résultats mesurables grâce à la méthodologie **4DX** (4 Disciplines of Execution) de FranklinCovey.
 
-> *"L'exécution est la discipline qui permet de transformer la stratégie en réalité."*
+> *"80% des stratégies échouent non pas à cause d'une mauvaise stratégie, mais d'une mauvaise exécution."*
 
-## Méthodologie 4DX
+### Pourquoi C4DENCE?
 
-Les 4 Disciplines de l'Exécution forment un cadre éprouvé pour atteindre des objectifs importants malgré le "tourbillon" du quotidien:
+| Problème | Solution C4DENCE |
+|----------|------------------|
+| Trop d'objectifs = aucun focus | **Discipline 1** : Focus sur 2-3 WIGs essentiels |
+| On mesure les résultats trop tard | **Discipline 2** : Lead Measures prédictives |
+| L'équipe ne sait pas si elle gagne | **Discipline 3** : Scoreboard visuel et clair |
+| Les urgences prennent le dessus | **Discipline 4** : Cadence hebdomadaire sacrée |
 
-### Discipline 1: Focus sur l'Essentiel
-**WIGs (Wildly Important Goals)** - Se concentrer sur 1-3 objectifs vitalement importants plutôt que de disperser l'énergie sur tout.
-
-### Discipline 2: Agir sur les Mesures Prédictives
-**Lead Measures** - Identifier et suivre les actions qui influencent directement l'atteinte du WIG (mesures prédictives vs résultats).
-
-### Discipline 3: Maintenir un Tableau de Bord Engageant
-**Scoreboard** - Visualiser la progression de façon claire et motivante. Les gens jouent différemment quand ils gardent le score.
-
-### Discipline 4: Créer une Cadence de Responsabilité
-**Cadence Meetings** - Réunions hebdomadaires courtes où chaque membre rend des comptes et prend de nouveaux engagements.
+---
 
 ## Fonctionnalités
 
-### WIGs (Objectifs)
-- Création et suivi d'objectifs avec dates de début/fin
-- Mesure de progression (valeur départ → actuelle → cible)
-- Status automatique: En bonne voie / À risque / Hors piste
-- Visualisation de la progression vs temps écoulé
+### WIGs (Wildly Important Goals)
+- Format "De X à Y d'ici [date]"
+- Progression visuelle avec indicateur WINNING/LOSING
+- Statuts automatiques : En bonne voie / À risque / Hors piste
+- Attribution de responsable
 
 ### Lead Measures (Mesures Prédictives)
-- Association de mesures prédictives à chaque WIG
-- Enregistrement hebdomadaire des valeurs
-- Cible par semaine configurable
-- Charts de performance hebdomadaire
+- Actions hebdomadaires mesurables
+- Cibles par semaine configurables
+- Tendances avec flèches directionnelles
+- Charts de performance
 
 ### Scoreboard (Tableau de Bord)
-- Charts Tremor pour visualisation des tendances
-- Progression WIG (AreaChart) - réel vs cible linéaire
-- Lead Measures (BarChart) - performance hebdo vs cible
-- KPIs en temps réel sur le dashboard
+- Dashboard avec KPIs temps réel
+- Charts Tremor pour visualisations
+- Progression WIG vs trajectoire idéale
+- Indicateur WINNING/LOSING prominent
 
 ### Cadence (Responsabilité)
-- Page de réunion de cadence dédiée
-- Navigation par semaine (précédente/suivante)
-- Vue des engagements de l'équipe
-- Gestion des engagements personnels
+- Page de réunion dédiée avec timer
+- Navigation par semaine
+- Engagements par membre
+- Gestion des obstacles
 - Agenda structuré en 5 étapes
 
 ### Multi-Tenant
-- **Organisations isolées** - Chaque client a son espace dédié
-- **Système d'invitations** - Inviter des membres par email
-- **Rôles et permissions** - OWNER > ADMIN > MEMBER
-- **Organisation Switcher** - Basculer entre organisations
+- Organisations isolées
+- Invitations par email (via Resend)
+- Rôles : Propriétaire > Admin > Membre
+- Sélecteur d'organisation
 
-#### Matrice des permissions
-
-| Action | OWNER | ADMIN | MEMBER |
-|--------|-------|-------|--------|
-| Créer WIG | ✅ | ✅ | ❌ |
-| Modifier WIG | ✅ | ✅ | ❌ |
-| Mettre à jour valeur WIG | ✅ | ✅ | ✅ |
-| Archiver WIG | ✅ | ✅ | ❌ |
-| Créer Lead Measure | ✅ | ✅ | ❌ |
-| Enregistrer mesure hebdo | ✅ | ✅ | ✅ |
-| Créer engagement | ✅ | ✅ | ✅ |
-| Modifier son engagement | ✅ | ✅ | ✅ |
-| Inviter membre | ✅ | ✅ | ❌ |
-| Retirer membre | ✅ | ❌ | ❌ |
+---
 
 ## Stack Technique
 
-| Technologie | Version | Usage |
-|------------|---------|-------|
-| **Next.js** | 16 | Framework React avec App Router |
-| **React** | 19 | Interface utilisateur |
-| **TypeScript** | 5.x | Typage statique |
-| **Tailwind CSS** | 4 | Styling utility-first |
-| **Prisma** | 7 | ORM avec adapter pattern |
-| **Supabase** | - | Auth (Google OAuth) + PostgreSQL |
-| **Tremor** | 3 | Charts et visualisations |
-| **shadcn/ui** | - | Composants UI accessibles |
-| **TanStack Query** | 5 | Data fetching & caching |
+| Technologie | Usage |
+|------------|-------|
+| **Next.js 16** | Framework React avec App Router |
+| **React 19** | Interface utilisateur |
+| **TypeScript** | Typage statique |
+| **Tailwind CSS 4** | Styling utility-first |
+| **Prisma 7** | ORM avec adapter pattern |
+| **Supabase** | Auth (Google OAuth) + PostgreSQL |
+| **Tremor** | Charts et visualisations |
+| **shadcn/ui** | Composants UI accessibles |
+| **Resend** | Emails transactionnels |
+
+---
 
 ## Démarrage Rapide
 
 ### Prérequis
+
 - Node.js 20+
 - Compte Supabase
-- Google OAuth credentials (optionnel)
+- Credentials Google OAuth
+- Compte Resend (pour les emails)
 
 ### Installation
 
 ```bash
 # Cloner le repo
-git clone https://github.com/chrisboulet/c4dence.git
+git clone https://github.com/BouletStrategies/c4dence.git
 cd c4dence
 
 # Installer les dépendances
@@ -124,8 +122,6 @@ cp .env.example .env.local
 
 ### Configuration
 
-Créer un fichier `.env.local` avec:
-
 ```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -133,9 +129,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 # Database (Supavisor pooler)
 DATABASE_URL=postgresql://...?pgbouncer=true
+DIRECT_URL=postgresql://...
 
-# Optional: Direct connection for migrations
-DIRECT_DATABASE_URL=postgresql://...
+# Resend (emails)
+RESEND_API_KEY=re_xxxxx
+EMAIL_FROM="C4dence <noreply@yourdomain.com>"
+
+# App URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### Base de données
@@ -144,104 +145,170 @@ DIRECT_DATABASE_URL=postgresql://...
 # Générer le client Prisma
 npx prisma generate
 
-# Pousser le schéma vers Supabase
+# Pousser le schéma
 npx prisma db push
 ```
 
 ### Développement
 
 ```bash
-# Lancer le serveur de développement
 npm run dev
 ```
 
 Ouvrir [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Documentation
+
+| Document | Description | Audience |
+|----------|-------------|----------|
+| [Guide Utilisateur](docs/guide-utilisateur.md) | Prise en main complète | Tous les utilisateurs |
+| [Méthodologie 4DX](docs/methodologie-4dx.md) | Comprendre les 4 disciplines | Leaders, Managers |
+| [Guide Administrateur](docs/guide-admin.md) | Configuration et gestion | Admins, Owners |
+
+---
 
 ## Structure du Projet
 
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── (auth)/            # Routes auth
-│   │   ├── login/         # Page connexion
+│   ├── (auth)/            # Routes authentification
+│   │   ├── login/         # Connexion Google OAuth
 │   │   ├── callback/      # OAuth callback
-│   │   ├── onboarding/    # Création 1ère org
-│   │   └── invite/[token] # Accepter invitation
+│   │   ├── onboarding/    # Création première org
+│   │   └── invite/[token] # Acceptation invitation
 │   ├── dashboard/         # Routes protégées
 │   │   ├── page.tsx       # Dashboard principal
 │   │   ├── wigs/          # Liste et détail WIGs
-│   │   ├── cadence/       # Page réunion cadence
-│   │   └── members/       # Gestion membres
+│   │   ├── cadence/       # Réunion de cadence
+│   │   ├── members/       # Gestion membres
+│   │   └── settings/      # Paramètres organisation
 │   └── actions/           # Server Actions
-│       ├── wig.ts         # CRUD WIGs + permissions
-│       ├── lead-measure.ts# CRUD Lead Measures
-│       ├── engagement.ts  # CRUD Engagements
-│       └── organization.ts# Orgs + invitations
 ├── components/
-│   ├── ui/                # shadcn/ui components
+│   ├── ui/                # shadcn/ui
 │   ├── providers/         # React Context
-│   │   └── organization-provider.tsx
-│   ├── layout/            # Header, org-switcher
+│   ├── layout/            # Header, navigation
 │   ├── wig/               # Composants WIG
-│   ├── lead-measure/      # Composants Lead Measures
-│   ├── engagement/        # Composants Engagements
-│   ├── cadence/           # Composants Cadence
-│   └── charts/            # Charts Tremor
+│   ├── lead-measure/      # Lead Measures
+│   ├── engagement/        # Engagements
+│   ├── cadence/           # Cadence meeting
+│   └── charts/            # Tremor charts
 ├── lib/                   # Utilitaires
 │   ├── prisma.ts          # Client Prisma
 │   ├── supabase/          # Clients Supabase
+│   ├── email.ts           # Service Resend
 │   ├── permissions.ts     # Matrice permissions
-│   ├── role-utils.ts      # Utilitaires rôles (client)
-│   └── week.ts            # Utilitaires semaine
+│   └── week.ts            # Utilitaires semaine ISO
 └── types/                 # Types TypeScript
 ```
 
-## Routes
-
-| Route | Description |
-|-------|-------------|
-| `/login` | Page de connexion |
-| `/onboarding` | Création première organisation |
-| `/invite/[token]` | Accepter une invitation |
-| `/dashboard` | Vue d'ensemble avec KPIs |
-| `/dashboard/wigs` | Liste de tous les WIGs |
-| `/dashboard/wigs/[id]` | Détail WIG + charts |
-| `/dashboard/cadence` | Réunion de cadence hebdo |
-| `/dashboard/members` | Gestion des membres (OWNER/ADMIN) |
+---
 
 ## Design System
 
-### Couleurs de marque
+### Couleurs
 
-```css
---brand-purple: #684bf8   /* Primaire */
---brand-cyan: #11e6ba     /* Accent / On-track */
---brand-gold: #fcdc76     /* Warning / At-risk */
---brand-lime: #9bef8e     /* Success secondaire */
-```
+| Couleur | Hex | Usage |
+|---------|-----|-------|
+| Purple | `#684bf8` | Primaire, actions |
+| Cyan | `#11e6ba` | Success, On-track |
+| Gold | `#fcdc76` | Warning, At-risk |
+| Lime | `#9bef8e` | Success secondaire |
 
-### Status
+### Statuts WIG
 
-- **On-track** (cyan): Progression ≥ 90% de l'attendu
-- **At-risk** (gold): Progression entre 70-90%
-- **Off-track** (rouge): Progression < 70%
+| Statut | Couleur | Condition |
+|--------|---------|-----------|
+| En bonne voie | Cyan | Progression >= 90% attendu |
+| À risque | Gold | Progression 70-90% |
+| Hors piste | Rouge | Progression < 70% |
+| Atteint | Or | Objectif complété |
+
+---
+
+## Screenshots
+
+<details>
+<summary>Voir toutes les captures d'écran</summary>
+
+### Login
+![Login](docs/images/01-login-desktop.png)
+
+### Dashboard
+![Dashboard](docs/images/02-dashboard-desktop.png)
+
+### Liste des WIGs
+![WIGs](docs/images/05-wigs-list-desktop.png)
+
+### Page Cadence
+![Cadence](docs/images/12-cadence-page-desktop.png)
+
+### Gestion des Membres
+![Members](docs/images/17-members-desktop.png)
+
+### Paramètres
+![Settings](docs/images/18-settings-desktop.png)
+
+</details>
+
+---
+
+## Responsive
+
+C4DENCE s'adapte à tous les écrans :
+
+| Desktop (1440px) | Tablet (768px) | Mobile (375px) |
+|------------------|----------------|----------------|
+| ![Desktop](docs/images/02-dashboard-desktop.png) | ![Tablet](docs/images/02-dashboard-tablet.png) | ![Mobile](docs/images/02-dashboard-mobile.png) |
+
+---
+
+## Roadmap
+
+- [x] WIGs avec progression
+- [x] Lead Measures hebdomadaires
+- [x] Scoreboard avec charts
+- [x] Cadence meeting
+- [x] Multi-tenant avec invitations
+- [x] Emails d'invitation (Resend)
+- [ ] Export PDF des rapports
+- [ ] Notifications (rappels cadence)
+- [ ] Intégration calendrier
+- [ ] API publique
+
+---
 
 ## Contribuer
 
 Les contributions sont les bienvenues!
 
 1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push la branche (`git push origin feature/AmazingFeature`)
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit (`git commit -m 'Add AmazingFeature'`)
+4. Push (`git push origin feature/AmazingFeature`)
 5. Ouvrir une Pull Request
+
+---
+
+## Support
+
+- **Email** : support@bouletstrategies.ca
+- **Documentation** : [docs/](docs/)
+
+---
 
 ## License
 
-MIT © [Boulet Stratégies TI](https://bouletstrategies.com)
+MIT © [Boulet Stratégies TI](https://bouletstrategies.ca)
 
 ---
 
 <p align="center">
-  Construit avec passion par <a href="https://bouletstrategies.com">Boulet Stratégies TI</a>
+  <img src="public/logo-boulet-strategies-dark.svg" alt="Boulet Stratégies TI" width="150" />
+</p>
+
+<p align="center">
+  <sub>Construit avec passion par <a href="https://bouletstrategies.ca">Boulet Stratégies TI</a></sub>
 </p>

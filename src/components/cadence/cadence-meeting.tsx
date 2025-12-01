@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Target, TrendingUp, Users, CheckCircle2, AlertCircle, XCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Target, TrendingUp, Users, CheckCircle2, AlertCircle, XCircle, Trophy } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +9,9 @@ import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EngagementWidget } from '@/components/engagement/engagement-widget'
 import { LeadMeasureChart } from '@/components/charts/lead-measure-chart'
+import { WigSessionTimer } from '@/components/cadence/wig-session-timer'
+import { WinningIndicator } from '@/components/ui/trend-arrow'
+import { BlockerWidget } from '@/components/blocker/blocker-widget'
 import { getWigs } from '@/app/actions/wig'
 import { getEngagements } from '@/app/actions/engagement'
 import { getCurrentWeek } from '@/lib/week'
@@ -75,6 +78,7 @@ export function CadenceMeeting() {
   const onTrackWigs = wigs.filter(w => w.status === 'ON_TRACK').length
   const atRiskWigs = wigs.filter(w => w.status === 'AT_RISK').length
   const offTrackWigs = wigs.filter(w => w.status === 'OFF_TRACK').length
+  const achievedWigs = wigs.filter(w => w.status === 'ACHIEVED').length
 
   const completionRate = stats.totalEngagements > 0
     ? Math.round((stats.completedEngagements / stats.totalEngagements) * 100)
@@ -82,6 +86,13 @@ export function CadenceMeeting() {
 
   return (
     <div className="space-y-6">
+      {/* WINNING/LOSING Indicator - 4DX Discipline 3 */}
+      {!isLoading && wigs.length > 0 && (
+        <div className="flex justify-center">
+          <WinningIndicator wigs={wigs} />
+        </div>
+      )}
+
       {/* Week Navigation */}
       <div className="flex items-center justify-between">
         <Button
@@ -141,6 +152,12 @@ export function CadenceMeeting() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="flex items-center gap-3">
+                {achievedWigs > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Trophy className="w-3 h-3 text-status-on-track" />
+                    <span className="text-lg font-bold text-status-on-track">{achievedWigs}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-status-on-track" />
                   <span className="text-lg font-bold">{onTrackWigs}</span>
@@ -263,11 +280,13 @@ export function CadenceMeeting() {
                       <span className="font-medium truncate flex-1">{wig.name}</span>
                       <Badge
                         variant={
+                          wig.status === 'ACHIEVED' ? 'achieved' :
                           wig.status === 'ON_TRACK' ? 'on-track' :
                           wig.status === 'AT_RISK' ? 'at-risk' : 'off-track'
                         }
                       >
-                        {wig.status === 'ON_TRACK' ? 'En bonne voie' :
+                        {wig.status === 'ACHIEVED' ? 'Atteint 🏆' :
+                         wig.status === 'ON_TRACK' ? 'En bonne voie' :
                          wig.status === 'AT_RISK' ? 'À risque' : 'Hors piste'}
                       </Badge>
                     </div>
@@ -357,10 +376,18 @@ export function CadenceMeeting() {
       {/* My Engagements Section */}
       <EngagementWidget />
 
-      {/* Cadence Checklist */}
-      <Card className="border-brand-purple/30 bg-gradient-to-br from-brand-purple/5 to-transparent">
-        <CardHeader>
-          <CardTitle className="text-lg">Agenda de la réunion de Cadence</CardTitle>
+      {/* Obstacles Section - 4DX Phase Clear */}
+      <BlockerWidget />
+
+      {/* WIG Session Timer and Agenda */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* WIG Session Timer - 4DX Discipline 4 */}
+        <WigSessionTimer />
+
+        {/* Cadence Checklist */}
+        <Card className="border-brand-purple/30 bg-gradient-to-br from-brand-purple/5 to-transparent">
+          <CardHeader>
+            <CardTitle className="text-lg">Agenda de la réunion de Cadence</CardTitle>
           <CardDescription>
             Les 5 étapes clés pour une réunion efficace
           </CardDescription>
@@ -405,6 +432,7 @@ export function CadenceMeeting() {
           </ol>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState, useEffect } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createWig, updateWig } from '@/app/actions/wig'
+import { getOrganizationMembers } from '@/app/actions/organization'
+import { useOrganization } from '@/components/providers/organization-provider'
 import type { Wig } from '@prisma/client'
 
 type WigFormData = {
@@ -25,6 +34,12 @@ type WigFormData = {
   unit: string
   startDate: string
   endDate: string
+  ownerId: string
+}
+
+type OrgMember = {
+  id: string
+  profile: { id: string; email: string; fullName: string | null; avatarUrl: string | null }
 }
 
 type WigFormProps = {
@@ -37,13 +52,30 @@ type WigFormProps = {
 export function WigForm({ open, onOpenChange, wig, onSuccess }: WigFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [members, setMembers] = useState<OrgMember[]>([])
+  const { currentOrg } = useOrganization()
 
   const isEditing = !!wig
+
+  // Charger les membres de l'organisation
+  useEffect(() => {
+    async function fetchMembers() {
+      if (!currentOrg?.organizationId) return
+      const result = await getOrganizationMembers(currentOrg.organizationId)
+      if (result.success) {
+        setMembers(result.data)
+      }
+    }
+    if (open) {
+      fetchMembers()
+    }
+  }, [currentOrg?.organizationId, open])
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<WigFormData>({
     defaultValues: wig
@@ -55,6 +87,7 @@ export function WigForm({ open, onOpenChange, wig, onSuccess }: WigFormProps) {
           unit: wig.unit,
           startDate: format(new Date(wig.startDate), 'yyyy-MM-dd'),
           endDate: format(new Date(wig.endDate), 'yyyy-MM-dd'),
+          ownerId: (wig as Wig & { ownerId?: string | null }).ownerId || '',
         }
       : {
           name: '',
@@ -64,6 +97,7 @@ export function WigForm({ open, onOpenChange, wig, onSuccess }: WigFormProps) {
           unit: '',
           startDate: format(new Date(), 'yyyy-MM-dd'),
           endDate: '',
+          ownerId: '',
         },
   })
 
@@ -88,6 +122,7 @@ export function WigForm({ open, onOpenChange, wig, onSuccess }: WigFormProps) {
       unit: data.unit,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
+      ownerId: data.ownerId || undefined, // 4DX: Responsable
     }
 
     const result = isEditing
@@ -146,6 +181,32 @@ export function WigForm({ open, onOpenChange, wig, onSuccess }: WigFormProps) {
                 placeholder="Contexte et détails additionnels"
                 {...register('description')}
               />
+            </div>
+
+            {/* 4DX: Responsable du WIG */}
+            <div className="grid gap-2">
+              <Label htmlFor="ownerId">Responsable</Label>
+              <Controller
+                name="ownerId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un responsable" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.profile.id} value={member.profile.id}>
+                          {member.profile.fullName || member.profile.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                4DX : Chaque WIG doit avoir un responsable clairement identifié
+              </p>
             </div>
 
             <div className="grid grid-cols-3 gap-4">

@@ -56,7 +56,10 @@ export type WigSummary = Pick<
   | 'unit'
   | 'startDate'
   | 'endDate'
->
+> & {
+  ownerId?: string | null
+  owner?: Pick<Profile, 'id' | 'fullName' | 'avatarUrl'> | null
+}
 
 /**
  * Organisation avec le membership de l'utilisateur courant
@@ -88,6 +91,25 @@ export type MemberWithProfile = Membership & {
  */
 export type EngagementWithProfile = Engagement & {
   profile: Pick<Profile, 'id' | 'fullName' | 'avatarUrl'>
+}
+
+/**
+ * Blocker avec le profil du reporter et le WIG associé
+ * Utilisé dans : Page Cadence, section Obstacles
+ */
+export type BlockerWithProfile = {
+  id: string
+  createdAt: Date
+  updatedAt: Date
+  wigId: string
+  reportedById: string
+  description: string
+  status: 'OPEN' | 'ESCALATED' | 'RESOLVED'
+  escalatedTo: string | null
+  resolvedAt: Date | null
+  resolution: string | null
+  reportedBy: Pick<Profile, 'id' | 'fullName' | 'avatarUrl'>
+  wig: Pick<Wig, 'id' | 'name'>
 }
 
 // =============================================================================
@@ -161,6 +183,7 @@ export type CreateWigInput = {
   unit: string
   startDate: Date
   endDate: Date
+  ownerId?: string // 4DX: Responsable du WIG
 }
 
 /**
@@ -169,6 +192,7 @@ export type CreateWigInput = {
 export type UpdateWigInput = Partial<CreateWigInput> & {
   id: string
   currentValue?: number
+  ownerId?: string // 4DX: Responsable du WIG
 }
 
 /**
@@ -180,6 +204,7 @@ export type CreateLeadMeasureInput = {
   description?: string
   targetPerWeek: number
   unit: string
+  assignedToId?: string // 4DX: Responsable de la mesure
 }
 
 /**
@@ -201,6 +226,24 @@ export type CreateEngagementInput = {
   year: number
   weekNumber: number
   description: string
+}
+
+/**
+ * Input pour créer un blocker (obstacle)
+ */
+export type CreateBlockerInput = {
+  wigId: string
+  description: string
+}
+
+/**
+ * Input pour mettre à jour un blocker
+ */
+export type UpdateBlockerInput = {
+  id: string
+  status?: 'OPEN' | 'ESCALATED' | 'RESOLVED'
+  escalatedTo?: string
+  resolution?: string
 }
 
 /**
@@ -360,7 +403,9 @@ export type {
   Profile,
   Organization,
   Membership,
+  Blocker,
   WigStatus,
   MemberRole,
   EngagementStatus,
+  BlockerStatus,
 } from '@prisma/client'

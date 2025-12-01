@@ -4,11 +4,18 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MoreHorizontal, Pencil, Archive, TrendingUp, ChevronRight } from 'lucide-react'
+import { MoreHorizontal, Pencil, Archive, TrendingUp, ChevronRight, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { Avatar, AvatarImage, AvatarFallback, getInitials } from '@/components/ui/avatar'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +31,7 @@ type WigListProps = {
   onRefresh: () => void
 }
 
-function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-track' {
+function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-track' | 'achieved' {
   switch (status) {
     case 'ON_TRACK':
       return 'on-track'
@@ -32,6 +39,10 @@ function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-trac
       return 'at-risk'
     case 'OFF_TRACK':
       return 'off-track'
+    case 'ACHIEVED':
+      return 'achieved'
+    default:
+      return 'at-risk'
   }
 }
 
@@ -43,6 +54,10 @@ function getStatusLabel(status: WigStatus): string {
       return 'À risque'
     case 'OFF_TRACK':
       return 'Hors piste'
+    case 'ACHIEVED':
+      return 'Objectif atteint!'
+    default:
+      return 'Inconnu'
   }
 }
 
@@ -148,6 +163,34 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
                     </p>
                   </div>
                 </div>
+
+                {/* Responsable du WIG */}
+                {wig.owner && (
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              {wig.owner.avatarUrl && (
+                                <AvatarImage src={wig.owner.avatarUrl} alt={wig.owner.fullName || ''} />
+                              )}
+                              <AvatarFallback className="text-xs">
+                                {getInitials(wig.owner.fullName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs text-muted-foreground">
+                              {wig.owner.fullName || 'Responsable'}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Responsable : {wig.owner.fullName}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-2 border-t">
                   <p className="text-xs text-muted-foreground">

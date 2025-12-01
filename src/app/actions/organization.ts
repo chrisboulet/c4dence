@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
+import { sendInvitationEmail } from '@/lib/email'
 import type { ActionResult, MembershipWithOrg, CreateOrganizationInput, InviteMemberInput } from '@/types'
 import type { Organization, MemberRole } from '@prisma/client'
 
@@ -192,7 +193,7 @@ export async function updateOrganization(
  */
 export async function inviteMember(
   input: InviteMemberInput
-): Promise<ActionResult<{ inviteId: string }>> {
+): Promise<ActionResult<{ inviteId: string; emailSent?: boolean }>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -239,6 +240,18 @@ export async function inviteMember(
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + 7) // Expire dans 7 jours
 
+    // Récupérer les informations pour l'email
+    const [organization, inviterProfile] = await Promise.all([
+      prisma.organization.findUnique({
+        where: { id: input.organizationId },
+        select: { name: true },
+      }),
+      prisma.profile.findUnique({
+        where: { id: user.id },
+        select: { fullName: true, email: true },
+      }),
+    ])
+
     const invitation = await prisma.invitation.create({
       data: {
         organizationId: input.organizationId,
@@ -249,10 +262,22 @@ export async function inviteMember(
       },
     })
 
-    // TODO: Envoyer l'email d'invitation via Supabase ou autre service
-    // Pour l'instant, on retourne juste l'ID pour afficher le lien
+    // Envoyer l'email d'invitation via Resend
+    const emailResult = await sendInvitationEmail({
+      to: input.email,
+      organizationName: organization?.name || 'Organisation',
+      inviterName: inviterProfile?.fullName || inviterProfile?.email || 'Un administrateur',
+      token,
+      role: input.role || 'MEMBER',
+    })
 
-    return { success: true, data: { inviteId: invitation.id } }
+    if (!emailResult.success) {
+      console.error('Failed to send invitation email:', emailResult.error)
+      // On ne fait pas échouer l'invitation si l'email échoue
+      // L'admin peut toujours partager le lien manuellement
+    }
+
+    return { success: true, data: { inviteId: invitation.id, emailSent: emailResult.success } }
   } catch (error) {
     console.error('inviteMember error:', error)
     return { success: false, error: "Erreur lors de l'invitation" }

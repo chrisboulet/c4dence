@@ -22,6 +22,8 @@ const badgeVariants = cva(
           'border-transparent bg-status-at-risk/20 text-status-at-risk font-semibold',
         'off-track':
           'border-transparent bg-status-off-track/20 text-status-off-track font-semibold',
+        achieved:
+          'border-transparent bg-status-on-track/20 text-status-on-track font-semibold',
       },
     },
     defaultVariants: {

@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Pencil, Trash2, Target } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Target, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { Avatar, AvatarImage, AvatarFallback, getInitials } from '@/components/ui/avatar'
+import { Alert, AlertIcon, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +16,14 @@ import {
 import { LeadMeasureForm } from './lead-measure-form'
 import { WeeklyInput } from './weekly-input'
 import { deleteLeadMeasure } from '@/app/actions/lead-measure'
-import type { LeadMeasure, WeeklyMeasure } from '@prisma/client'
+import type { LeadMeasure, WeeklyMeasure, Profile } from '@prisma/client'
 
 type LeadMeasureWithWeekly = LeadMeasure & {
   weeklyMeasures: WeeklyMeasure[]
+  assignedTo?: Pick<Profile, 'id' | 'fullName' | 'avatarUrl'> | null
 }
+
+const MAX_RECOMMENDED_LEAD_MEASURES = 3
 
 type LeadMeasureListProps = {
   wigId: string
@@ -76,6 +81,18 @@ export function LeadMeasureList({
 
   return (
     <>
+      {/* Warning 4DX - Trop de Lead Measures */}
+      {leadMeasures.length > MAX_RECOMMENDED_LEAD_MEASURES && (
+        <Alert variant="warning" className="mb-4">
+          <AlertIcon variant="warning" />
+          <AlertTitle>{leadMeasures.length} mesures prédictives</AlertTitle>
+          <AlertDescription>
+            4DX recommande de se concentrer sur{' '}
+            <strong>2-3 mesures prédictives maximum</strong> par WIG pour maximiser l'impact.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4">
         {leadMeasures.map((measure) => {
           const currentValue = getWeeklyValue(
@@ -90,8 +107,21 @@ export function LeadMeasureList({
             <Card key={measure.id}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base">{measure.name}</CardTitle>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">{measure.name}</CardTitle>
+                      {/* Assigné */}
+                      {measure.assignedTo && (
+                        <Avatar className="h-5 w-5" title={`Assigné à: ${measure.assignedTo.fullName}`}>
+                          {measure.assignedTo.avatarUrl && (
+                            <AvatarImage src={measure.assignedTo.avatarUrl} alt={measure.assignedTo.fullName || ''} />
+                          )}
+                          <AvatarFallback className="text-[10px]">
+                            {getInitials(measure.assignedTo.fullName)}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
                     {measure.description && (
                       <p className="text-sm text-muted-foreground">
                         {measure.description}

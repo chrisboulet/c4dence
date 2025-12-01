@@ -321,6 +321,51 @@ export async function getEngagementsSummary(
 }
 
 /**
+ * Compte les engagements de l'utilisateur courant pour une semaine donnée
+ * Utilisé pour la limite 4DX de max 2 engagements par personne par semaine
+ */
+export async function getMyEngagementsCount(
+  year: number,
+  weekNumber: number,
+  organizationId?: string
+): Promise<ActionResult<number>> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non authentifié' }
+    }
+
+    // Trouver l'organisation
+    let orgId = organizationId
+    if (!orgId) {
+      const membership = await prisma.membership.findFirst({
+        where: { profileId: user.id },
+      })
+      if (!membership) {
+        return { success: true, data: 0 }
+      }
+      orgId = membership.organizationId
+    }
+
+    const count = await prisma.engagement.count({
+      where: {
+        profileId: user.id,
+        organizationId: orgId,
+        year,
+        weekNumber,
+      },
+    })
+
+    return { success: true, data: count }
+  } catch (error) {
+    console.error('getMyEngagementsCount error:', error)
+    return { success: false, error: 'Erreur lors du comptage' }
+  }
+}
+
+/**
  * Résumé des engagements de toute l'équipe pour le dashboard
  */
 export async function getTeamEngagementsSummary(
