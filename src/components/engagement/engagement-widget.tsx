@@ -7,28 +7,33 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EngagementForm } from './engagement-form'
 import { EngagementList } from './engagement-list'
+import { useOrganization } from '@/components/providers/organization-provider'
 import { getMyEngagements } from '@/app/actions/engagement'
 import { getCurrentWeek } from '@/lib/week'
 import type { Engagement } from '@prisma/client'
 
 export function EngagementWidget() {
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
   const [engagements, setEngagements] = useState<Engagement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const currentWeek = getCurrentWeek()
 
-  const fetchEngagements = useCallback(async () => {
+  const fetchEngagements = useCallback(async (orgId: string) => {
     setIsLoading(true)
-    const result = await getMyEngagements(currentWeek.year, currentWeek.weekNumber)
+    const result = await getMyEngagements(currentWeek.year, currentWeek.weekNumber, orgId)
     if (result.success) {
       setEngagements(result.data)
     }
     setIsLoading(false)
   }, [currentWeek.year, currentWeek.weekNumber])
 
+  // Re-fetch when organization changes
   useEffect(() => {
-    fetchEngagements()
-  }, [fetchEngagements])
+    if (currentOrg && !isOrgLoading) {
+      fetchEngagements(currentOrg.organizationId)
+    }
+  }, [currentOrg, isOrgLoading, fetchEngagements])
 
   const pendingCount = engagements.filter((e) => e.status === 'PENDING').length
   const completedCount = engagements.filter((e) => e.status === 'COMPLETED').length
@@ -58,7 +63,7 @@ export function EngagementWidget() {
         ) : (
           <EngagementList
             engagements={engagements}
-            onRefresh={fetchEngagements}
+            onRefresh={() => currentOrg && fetchEngagements(currentOrg.organizationId)}
           />
         )}
       </CardContent>
@@ -68,7 +73,7 @@ export function EngagementWidget() {
         onOpenChange={setIsFormOpen}
         year={currentWeek.year}
         weekNumber={currentWeek.weekNumber}
-        onSuccess={fetchEngagements}
+        onSuccess={() => currentOrg && fetchEngagements(currentOrg.organizationId)}
       />
     </Card>
   )

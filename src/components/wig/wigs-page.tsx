@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { WigForm } from './wig-form'
+import { useOrganization } from '@/components/providers/organization-provider'
 import { getWigs } from '@/app/actions/wig'
 import type { WigSummary } from '@/types'
 
@@ -49,22 +50,26 @@ function formatValue(value: number, unit: string): string {
 }
 
 export function WigsPage() {
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
   const [wigs, setWigs] = useState<WigSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
 
-  const fetchWigs = useCallback(async () => {
+  const fetchWigs = useCallback(async (orgId: string) => {
     setIsLoading(true)
-    const result = await getWigs()
+    const result = await getWigs(orgId)
     if (result.success) {
       setWigs(result.data)
     }
     setIsLoading(false)
   }, [])
 
+  // Re-fetch when organization changes
   useEffect(() => {
-    fetchWigs()
-  }, [fetchWigs])
+    if (currentOrg && !isOrgLoading) {
+      fetchWigs(currentOrg.organizationId)
+    }
+  }, [currentOrg, isOrgLoading, fetchWigs])
 
   const onTrack = wigs.filter((w) => w.status === 'ON_TRACK').length
   const atRisk = wigs.filter((w) => w.status === 'AT_RISK').length
@@ -209,7 +214,7 @@ export function WigsPage() {
       <WigForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
-        onSuccess={fetchWigs}
+        onSuccess={() => currentOrg && fetchWigs(currentOrg.organizationId)}
       />
     </div>
   )

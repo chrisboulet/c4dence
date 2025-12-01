@@ -12,6 +12,7 @@ import { LeadMeasureChart } from '@/components/charts/lead-measure-chart'
 import { WigSessionTimer } from '@/components/cadence/wig-session-timer'
 import { WinningIndicator } from '@/components/ui/trend-arrow'
 import { BlockerWidget } from '@/components/blocker/blocker-widget'
+import { useOrganization } from '@/components/providers/organization-provider'
 import { getWigs } from '@/app/actions/wig'
 import { getEngagements } from '@/app/actions/engagement'
 import { getCurrentWeek } from '@/lib/week'
@@ -25,6 +26,7 @@ type WeeklyStats = {
 }
 
 export function CadenceMeeting() {
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
   const [wigs, setWigs] = useState<WigSummary[]>([])
   const [engagements, setEngagements] = useState<EngagementWithProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -45,12 +47,12 @@ export function CadenceMeeting() {
 
   const currentWeek = getWeek()
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (orgId: string) => {
     setIsLoading(true)
 
     const [wigsResult, engagementsResult] = await Promise.all([
-      getWigs(),
-      getEngagements(currentWeek.year, currentWeek.weekNumber),
+      getWigs(orgId),
+      getEngagements(currentWeek.year, currentWeek.weekNumber, orgId),
     ])
 
     if (wigsResult.success) {
@@ -63,9 +65,12 @@ export function CadenceMeeting() {
     setIsLoading(false)
   }, [currentWeek.year, currentWeek.weekNumber])
 
+  // Re-fetch when organization or week changes
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (currentOrg && !isOrgLoading) {
+      fetchData(currentOrg.organizationId)
+    }
+  }, [currentOrg, isOrgLoading, fetchData])
 
   // Stats calculations
   const stats: WeeklyStats = {

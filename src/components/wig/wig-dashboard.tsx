@@ -11,6 +11,7 @@ import { WinningIndicator } from '@/components/ui/trend-arrow'
 import { WigForm } from './wig-form'
 import { WigList } from './wig-list'
 import { EngagementWidget } from '@/components/engagement/engagement-widget'
+import { useOrganization } from '@/components/providers/organization-provider'
 import { getWigs } from '@/app/actions/wig'
 import { getEngagementsSummary } from '@/app/actions/engagement'
 import { getCurrentWeek } from '@/lib/week'
@@ -21,6 +22,7 @@ type WigDashboardProps = {
 }
 
 export function WigDashboard({ initialWigs }: WigDashboardProps) {
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
   const [wigs, setWigs] = useState<WigSummary[]>(initialWigs || [])
   const [isLoading, setIsLoading] = useState(!initialWigs)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -29,31 +31,34 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
   const [previousAchievedCount, setPreviousAchievedCount] = useState(0)
   const currentWeek = getCurrentWeek()
 
-  const fetchWigs = useCallback(async () => {
+  const fetchWigs = useCallback(async (orgId: string) => {
     setIsLoading(true)
-    const result = await getWigs()
+    const result = await getWigs(orgId)
     if (result.success) {
       setWigs(result.data)
     }
     setIsLoading(false)
   }, [])
 
-  const fetchEngagementsSummary = useCallback(async () => {
-    const result = await getEngagementsSummary(currentWeek.year, currentWeek.weekNumber)
+  const fetchEngagementsSummary = useCallback(async (orgId: string) => {
+    const result = await getEngagementsSummary(currentWeek.year, currentWeek.weekNumber, orgId)
     if (result.success) {
       setEngagementPending(result.data.pending)
     }
   }, [currentWeek.year, currentWeek.weekNumber])
 
+  // Re-fetch when organization changes
   useEffect(() => {
-    if (!initialWigs) {
-      fetchWigs()
+    if (currentOrg && !isOrgLoading) {
+      fetchWigs(currentOrg.organizationId)
+      fetchEngagementsSummary(currentOrg.organizationId)
     }
-    fetchEngagementsSummary()
-  }, [initialWigs, fetchWigs, fetchEngagementsSummary])
+  }, [currentOrg, isOrgLoading, fetchWigs, fetchEngagementsSummary])
 
   const handleRefresh = () => {
-    fetchWigs()
+    if (currentOrg) {
+      fetchWigs(currentOrg.organizationId)
+    }
   }
 
   // Calculs KPIs
