@@ -50,6 +50,10 @@ export async function getUserMemberships(): Promise<ActionResult<MembershipWithO
 /**
  * Crée une nouvelle organisation et ajoute l'utilisateur comme OWNER
  */
+// Constantes de validation
+const ORG_NAME_MAX_LENGTH = 100
+const ORG_NAME_MIN_LENGTH = 2
+
 export async function createOrganization(
   input: CreateOrganizationInput
 ): Promise<ActionResult<Organization>> {
@@ -59,6 +63,15 @@ export async function createOrganization(
 
     if (!user) {
       return { success: false, error: 'Non authentifié' }
+    }
+
+    // Validation des entrées
+    const trimmedName = input.name.trim()
+    if (trimmedName.length < ORG_NAME_MIN_LENGTH) {
+      return { success: false, error: `Le nom doit contenir au moins ${ORG_NAME_MIN_LENGTH} caractères` }
+    }
+    if (trimmedName.length > ORG_NAME_MAX_LENGTH) {
+      return { success: false, error: `Le nom ne peut pas dépasser ${ORG_NAME_MAX_LENGTH} caractères` }
     }
 
     // S'assurer que le profil existe
@@ -76,7 +89,7 @@ export async function createOrganization(
     }
 
     // Générer un slug unique
-    const baseSlug = input.slug || input.name.toLowerCase()
+    const baseSlug = input.slug || trimmedName.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
     const slug = `${baseSlug}-${Date.now().toString(36)}`
@@ -84,7 +97,7 @@ export async function createOrganization(
     // Créer l'organisation avec le membership OWNER
     const organization = await prisma.organization.create({
       data: {
-        name: input.name,
+        name: trimmedName,
         slug,
         memberships: {
           create: {
@@ -219,8 +232,10 @@ export async function inviteMember(
       }
     }
 
-    // Créer l'invitation
-    const token = crypto.randomUUID()
+    // Créer l'invitation avec token sécurisé (256 bits d'entropie)
+    const tokenBytes = new Uint8Array(32)
+    crypto.getRandomValues(tokenBytes)
+    const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('')
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + 7) // Expire dans 7 jours
 
