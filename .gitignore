@@ -41,6 +41,10 @@ next-env.d.ts
 .idea
 .vscode
 
+# Local configs
+.mcp.json
+.claude/settings.local.json
+
 # Prisma
 prisma/migrations/**/migration_lock.toml
 
