@@ -42,7 +42,7 @@ C4DENCE utilise trois niveaux de rôles :
    - Le logo (à venir)
 3. Cliquez sur **Enregistrer**
 
-![Paramètres](../docs/images/18-settings-desktop.png)
+![Paramètres](images/18-settings-desktop.png)
 
 ### Configurer le jour et l'heure de cadence
 

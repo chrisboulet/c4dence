@@ -5,10 +5,10 @@
 **Tagline FR** : Le rythme de votre exécution  
 **Tagline EN** : The rhythm of your execution  
 
-**Version** : 2.0 (Revue critique novembre 2025)  
-**Date** : 30 novembre 2025  
-**Auteur** : Boulet Stratégies TI  
-**Statut** : Architecture validée, prêt pour développement
+**Version** : 3.0 (Post-lancement décembre 2025)
+**Date** : 1 décembre 2025
+**Auteur** : Boulet Stratégies TI
+**Statut** : Application en production — https://c4dence.bouletstrategies.ca
 
 ---
 
@@ -31,28 +31,29 @@ En tant que Fractional CTO servant plusieurs clients PME, tu dois :
 ### Différenciateur Clé
 Cette application est **TDAH-optimisée** : pas de features inutiles, friction minimale, gamification intelligente pour maintenir l'engagement.
 
-### Stack Technique (Validée novembre 2025)
+### Stack Technique (Production décembre 2025)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     STACK C4DENCE v2                         │
+│                     STACK C4DENCE v3                         │
 ├─────────────────────────────────────────────────────────────┤
 │  FRONTEND                                                    │
-│  ├─ Next.js 15.5 (App Router, Turbopack)                    │
-│  ├─ React 19 (Server Components par défaut)                 │
-│  ├─ Tailwind CSS 3.4                                        │
+│  ├─ Next.js 16 (App Router, Turbopack)                      │
+│  ├─ React 19.2 (Server Components par défaut)               │
+│  ├─ Tailwind CSS 4                                          │
 │  ├─ shadcn/ui (composants de base)                          │
-│  └─ Tremor (charts + dashboard components)                  │
+│  └─ Tremor 3.18 (charts + dashboard components)             │
 │                                                              │
 │  DATA LAYER                                                  │
-│  ├─ Prisma 6 (ORM)                                          │
-│  ├─ TanStack Query 5 (cache client + optimistic updates)   │
+│  ├─ Prisma 7 (ORM avec adapter-pg)                          │
+│  ├─ TanStack Query 5 (cache client + optimistic updates)    │
 │  └─ Server Actions (mutations)                              │
 │                                                              │
 │  BACKEND                                                     │
 │  ├─ Supabase PostgreSQL                                     │
 │  ├─ Supabase Auth (@supabase/ssr)                           │
-│  └─ Row Level Security (multi-tenant)                       │
+│  ├─ Row Level Security (multi-tenant)                       │
+│  └─ Resend (emails transactionnels)                         │
 │                                                              │
 │  DEPLOY                                                      │
 │  └─ Vercel (Edge Network, Turbopack)                        │
@@ -223,17 +224,18 @@ Cette application est **TDAH-optimisée** : pas de features inutiles, friction m
 
 ## 4. Architecture Technique
 
-### 4.1 Pourquoi ce Stack? (Validations novembre 2025)
+### 4.1 Pourquoi ce Stack? (Production décembre 2025)
 
 | Composant | Choix | Justification |
 |-----------|-------|---------------|
-| **Next.js 15.5** | Framework | Turbopack stable, React 19 natif, Server Actions, typed routes |
-| **React 19** | UI | Server Components par défaut, hook `use()`, React Compiler |
-| **Prisma 6** | ORM | Type-checking rapide (précompilé), migrations robustes, DX mature |
-| **Supabase** | Backend | PostgreSQL + Auth + RLS gratuit, parfait multi-tenant |
+| **Next.js 16** | Framework | Turbopack stable, React 19 natif, Server Actions, typed routes |
+| **React 19.2** | UI | Server Components par défaut, hook `use()`, React Compiler |
+| **Prisma 7** | ORM | adapter-pg pour Supabase Pooler, fullTextSearchPostgres |
+| **Supabase** | Backend | PostgreSQL + Auth (Google OAuth) + RLS multi-tenant |
 | **TanStack Query 5** | Cache | Standard industrie pour cache client + optimistic updates |
 | **shadcn/ui** | Composants base | Copy-paste, pas de lock-in, Tailwind-native |
-| **Tremor** | Charts/Dashboard | Wrapper Recharts + composants dashboard prêts à l'emploi |
+| **Tremor 3.18** | Charts/Dashboard | Wrapper Recharts + composants dashboard prêts à l'emploi |
+| **Resend** | Emails | Emails transactionnels pour invitations |
 | **Vercel** | Hosting | Zero-config, Turbopack natif, preview deployments |
 
 ### 4.2 Patterns 2025 : RSC-First
@@ -846,7 +848,7 @@ npx prisma init
 npm run dev
 ```
 
-### 5.3 Package.json Recommandé
+### 5.3 Package.json (Production décembre 2025)
 
 ```json
 {
@@ -854,45 +856,47 @@ npm run dev
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "lint": "next lint"
   },
   "dependencies": {
-    "next": "^15.5.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@supabase/supabase-js": "^2.45.0",
-    "@supabase/ssr": "^0.5.0",
-    "@prisma/client": "^6.0.0",
-    "@tanstack/react-query": "^5.60.0",
-    "@tremor/react": "^3.18.0",
+    "next": "^16.0.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@supabase/supabase-js": "^2.86.0",
+    "@supabase/ssr": "^0.8.0",
+    "@prisma/client": "^7.0.1",
+    "@prisma/adapter-pg": "^7.0.1",
+    "pg": "^8.16.3",
+    "@tanstack/react-query": "^5.90.11",
+    "@tremor/react": "^3.18.7",
+    "resend": "^6.5.2",
     "date-fns": "^4.1.0",
-    "zod": "^3.23.0",
-    "react-hook-form": "^7.53.0",
-    "@hookform/resolvers": "^3.9.0",
-    "lucide-react": "^0.460.0",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.5.0"
+    "zod": "^4.1.13",
+    "react-hook-form": "^7.67.0",
+    "@hookform/resolvers": "^5.2.2",
+    "lucide-react": "^0.555.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.4.0",
+    "sonner": "^2.0.7",
+    "react-confetti": "^6.4.0",
+    "next-themes": "^0.4.6"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
-    "@types/node": "^22.0.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "prisma": "^6.0.0",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "^15.0.0",
-    "tsx": "^4.19.0"
+    "typescript": "^5.9.3",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "prisma": "^7.0.1",
+    "tailwindcss": "^4.1.17",
+    "postcss": "^8.5.6",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.0.5",
+    "tsx": "^4.20.6"
   }
 }
 ```
@@ -1496,28 +1500,33 @@ Redirect URLs:
 | 3 | Responsive mobile | 🟡 |
 | 4 | Tests manuels + corrections bugs | 🔴 |
 
-### Definition of Done MVP
+### Definition of Done MVP — ✅ COMPLÉTÉ
 
-- [ ] Je peux me connecter avec email/password
-- [ ] Je vois tous mes WIGs avec leur statut couleur
-- [ ] Je peux créer un nouveau WIG
-- [ ] Je peux voir le scoreboard d'un WIG avec graphique
-- [ ] Je peux saisir les Lead Measures de la semaine
-- [ ] Je peux gérer mes engagements hebdomadaires
-- [ ] L'app est déployée sur Vercel et accessible publiquement
+- [x] Je peux me connecter avec Google OAuth
+- [x] Je vois tous mes WIGs avec leur statut couleur
+- [x] Je peux créer un nouveau WIG
+- [x] Je peux voir le scoreboard d'un WIG avec graphique
+- [x] Je peux saisir les Lead Measures de la semaine
+- [x] Je peux gérer mes engagements hebdomadaires
+- [x] L'app est déployée sur Vercel et accessible publiquement
 
-### Phase 2 : Multi-Client (4 semaines)
+### Phase 2 : Multi-Client — ✅ COMPLÉTÉ
 
-- Système multi-tenant complet (organisations, invitations)
-- Portail client (accès limité au scoreboard)
-- Exports PDF
-- Intégration Google Calendar
+- [x] Système multi-tenant complet (organisations)
+- [x] Invitations par email (via Resend)
+- [x] Rôles : Owner / Admin / Member
+- [x] Sélecteur d'organisation
+- [x] Page Cadence avec timer et agenda 4DX
+- [x] Gestion des obstacles (Blockers)
+- [ ] Exports PDF (à venir)
+- [ ] Intégration Google Calendar (à venir)
 
-### Phase 3 : Intelligence (4 semaines)
+### Phase 3 : Intelligence (Roadmap)
 
-- Intégration Claude API pour suggestions de déblocage
-- Analytics avancés (patterns de succès/échec)
-- Notifications intelligentes + rappels adaptatifs
+- [ ] Intégration Claude API pour suggestions de déblocage
+- [ ] Analytics avancés (patterns de succès/échec)
+- [ ] Notifications intelligentes + rappels adaptatifs
+- [ ] API publique
 
 ---
 
@@ -1593,5 +1602,5 @@ Configure Supabase Auth avec Next.js 15 App Router:
 
 ---
 
-*Document généré le 29 novembre 2025 — Boulet Stratégies TI*
-*Version 2.0 — Architecture validée avec best practices novembre 2025*
+*Document mis à jour le 1 décembre 2025 — Boulet Stratégies TI*
+*Version 3.0 — Application en production sur https://c4dence.bouletstrategies.ca*

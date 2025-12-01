@@ -1,926 +1,520 @@
 # 🧩 C4DENCE — Catalogue des Composants UI
 
-**Version** : 1.0  
-**Date** : 30 novembre 2025  
+**Version** : 2.0
+**Date** : 1er décembre 2025
 **Usage** : Référence pour Claude Code — éviter les duplications, garantir la cohérence
 
 ---
 
-## 1. Architecture des Composants
+## 1. Architecture des Composants (Réelle)
 
 ```
-src/
-├── components/
-│   ├── ui/                    # shadcn/ui (NE PAS MODIFIER)
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── input.tsx
-│   │   ├── label.tsx
-│   │   ├── dialog.tsx
-│   │   ├── dropdown-menu.tsx
-│   │   ├── tabs.tsx
-│   │   ├── badge.tsx
-│   │   ├── progress.tsx
-│   │   ├── skeleton.tsx
-│   │   ├── avatar.tsx
-│   │   ├── separator.tsx
-│   │   └── tooltip.tsx
-│   │
-│   ├── layout/                # Structure de page
-│   │   ├── app-shell.tsx
-│   │   ├── sidebar.tsx
-│   │   ├── header.tsx
-│   │   ├── nav-link.tsx
-│   │   └── page-header.tsx
-│   │
-│   ├── charts/                # Visualisations (Tremor)
-│   │   ├── beat-the-goat.tsx
-│   │   ├── lead-measure-chart.tsx
-│   │   ├── week-tracker.tsx
-│   │   └── trend-badge.tsx
-│   │
-│   ├── cards/                 # Cartes métier
-│   │   ├── wig-card.tsx
-│   │   ├── lead-measure-card.tsx
-│   │   ├── engagement-card.tsx
-│   │   ├── kpi-card.tsx
-│   │   └── member-card.tsx
-│   │
-│   ├── forms/                 # Formulaires
-│   │   ├── wig-form.tsx
-│   │   ├── lead-measure-form.tsx
-│   │   ├── weekly-input.tsx
-│   │   ├── engagement-form.tsx
-│   │   └── organization-form.tsx
-│   │
-│   ├── tables/                # Tableaux
-│   │   ├── lead-measures-table.tsx
-│   │   ├── engagements-table.tsx
-│   │   └── members-table.tsx
-│   │
-│   └── shared/                # Composants partagés
-│       ├── status-badge.tsx
-│       ├── empty-state.tsx
-│       ├── confirm-dialog.tsx
-│       ├── date-range-picker.tsx
-│       └── week-selector.tsx
+src/components/
+├── ui/                       # shadcn/ui + composants UI custom
+│   ├── alert.tsx
+│   ├── alert-dialog.tsx
+│   ├── avatar.tsx
+│   ├── badge.tsx
+│   ├── button.tsx
+│   ├── card.tsx
+│   ├── confetti-celebration.tsx  # Custom - animations de succès
+│   ├── dialog.tsx
+│   ├── dropdown-menu.tsx
+│   ├── input.tsx
+│   ├── label.tsx
+│   ├── progress.tsx
+│   ├── select.tsx
+│   ├── skeleton.tsx
+│   ├── textarea.tsx
+│   ├── tooltip.tsx
+│   └── trend-arrow.tsx           # Custom - indicateur tendance
+│
+├── providers/                # Contexts React
+│   ├── index.tsx                 # Export combiné
+│   ├── organization-provider.tsx # Multi-org context
+│   └── query-provider.tsx        # TanStack Query
+│
+├── layout/                   # Structure de page
+│   ├── header.tsx               # Barre supérieure
+│   └── organization-switcher.tsx # Sélecteur d'org
+│
+├── wig/                      # Objectifs ambitieux (WIGs)
+│   ├── wigs-page.tsx            # Liste complète des WIGs
+│   ├── wig-dashboard.tsx        # Dashboard avec stats
+│   ├── wig-detail.tsx           # Détail d'un WIG
+│   ├── wig-list.tsx             # Liste simple
+│   ├── wig-form.tsx             # Création/édition
+│   └── update-value-dialog.tsx  # Mise à jour valeur actuelle
+│
+├── lead-measure/             # Mesures prédictives
+│   ├── lead-measure-list.tsx    # Liste des mesures
+│   ├── lead-measure-form.tsx    # Création/édition
+│   └── weekly-input.tsx         # Saisie hebdomadaire
+│
+├── engagement/               # Engagements d'équipe
+│   ├── engagement-widget.tsx    # Widget dashboard
+│   ├── engagement-list.tsx      # Liste des engagements
+│   └── engagement-form.tsx      # Création d'engagement
+│
+├── blocker/                  # Obstacles (4DX "Clear")
+│   ├── blocker-widget.tsx       # Widget dashboard
+│   ├── blocker-list.tsx         # Liste des blockers
+│   └── blocker-form.tsx         # Signalement d'obstacle
+│
+├── cadence/                  # Réunions de cadence
+│   ├── cadence-meeting.tsx      # Page réunion complète
+│   └── wig-session-timer.tsx    # Timer focus WIG
+│
+└── charts/                   # Visualisations
+    ├── progress-chart.tsx       # Progression WIG
+    └── lead-measure-chart.tsx   # Barres mesures prédictives
 ```
 
 ---
 
-## 2. Composants Layout
+## 2. Providers (Contexts)
 
-### 2.1 AppShell
+### 2.1 OrganizationProvider
 
-**Fichier** : `components/layout/app-shell.tsx`  
-**Rôle** : Structure principale de l'application (sidebar + contenu)
-
-```typescript
-// Usage
-<AppShell>
-  <AppShell.Sidebar>
-    <Sidebar />
-  </AppShell.Sidebar>
-  <AppShell.Content>
-    {children}
-  </AppShell.Content>
-</AppShell>
-
-// Props
-interface AppShellProps {
-  children: React.ReactNode
-}
-```
-
-**Comportement** :
-- Sidebar collapsible sur mobile (hamburger menu)
-- Sidebar fixe sur desktop (240px)
-- Responsive breakpoint : `md` (768px)
-
----
-
-### 2.2 Sidebar
-
-**Fichier** : `components/layout/sidebar.tsx`  
-**Rôle** : Navigation principale + sélecteur d'organisation
+**Fichier** : `components/providers/organization-provider.tsx`
+**Rôle** : Gestion du contexte multi-organisation
 
 ```typescript
-// Props
-interface SidebarProps {
+// Hook exposé
+const { currentOrg, organizations, setCurrentOrg, isLoading } = useOrganization()
+
+// Type retourné
+interface OrganizationContext {
+  currentOrg: OrganizationWithRole | null
   organizations: OrganizationWithRole[]
-  currentOrgId: string
-  user: Pick<Profile, 'fullName' | 'email' | 'avatarUrl'>
+  setCurrentOrg: (org: OrganizationWithRole) => void
+  isLoading: boolean
 }
-
-// Sections
-1. Logo C4DENCE
-2. Sélecteur d'organisation (dropdown)
-3. Navigation principale :
-   - Tableau de bord (/)
-   - Objectifs (/wig)
-   - Cadence (/cadence)
-   - Équipe (/team)
-   - Paramètres (/settings)
-4. Profil utilisateur (bas)
 ```
 
-**États** :
-- Expanded (desktop default)
-- Collapsed (mobile default, toggle)
+**Comportement clé** :
+- Persiste l'org sélectionnée dans localStorage
+- Tous les composants métier doivent utiliser `currentOrg.organizationId` pour les requêtes
+- Re-fetch automatique quand l'org change
 
 ---
 
-### 2.3 PageHeader
+### 2.2 QueryProvider
 
-**Fichier** : `components/layout/page-header.tsx`  
-**Rôle** : En-tête de page avec titre, description et actions
+**Fichier** : `components/providers/query-provider.tsx`
+**Rôle** : Wrapper TanStack Query
 
 ```typescript
-// Props
-interface PageHeaderProps {
-  title: string
-  description?: string
-  actions?: React.ReactNode  // Boutons d'action
-  breadcrumbs?: Array<{ label: string; href?: string }>
-}
+// Configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,      // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+})
+```
 
+---
+
+## 3. Composants Layout
+
+### 3.1 Header
+
+**Fichier** : `components/layout/header.tsx`
+**Rôle** : Barre supérieure avec navigation et profil
+
+**Contenu** :
+- Logo C4DENCE (lien vers dashboard)
+- Navigation principale (liens vers les sections)
+- Profil utilisateur avec menu dropdown
+
+---
+
+### 3.2 OrganizationSwitcher
+
+**Fichier** : `components/layout/organization-switcher.tsx`
+**Rôle** : Dropdown pour changer d'organisation
+
+```typescript
 // Usage
-<PageHeader
-  title="Objectifs ambitieux"
-  description="Gérez vos WIGs et suivez leur progression"
-  actions={
-    <Button>
-      <Plus className="mr-2 h-4 w-4" />
-      Nouveau WIG
-    </Button>
-  }
-/>
+<OrganizationSwitcher />  // Utilise useOrganization() en interne
 ```
 
 ---
 
-### 2.4 NavLink
+## 4. Composants WIG
 
-**Fichier** : `components/layout/nav-link.tsx`  
-**Rôle** : Lien de navigation avec état actif
+### 4.1 WigsPage
 
+**Fichier** : `components/wig/wigs-page.tsx`
+**Rôle** : Page complète listant tous les WIGs avec statistiques
+
+**Contenu** :
+1. Cartes stats : Total, En bonne voie, À risque, Hors piste
+2. Liste des WIGs avec progression et statut
+3. Bouton "Nouveau WIG" ouvrant WigForm
+
+**Pattern data-fetching** :
 ```typescript
-// Props
-interface NavLinkProps {
-  href: string
-  icon: LucideIcon
-  label: string
-  badge?: number  // Notification count
-}
-
-// Usage
-<NavLink 
-  href="/wig" 
-  icon={Target} 
-  label="Objectifs"
-  badge={3}  // 3 WIGs à risque
-/>
-```
-
-**États visuels** :
-- Default : `text-muted-foreground`
-- Hover : `bg-accent`
-- Active : `bg-primary/10 text-primary font-medium`
-
----
-
-## 3. Composants Charts (Tremor)
-
-### 3.1 BeatTheGoat
-
-**Fichier** : `components/charts/beat-the-goat.tsx`  
-**Rôle** : Graphique progression réelle vs cible (WIG principal)
-
-```typescript
-// Props
-interface BeatTheGoatProps {
-  wig: WigWithMeasures
-  className?: string
-}
-
-// Données générées
-- Axe X : Semaines (S1 à S52)
-- Ligne bleue : Progression réelle
-- Ligne grise pointillée : Progression cible (linéaire)
-- Zone verte/rouge : Écart positif/négatif
-```
-
-**Composants Tremor utilisés** :
-- `AreaChart`
-- `Card`
-- `Title`
-- `Text`
-
-**Calcul** :
-```typescript
-// Progression cible à la semaine N
-const targetAtWeek = startValue + (targetValue - startValue) * (weekN / totalWeeks)
-
-// Progression réelle
-const actualAtWeek = currentValue // ou calculé depuis lead measures
+const { currentOrg } = useOrganization()
+useEffect(() => {
+  if (currentOrg) fetchWigs(currentOrg.organizationId)
+}, [currentOrg])
 ```
 
 ---
 
-### 3.2 LeadMeasureChart
+### 4.2 WigDashboard
 
-**Fichier** : `components/charts/lead-measure-chart.tsx`  
-**Rôle** : Barres hebdomadaires pour une mesure prédictive
-
-```typescript
-// Props
-interface LeadMeasureChartProps {
-  leadMeasure: LeadMeasureWithWeekly
-  weeksToShow?: number  // Default: 12
-  className?: string
-}
-
-// Affichage
-- Barres verticales par semaine
-- Ligne horizontale : cible hebdo
-- Couleur : vert si >= cible, rouge si < cible
-```
-
-**Composants Tremor utilisés** :
-- `BarChart`
-- `Card`
+**Fichier** : `components/wig/wig-dashboard.tsx`
+**Rôle** : Vue dashboard condensée des WIGs pour la page d'accueil
 
 ---
 
-### 3.3 WeekTracker
+### 4.3 WigDetail
 
-**Fichier** : `components/charts/week-tracker.tsx`  
-**Rôle** : Grille style "GitHub contributions" pour visualiser l'historique
-
-```typescript
-// Props
-interface WeekTrackerProps {
-  data: WeeklyStatusPoint[]  // 52 semaines
-  className?: string
-}
-
-// Affichage
-- Grille 52 carrés (1 par semaine)
-- Couleurs : vert (>=90%), jaune (70-90%), rouge (<70%), gris (pas de données)
-```
-
-**Composants Tremor utilisés** :
-- `Tracker`
+**Fichier** : `components/wig/wig-detail.tsx`
+**Rôle** : Détail complet d'un WIG avec ses lead measures
 
 ---
 
-### 3.4 TrendBadge
+### 4.4 WigForm
 
-**Fichier** : `components/charts/trend-badge.tsx`  
-**Rôle** : Badge avec flèche de tendance (hausse/baisse)
-
-```typescript
-// Props
-interface TrendBadgeProps {
-  value: number        // Valeur actuelle
-  previousValue: number // Valeur précédente
-  format?: 'percent' | 'number' | 'currency'
-  className?: string
-}
-
-// Affichage
-- Flèche ↑ verte si hausse
-- Flèche ↓ rouge si baisse
-- → gris si stable (±2%)
-- Valeur du delta formatée
-```
-
-**Composants Tremor utilisés** :
-- `BadgeDelta`
-
----
-
-## 4. Composants Cards
-
-### 4.1 WigCard
-
-**Fichier** : `components/cards/wig-card.tsx`  
-**Rôle** : Carte résumé d'un WIG pour le dashboard
+**Fichier** : `components/wig/wig-form.tsx`
+**Rôle** : Dialog pour créer ou modifier un WIG
 
 ```typescript
-// Props
-interface WigCardProps {
-  wig: WigSummary
-  onClick?: () => void
-  className?: string
-}
-
-// Contenu
-1. StatusBadge (coin supérieur droit)
-2. Nom du WIG
-3. Progression : "2.75M$ / 3.2M$" avec unité
-4. ProgressBar visuelle
-5. Date d'échéance : "Échéance : 31 déc. 2025"
-6. Nombre de lead measures actives
-```
-
-**États** :
-- `ON_TRACK` : bordure verte
-- `AT_RISK` : bordure jaune
-- `OFF_TRACK` : bordure rouge
-
----
-
-### 4.2 LeadMeasureCard
-
-**Fichier** : `components/cards/lead-measure-card.tsx`  
-**Rôle** : Carte pour une mesure prédictive avec entrée rapide
-
-```typescript
-// Props
-interface LeadMeasureCardProps {
-  leadMeasure: LeadMeasureWithWeekly
-  currentWeek: { year: number; weekNumber: number }
-  onUpdate: (value: number) => void
-  className?: string
-}
-
-// Contenu
-1. Nom de la mesure
-2. Cible : "50 appels/semaine"
-3. Cette semaine : Input numérique éditable
-4. Mini-chart des 4 dernières semaines
-5. Tendance (TrendBadge)
-```
-
----
-
-### 4.3 EngagementCard
-
-**Fichier** : `components/cards/engagement-card.tsx`  
-**Rôle** : Carte d'un engagement avec statut
-
-```typescript
-// Props
-interface EngagementCardProps {
-  engagement: EngagementWithProfile
-  onStatusChange?: (status: EngagementStatus) => void
-  isEditable?: boolean
-  className?: string
-}
-
-// Contenu
-1. Avatar + nom de la personne
-2. Description de l'engagement
-3. StatusBadge (PENDING/COMPLETED/MISSED)
-4. Boutons d'action si éditable :
-   - ✓ Complété
-   - ✗ Manqué
-   - Notes de suivi
-```
-
----
-
-### 4.4 KpiCard
-
-**Fichier** : `components/cards/kpi-card.tsx`  
-**Rôle** : Carte KPI générique (métrique + tendance)
-
-```typescript
-// Props
-interface KpiCardProps {
-  title: string
-  value: string | number
-  previousValue?: number
-  icon?: LucideIcon
-  format?: 'number' | 'percent' | 'currency'
-  className?: string
-}
-
-// Usage
-<KpiCard
-  title="Taux de complétion"
-  value={85}
-  previousValue={78}
-  icon={CheckCircle}
-  format="percent"
-/>
-```
-
-**Composants Tremor utilisés** :
-- `Card`
-- `Metric`
-- `Text`
-- `BadgeDelta`
-
----
-
-### 4.5 MemberCard
-
-**Fichier** : `components/cards/member-card.tsx`  
-**Rôle** : Carte membre d'équipe
-
-```typescript
-// Props
-interface MemberCardProps {
-  member: MemberWithProfile
-  onRoleChange?: (role: MemberRole) => void
-  onRemove?: () => void
-  canManage?: boolean
-  className?: string
-}
-
-// Contenu
-1. Avatar
-2. Nom complet
-3. Email
-4. Badge rôle (OWNER/ADMIN/MEMBER)
-5. Menu actions si canManage
-```
-
----
-
-## 5. Composants Forms
-
-### 5.1 WigForm
-
-**Fichier** : `components/forms/wig-form.tsx`  
-**Rôle** : Création/édition d'un WIG
-
-```typescript
-// Props
 interface WigFormProps {
-  wig?: Wig  // Si fourni = mode édition
-  onSubmit: (data: CreateWigInput | UpdateWigInput) => Promise<void>
-  onCancel: () => void
-  isLoading?: boolean
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  wig?: Wig                    // Si fourni = mode édition
+  onSuccess?: () => void       // Callback après succès
 }
-
-// Champs
-1. name* : Input text (max 100 chars)
-2. description : Textarea (optionnel)
-3. startValue* : Input number + unit
-4. targetValue* : Input number
-5. unit* : Select (prédéfinis + custom)
-6. startDate* : DatePicker
-7. endDate* : DatePicker
-
-// Validation Zod
-- targetValue > startValue
-- endDate > startDate
-- endDate <= 2 ans dans le futur
 ```
+
+**Champs** :
+- `name` : Nom du WIG
+- `description` : Description optionnelle
+- `startValue` : Valeur de départ
+- `targetValue` : Valeur cible
+- `currentValue` : Valeur actuelle
+- `unit` : Unité de mesure
+- `startDate` / `endDate` : Période
+
+---
+
+### 4.5 UpdateValueDialog
+
+**Fichier** : `components/wig/update-value-dialog.tsx`
+**Rôle** : Dialog simple pour mettre à jour la valeur actuelle d'un WIG
+
+---
+
+## 5. Composants Lead Measure
+
+### 5.1 LeadMeasureList
+
+**Fichier** : `components/lead-measure/lead-measure-list.tsx`
+**Rôle** : Liste des mesures prédictives d'un WIG
 
 ---
 
 ### 5.2 LeadMeasureForm
 
-**Fichier** : `components/forms/lead-measure-form.tsx`  
-**Rôle** : Création/édition d'une mesure prédictive
+**Fichier** : `components/lead-measure/lead-measure-form.tsx`
+**Rôle** : Dialog pour créer/modifier une mesure prédictive
 
 ```typescript
-// Props
 interface LeadMeasureFormProps {
   wigId: string
-  leadMeasure?: LeadMeasure  // Si fourni = mode édition
-  onSubmit: (data: CreateLeadMeasureInput) => Promise<void>
-  onCancel: () => void
-  isLoading?: boolean
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  leadMeasure?: LeadMeasure    // Mode édition si fourni
+  onSuccess?: () => void
 }
-
-// Champs
-1. name* : Input text
-2. description : Textarea
-3. targetPerWeek* : Input number
-4. unit* : Input text (ex: "appels", "démos", "$")
 ```
 
 ---
 
 ### 5.3 WeeklyInput
 
-**Fichier** : `components/forms/weekly-input.tsx`  
-**Rôle** : Saisie rapide de la valeur hebdomadaire (inline)
+**Fichier** : `components/lead-measure/weekly-input.tsx`
+**Rôle** : Input inline pour saisir la valeur hebdomadaire
 
-```typescript
-// Props
-interface WeeklyInputProps {
-  leadMeasureId: string
-  currentValue?: number
-  target: number
-  unit: string
-  week: { year: number; weekNumber: number }
-  onSave: (value: number) => Promise<void>
-}
-
-// Comportement
-- Input numérique compact
-- Sauvegarde sur blur ou Enter
-- Indicateur visuel vs cible (vert/rouge)
-- Loading state pendant sauvegarde
-```
+**Comportement** :
+- Sauvegarde automatique sur blur
+- Indicateur visuel vert/rouge vs cible
 
 ---
 
-### 5.4 EngagementForm
+## 6. Composants Engagement
 
-**Fichier** : `components/forms/engagement-form.tsx`  
-**Rôle** : Création d'un engagement lors de la cadence
+### 6.1 EngagementWidget
+
+**Fichier** : `components/engagement/engagement-widget.tsx`
+**Rôle** : Widget compact pour le dashboard montrant les engagements de la semaine
+
+**Affichage** :
+- Titre avec semaine courante
+- Compteur complétés/total
+- Liste des engagements
+- Bouton "Ajouter"
+
+---
+
+### 6.2 EngagementList
+
+**Fichier** : `components/engagement/engagement-list.tsx`
+**Rôle** : Liste des engagements avec actions
+
+---
+
+### 6.3 EngagementForm
+
+**Fichier** : `components/engagement/engagement-form.tsx`
+**Rôle** : Dialog pour créer un engagement
 
 ```typescript
-// Props
 interface EngagementFormProps {
-  organizationId: string
-  week: { year: number; weekNumber: number }
-  onSubmit: (data: CreateEngagementInput) => Promise<void>
-  onCancel: () => void
-  isLoading?: boolean
-}
-
-// Champs
-1. description* : Textarea (max 500 chars)
-   - Placeholder : "Je m'engage à..."
-   - Auto-focus
-
-// UX
-- Soumission : Ctrl+Enter ou bouton
-- Validation : non vide, max 500 chars
-```
-
----
-
-## 6. Composants Tables
-
-### 6.1 LeadMeasuresTable
-
-**Fichier** : `components/tables/lead-measures-table.tsx`  
-**Rôle** : Tableau des mesures prédictives d'un WIG
-
-```typescript
-// Props
-interface LeadMeasuresTableProps {
-  leadMeasures: LeadMeasureWithWeekly[]
-  currentWeek: { year: number; weekNumber: number }
-  onUpdate: (id: string, value: number) => Promise<void>
-  onEdit?: (id: string) => void
-  onDelete?: (id: string) => void
-  canManage?: boolean
-}
-
-// Colonnes
-1. Nom de la mesure
-2. Cible/semaine
-3. S-3, S-2, S-1, Cette semaine (4 dernières)
-4. Tendance
-5. Actions (si canManage)
-
-// Features
-- Édition inline des valeurs
-- Tri par nom ou performance
-- Highlight semaine courante
-```
-
----
-
-### 6.2 EngagementsTable
-
-**Fichier** : `components/tables/engagements-table.tsx`  
-**Rôle** : Tableau des engagements d'une semaine
-
-```typescript
-// Props
-interface EngagementsTableProps {
-  engagements: EngagementWithProfile[]
-  onStatusChange: (id: string, status: EngagementStatus) => Promise<void>
-  currentUserId: string  // Pour identifier ses propres engagements
-}
-
-// Colonnes
-1. Membre (avatar + nom)
-2. Engagement (description)
-3. Statut (badge)
-4. Actions (si propriétaire)
-
-// Groupement
-- Par statut : PENDING en haut, puis COMPLETED, puis MISSED
-```
-
----
-
-## 7. Composants Shared
-
-### 7.1 StatusBadge
-
-**Fichier** : `components/shared/status-badge.tsx`  
-**Rôle** : Badge de statut coloré (WIG ou Engagement)
-
-```typescript
-// Props
-interface StatusBadgeProps {
-  status: WigStatus | EngagementStatus
-  size?: 'sm' | 'md' | 'lg'
-  showLabel?: boolean  // Afficher le texte ou juste la couleur
-}
-
-// Mapping WigStatus
-- ON_TRACK  → 🟢 "En bonne voie"
-- AT_RISK   → 🟡 "À risque"
-- OFF_TRACK → 🔴 "Hors piste"
-
-// Mapping EngagementStatus
-- PENDING   → ⏳ "En attente"
-- COMPLETED → ✅ "Complété"
-- MISSED    → ❌ "Manqué"
-- CANCELLED → 🚫 "Annulé"
-```
-
----
-
-### 7.2 EmptyState
-
-**Fichier** : `components/shared/empty-state.tsx`  
-**Rôle** : État vide avec illustration et CTA
-
-```typescript
-// Props
-interface EmptyStateProps {
-  icon?: LucideIcon
-  title: string
-  description?: string
-  action?: {
-    label: string
-    onClick: () => void
-  }
-}
-
-// Usage
-<EmptyState
-  icon={Target}
-  title="Aucun objectif ambitieux"
-  description="Créez votre premier WIG pour commencer à suivre votre exécution."
-  action={{
-    label: "Créer un WIG",
-    onClick: () => openDialog()
-  }}
-/>
-```
-
----
-
-### 7.3 ConfirmDialog
-
-**Fichier** : `components/shared/confirm-dialog.tsx`  
-**Rôle** : Dialog de confirmation pour actions destructives
-
-```typescript
-// Props
-interface ConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  title: string
-  description: string
-  confirmLabel?: string  // Default: "Confirmer"
-  cancelLabel?: string   // Default: "Annuler"
-  variant?: 'default' | 'destructive'
-  onConfirm: () => void | Promise<void>
-  isLoading?: boolean
+  year: number
+  weekNumber: number
+  onSuccess?: () => void
 }
-
-// Usage
-<ConfirmDialog
-  open={showDelete}
-  onOpenChange={setShowDelete}
-  title="Supprimer ce WIG ?"
-  description="Cette action est irréversible. Toutes les mesures associées seront supprimées."
-  variant="destructive"
-  confirmLabel="Supprimer"
-  onConfirm={handleDelete}
-/>
 ```
 
 ---
 
-### 7.4 WeekSelector
+## 7. Composants Blocker
 
-**Fichier** : `components/shared/week-selector.tsx`  
-**Rôle** : Sélecteur de semaine ISO avec navigation
+### 7.1 BlockerWidget
+
+**Fichier** : `components/blocker/blocker-widget.tsx`
+**Rôle** : Widget "Obstacles à lever" pour le dashboard
+
+**Affichage** :
+- Icône AlertTriangle avec bordure orange
+- Description "4DX Phase Clear"
+- Compteur actifs
+- Liste des blockers
+- Bouton "Signaler"
+
+---
+
+### 7.2 BlockerList
+
+**Fichier** : `components/blocker/blocker-list.tsx`
+**Rôle** : Liste des obstacles avec statuts
+
+**Statuts** :
+- `OPEN` : En attente
+- `ESCALATED` : Escaladé
+- `RESOLVED` : Résolu
+
+---
+
+### 7.3 BlockerForm
+
+**Fichier** : `components/blocker/blocker-form.tsx`
+**Rôle** : Dialog pour signaler un obstacle
+
+---
+
+## 8. Composants Cadence
+
+### 8.1 CadenceMeeting
+
+**Fichier** : `components/cadence/cadence-meeting.tsx`
+**Rôle** : Page complète de réunion de cadence 4DX
+
+**Structure 4DX** :
+1. **Account** : Revue des engagements passés
+2. **Scoreboard** : Visualisation des WIGs
+3. **Plan** : Nouveaux engagements
+4. **Clear** : Obstacles à lever
+
+---
+
+### 8.2 WigSessionTimer
+
+**Fichier** : `components/cadence/wig-session-timer.tsx`
+**Rôle** : Timer pour focus sur un WIG spécifique
+
+---
+
+## 9. Composants Charts
+
+### 9.1 ProgressChart
+
+**Fichier** : `components/charts/progress-chart.tsx`
+**Rôle** : Graphique de progression d'un WIG (réel vs cible)
+
+---
+
+### 9.2 LeadMeasureChart
+
+**Fichier** : `components/charts/lead-measure-chart.tsx`
+**Rôle** : Barres hebdomadaires pour une mesure prédictive
+
+---
+
+## 10. Composants UI Custom
+
+### 10.1 ConfettiCelebration
+
+**Fichier** : `components/ui/confetti-celebration.tsx`
+**Rôle** : Animation de confettis pour célébrer les succès
 
 ```typescript
-// Props
-interface WeekSelectorProps {
-  value: { year: number; weekNumber: number }
-  onChange: (week: { year: number; weekNumber: number }) => void
-  minWeek?: { year: number; weekNumber: number }
-  maxWeek?: { year: number; weekNumber: number }
-}
-
-// Affichage
-- "Semaine 48, 2025"
-- Boutons < > pour navigation
-- Bouton "Aujourd'hui" pour revenir à la semaine courante
+<ConfettiCelebration trigger={isCompleted} />
 ```
 
 ---
 
-## 8. Icônes (Lucide React)
+### 10.2 TrendArrow
+
+**Fichier** : `components/ui/trend-arrow.tsx`
+**Rôle** : Flèche indiquant la tendance (hausse/baisse/stable)
+
+```typescript
+<TrendArrow value={currentValue} previousValue={lastWeekValue} />
+```
+
+---
+
+## 11. Composants shadcn/ui Installés
+
+Les composants suivants sont installés et disponibles :
+
+| Composant | Fichier | Usage |
+|-----------|---------|-------|
+| Alert | `ui/alert.tsx` | Messages d'information |
+| AlertDialog | `ui/alert-dialog.tsx` | Confirmations destructives |
+| Avatar | `ui/avatar.tsx` | Photos de profil |
+| Badge | `ui/badge.tsx` | Statuts colorés |
+| Button | `ui/button.tsx` | Actions |
+| Card | `ui/card.tsx` | Conteneurs |
+| Dialog | `ui/dialog.tsx` | Modales |
+| DropdownMenu | `ui/dropdown-menu.tsx` | Menus contextuels |
+| Input | `ui/input.tsx` | Champs texte |
+| Label | `ui/label.tsx` | Labels de formulaire |
+| Progress | `ui/progress.tsx` | Barres de progression |
+| Select | `ui/select.tsx` | Sélecteurs |
+| Skeleton | `ui/skeleton.tsx` | États de chargement |
+| Textarea | `ui/textarea.tsx` | Champs multilignes |
+| Tooltip | `ui/tooltip.tsx` | Infobulles |
+
+---
+
+## 12. Couleurs de Statut
+
+### Badge Variants (badge.tsx)
+
+```typescript
+// Variants personnalisés C4DENCE
+const badgeVariants = cva(/* ... */, {
+  variants: {
+    variant: {
+      default: "...",
+      secondary: "...",
+      destructive: "...",
+      outline: "...",
+      "on-track": "border-status-on-track/30 bg-status-on-track/10 text-status-on-track",
+      "at-risk": "border-status-at-risk/30 bg-status-at-risk/10 text-status-at-risk",
+      "off-track": "border-status-off-track/30 bg-status-off-track/10 text-status-off-track",
+    },
+  },
+})
+```
+
+### Couleurs CSS (globals.css)
+
+```css
+--status-on-track: 174 100% 42%;    /* Cyan C4DENCE */
+--status-at-risk: 40 90% 55%;       /* Gold C4DENCE */
+--status-off-track: 0 84% 60%;      /* Rouge */
+
+--brand-cyan: 174 100% 42%;
+--brand-gold: 40 90% 55%;
+--brand-dark: 220 26% 14%;
+```
+
+---
+
+## 13. Pattern de Composant Standard
+
+Tous les composants métier suivent ce pattern :
+
+```typescript
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useOrganization } from '@/components/providers/organization-provider'
+import { someServerAction } from '@/app/actions/...'
+
+export function MyComponent() {
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization()
+  const [data, setData] = useState<DataType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchData = useCallback(async (orgId: string) => {
+    setIsLoading(true)
+    const result = await someServerAction(orgId)
+    if (result.success) {
+      setData(result.data)
+    }
+    setIsLoading(false)
+  }, [])
+
+  // CRITIQUE: Re-fetch quand l'org change
+  useEffect(() => {
+    if (currentOrg && !isOrgLoading) {
+      fetchData(currentOrg.organizationId)
+    }
+  }, [currentOrg, isOrgLoading, fetchData])
+
+  // ... render
+}
+```
+
+---
+
+## 14. Icônes (Lucide React)
 
 **Package** : `lucide-react`
 
-### Icônes utilisées par contexte :
-
-| Contexte | Icône | Import |
-|----------|-------|--------|
-| WIG / Objectif | `Target` | `import { Target } from 'lucide-react'` |
-| Lead Measure | `TrendingUp` | `import { TrendingUp } from 'lucide-react'` |
-| Engagement | `CheckSquare` | `import { CheckSquare } from 'lucide-react'` |
-| Cadence / Réunion | `Calendar` | `import { Calendar } from 'lucide-react'` |
-| Dashboard | `LayoutDashboard` | `import { LayoutDashboard } from 'lucide-react'` |
-| Équipe | `Users` | `import { Users } from 'lucide-react'` |
-| Paramètres | `Settings` | `import { Settings } from 'lucide-react'` |
-| Ajouter | `Plus` | `import { Plus } from 'lucide-react'` |
-| Modifier | `Pencil` | `import { Pencil } from 'lucide-react'` |
-| Supprimer | `Trash2` | `import { Trash2 } from 'lucide-react'` |
-| Succès | `CheckCircle` | `import { CheckCircle } from 'lucide-react'` |
-| Erreur | `XCircle` | `import { XCircle } from 'lucide-react'` |
-| Avertissement | `AlertTriangle` | `import { AlertTriangle } from 'lucide-react'` |
-| Info | `Info` | `import { Info } from 'lucide-react'` |
-| Navigation | `ChevronLeft`, `ChevronRight` | |
-| Menu | `Menu`, `X` | |
-| Utilisateur | `User` | |
-| Déconnexion | `LogOut` | |
+| Contexte | Icône |
+|----------|-------|
+| WIG / Objectif | `Target` |
+| Lead Measure | `TrendingUp` |
+| Engagement | `CheckSquare` |
+| Blocker / Obstacle | `AlertTriangle` |
+| Dashboard | `LayoutDashboard` |
+| Équipe | `Users` |
+| Paramètres | `Settings` |
+| Ajouter | `Plus` |
+| Succès (On Track) | `TrendingUp` |
+| Risque (At Risk) | `AlertTriangle` |
+| Échec (Off Track) | `XCircle` |
+| Navigation | `ArrowRight`, `ChevronLeft`, `ChevronRight` |
 
 ---
 
-## 9. Couleurs Sémantiques
+## 15. Checklist Avant Création
 
-### Palette de statuts (Tailwind)
-
-```css
-/* WIG Status */
---status-on-track: hsl(142, 76%, 36%);     /* green-600 */
---status-at-risk: hsl(45, 93%, 47%);       /* yellow-500 */
---status-off-track: hsl(0, 84%, 60%);      /* red-500 */
-
-/* Engagement Status */
---status-pending: hsl(221, 83%, 53%);      /* blue-500 */
---status-completed: hsl(142, 76%, 36%);    /* green-600 */
---status-missed: hsl(0, 84%, 60%);         /* red-500 */
---status-cancelled: hsl(220, 9%, 46%);     /* gray-500 */
-```
-
-### Usage dans les composants
-
-```typescript
-// Mapping statut → classe Tailwind
-const statusColors: Record<WigStatus, string> = {
-  ON_TRACK: 'bg-green-100 text-green-800 border-green-200',
-  AT_RISK: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  OFF_TRACK: 'bg-red-100 text-red-800 border-red-200',
-}
-```
-
----
-
-## 10. Règles de Composition
-
-### 10.1 Hiérarchie des composants
-
-```
-Page (Server Component)
-└── PageHeader
-└── Section containers
-    └── Cards (métier)
-        └── UI primitives (shadcn)
-            └── Tremor (charts)
-```
-
-### 10.2 Props drilling vs Context
-
-```typescript
-// ✅ BON — Props pour données spécifiques
-<WigCard wig={wig} />
-
-// ✅ BON — Context pour données globales
-<OrganizationProvider value={currentOrg}>
-  <Sidebar />
-  <Content />
-</OrganizationProvider>
-
-// ❌ MAUVAIS — Props drilling profond
-<Page org={org}>
-  <Section org={org}>
-    <Card org={org}>
-      <Button org={org} />  // NON!
-    </Card>
-  </Section>
-</Page>
-```
-
-### 10.3 Composition avec children
-
-```typescript
-// ✅ BON — Composants composables
-<Card>
-  <Card.Header>
-    <Card.Title>Mon titre</Card.Title>
-  </Card.Header>
-  <Card.Content>
-    {children}
-  </Card.Content>
-</Card>
-
-// ❌ MAUVAIS — Props monolithiques
-<Card 
-  title="Mon titre"
-  content={<div>...</div>}
-  footer={<Button>...</Button>}
-/>
-```
-
----
-
-## 11. Checklist Avant Création
-
-Avant de créer un nouveau composant, vérifier :
+Avant de créer un nouveau composant :
 
 ```markdown
-□ Le composant n'existe pas déjà dans ce catalogue
-□ Le composant n'est pas un doublon de shadcn/ui
-□ Le nom suit la convention kebab-case
-□ Le fichier est dans le bon dossier (layout/charts/cards/forms/tables/shared)
-□ Les props sont typées avec interface
-□ Le composant est documenté dans ce fichier
-□ Les variantes sont gérées par props, pas par composants séparés
+□ Vérifier que le composant n'existe pas déjà dans ce catalogue
+□ Placer dans le bon dossier (ui/, providers/, layout/, ou dossier métier)
+□ Suivre le pattern de data-fetching avec useOrganization()
+□ Utiliser les couleurs de statut définies (pas de couleurs hardcodées)
+□ Ajouter le composant à ce catalogue après création
 ```
 
 ---
 
-## 12. Composants shadcn/ui à Installer
-
-```bash
-# Commande d'installation initiale
-npx shadcn@latest init
-
-# Composants requis pour C4DENCE
-npx shadcn@latest add button
-npx shadcn@latest add card
-npx shadcn@latest add input
-npx shadcn@latest add label
-npx shadcn@latest add dialog
-npx shadcn@latest add dropdown-menu
-npx shadcn@latest add tabs
-npx shadcn@latest add badge
-npx shadcn@latest add progress
-npx shadcn@latest add skeleton
-npx shadcn@latest add avatar
-npx shadcn@latest add separator
-npx shadcn@latest add tooltip
-npx shadcn@latest add textarea
-npx shadcn@latest add select
-npx shadcn@latest add popover
-npx shadcn@latest add calendar
-```
-
----
-
-## 13. Dépendances Tremor
-
-```bash
-npm install @tremor/react
-
-# Composants Tremor utilisés
-- Card
-- Metric
-- Text
-- Title
-- BadgeDelta
-- ProgressBar
-- AreaChart
-- BarChart
-- Tracker
-```
-
-**Configuration Tailwind pour Tremor** :
-
-```typescript
-// tailwind.config.ts
-import type { Config } from 'tailwindcss'
-
-const config: Config = {
-  content: [
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
-    './node_modules/@tremor/**/*.{js,ts,jsx,tsx}', // ← Requis
-  ],
-  theme: {
-    extend: {
-      // Tremor utilise ces couleurs
-    },
-  },
-  plugins: [],
-}
-export default config
-```
-
----
-
-**Ce catalogue est la référence pour Claude Code. Tout nouveau composant doit y être ajouté.**
+**Ce catalogue reflète l'implémentation réelle au 1er décembre 2025.**
