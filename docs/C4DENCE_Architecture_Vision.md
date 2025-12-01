@@ -5,10 +5,14 @@
 **Tagline FR** : Le rythme de votre exécution  
 **Tagline EN** : The rhythm of your execution  
 
-**Version** : 3.0 (Post-lancement décembre 2025)
+**Version** : 3.1 (Rebranding terminologique)
 **Date** : 1 décembre 2025
 **Auteur** : Boulet Stratégies TI
 **Statut** : Application en production — https://c4dence.bouletstrategies.ca
+
+> ⚠️ **Note v3.1**: Ce document contient des références historiques à "WIG" (terminologie 4DX/FranklinCovey).
+> Pour des raisons légales, l'application utilise maintenant "Objective" (Objectif stratégique).
+> Voir **Section 11** pour les détails de la migration.
 
 ---
 
@@ -1602,5 +1606,68 @@ Configure Supabase Auth avec Next.js 15 App Router:
 
 ---
 
+## 11. Historique des Migrations
+
+### Migration 2025-12-01: Rebranding WIG → Objective
+
+**Contexte**: Pour des raisons légales (terminologie FranklinCovey/4DX protégée), renommage complet de la terminologie WIG vers Objective.
+
+**Changements Base de Données (Supabase)**:
+```sql
+-- Migration: 20251201221027_rename_wig_to_objective
+
+-- Renommage des enums
+ALTER TYPE c4dence."WigStatus" RENAME TO "ObjectiveStatus";
+ALTER TYPE c4dence."CadenceDay" RENAME TO "SyncDay";
+
+-- Renommage des colonnes dans organizations
+ALTER TABLE c4dence.organizations RENAME COLUMN cadence_day TO sync_day;
+ALTER TABLE c4dence.organizations RENAME COLUMN cadence_time TO sync_time;
+
+-- Renommage de la table principale
+ALTER TABLE c4dence.wigs RENAME TO objectives;
+
+-- Renommage des foreign keys
+ALTER TABLE c4dence.lead_measures RENAME COLUMN wig_id TO objective_id;
+ALTER TABLE c4dence.blockers RENAME COLUMN wig_id TO objective_id;
+
+-- Mise à jour des contraintes FK
+ALTER TABLE c4dence.lead_measures
+  DROP CONSTRAINT lead_measures_wig_id_fkey,
+  ADD CONSTRAINT lead_measures_objective_id_fkey
+  FOREIGN KEY (objective_id) REFERENCES c4dence.objectives(id) ON DELETE CASCADE;
+
+ALTER TABLE c4dence.blockers
+  DROP CONSTRAINT blockers_wig_id_fkey,
+  ADD CONSTRAINT blockers_objective_id_fkey
+  FOREIGN KEY (objective_id) REFERENCES c4dence.objectives(id) ON DELETE CASCADE;
+```
+
+**Changements Code Frontend**:
+| Ancien | Nouveau |
+|--------|---------|
+| `components/wig/` | `components/objective/` |
+| `components/cadence/` | `components/sync/` |
+| `WigStatus` enum | `ObjectiveStatus` enum |
+| `CadenceDay` enum | `SyncDay` enum |
+| `wigId` | `objectiveId` |
+| `/dashboard/wigs/` | `/dashboard/objectives/` |
+
+**Terminologie UI (Français)**:
+| Ancien | Nouveau |
+|--------|---------|
+| WIG | Objectif stratégique |
+| Cadence / Réunion WIG | Synchronisation |
+| Cadence Day | Jour de sync |
+
+**Fichiers Prisma**: Le schema `prisma/schema.prisma` utilise maintenant:
+- `model Objective` (au lieu de `model Wig`)
+- `enum ObjectiveStatus` (au lieu de `WigStatus`)
+- `enum SyncDay` (au lieu de `CadenceDay`)
+- `syncDay` / `syncTime` (au lieu de `cadenceDay` / `cadenceTime`)
+
+---
+
 *Document mis à jour le 1 décembre 2025 — Boulet Stratégies TI*
-*Version 3.0 — Application en production sur https://c4dence.bouletstrategies.ca*
+*Version 3.1 — Migration terminologie WIG → Objective*
+*Application en production sur https://c4dence.bouletstrategies.ca*

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -15,6 +16,7 @@ import {
 import { Target, BarChart3, Calendar, LogOut, Settings, UserPlus } from 'lucide-react'
 import { OrganizationSwitcher } from './organization-switcher'
 import { useOrganization } from '@/components/providers/organization-provider'
+import { getCurrentWeek } from '@/lib/week'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
@@ -30,6 +32,12 @@ export function Header({ userEmail }: HeaderProps) {
   const pathname = usePathname()
   const supabase = createClient()
   const { isAdmin } = useOrganization()
+  const [weekNumber, setWeekNumber] = useState<number | null>(null)
+
+  // Calculate week number on client only to avoid hydration mismatch
+  useEffect(() => {
+    setWeekNumber(getCurrentWeek().weekNumber)
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -47,7 +55,7 @@ export function Header({ userEmail }: HeaderProps) {
               alt="C4DENCE"
               width={140}
               height={36}
-              className="h-9 w-auto"
+              style={{ height: '36px', width: 'auto' }}
               priority
             />
           </Link>
@@ -80,13 +88,13 @@ export function Header({ userEmail }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-4">
           {/* Week indicator */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-sm">
-            <Calendar className="h-4 w-4 text-brand-cyan" />
-            <span className="text-muted-foreground">Semaine</span>
-            <span className="font-semibold text-foreground">
-              {Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}
-            </span>
-          </div>
+          {weekNumber !== null && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-sm">
+              <Calendar className="h-4 w-4 text-brand-cyan" />
+              <span className="text-muted-foreground">Semaine</span>
+              <span className="font-semibold text-foreground">{weekNumber}</span>
+            </div>
+          )}
 
           {/* User Menu */}
           <DropdownMenu>

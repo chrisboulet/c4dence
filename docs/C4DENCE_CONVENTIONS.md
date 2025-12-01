@@ -12,39 +12,39 @@
 
 | Élément | Langue | Exemple |
 |---------|--------|---------|
-| Code (variables, fonctions, types) | **Anglais** | `getWeeklyMeasures()`, `WigStatus` |
-| Commentaires | **Français** | `// Calcule le statut selon les seuils 4DX` |
-| UI (labels, messages) | **Français** | `"Objectif ambitieux"`, `"Mesure prédictive"` |
-| Noms de fichiers | **Anglais** | `wig-card.tsx`, `weekly-measure.ts` |
-| Commits | **Français** | `feat: ajout du scoreboard WIG` |
+| Code (variables, fonctions, types) | **Anglais** | `getWeeklyMeasures()`, `ObjectiveStatus` |
+| Commentaires | **Français** | `// Calcule le statut selon les seuils C4DENCE` |
+| UI (labels, messages) | **Français** | `"Objectif stratégique"`, `"Mesure prédictive"` |
+| Noms de fichiers | **Anglais** | `objective-card.tsx`, `weekly-measure.ts` |
+| Commits | **Français** | `feat: ajout du scoreboard Objectif` |
 
 ### 1.2 Conventions de casing
 
 ```typescript
 // PascalCase — Types, Interfaces, Components, Enums
-type WigStatus = 'ON_TRACK' | 'AT_RISK' | 'OFF_TRACK'
+type ObjectiveStatus = 'ON_TRACK' | 'AT_RISK' | 'OFF_TRACK' | 'ACHIEVED'
 interface LeadMeasure { ... }
-function WigCard() { ... }
+function ObjectiveCard() { ... }
 enum EngagementStatus { ... }
 
 // camelCase — Variables, fonctions, props
 const currentWeek = getISOWeek(new Date())
-function calculateWigStatus(wig: Wig): WigStatus { ... }
-<WigCard wigId={selectedWig} onSelect={handleSelect} />
+function calculateObjectiveStatus(objective: Objective): ObjectiveStatus { ... }
+<ObjectiveCard objectiveId={selectedObjective} onSelect={handleSelect} />
 
 // SCREAMING_SNAKE_CASE — Constantes, Enum values
-const MAX_LEAD_MEASURES_PER_WIG = 3
-const DEFAULT_CADENCE_DAY = 'MONDAY'
+const MAX_LEAD_MEASURES_PER_OBJECTIVE = 3
+const DEFAULT_SYNC_DAY = 'MONDAY'
 
 // kebab-case — Fichiers, dossiers, CSS classes
-src/components/wig-card.tsx
-src/app/wig/[id]/page.tsx
-className="wig-card-header"
+src/components/objective/objective-card.tsx
+src/app/dashboard/objectives/[id]/page.tsx
+className="objective-card-header"
 
 // snake_case — Colonnes base de données (Prisma)
-model Wig {
-  id            String   @id
-  created_at    DateTime @default(now())
+model Objective {
+  id              String   @id
+  created_at      DateTime @default(now())
   organization_id String
 }
 ```
@@ -53,7 +53,7 @@ model Wig {
 
 ```typescript
 // Hooks personnalisés — préfixe "use"
-function useWigStatus(wigId: string) { ... }
+function useObjectiveStatus(objectiveId: string) { ... }
 function useWeeklyMeasures(leadMeasureId: string) { ... }
 
 // Server Actions — suffixe "Action"
@@ -61,14 +61,14 @@ async function updateMeasureAction(formData: FormData) { ... }
 async function createEngagementAction(data: EngagementInput) { ... }
 
 // Types de props — suffixe "Props"
-interface WigCardProps { ... }
+interface ObjectiveCardProps { ... }
 interface ScoreboardProps { ... }
 
 // Types de réponse — suffixe "Result" ou "Response"
 type UpdateMeasureResult = { success: boolean; error?: string }
 
 // Schemas Zod — suffixe "Schema"
-const CreateWigSchema = z.object({ ... })
+const CreateObjectiveSchema = z.object({ ... })
 const WeeklyMeasureSchema = z.object({ ... })
 ```
 
@@ -83,19 +83,24 @@ src/
 ├── app/                      # Next.js App Router
 │   ├── (auth)/               # Route group — pages auth
 │   │   ├── login/
-│   │   └── register/
+│   │   └── onboarding/
 │   ├── (dashboard)/          # Route group — pages protégées
-│   │   ├── layout.tsx        # Layout avec sidebar
-│   │   ├── page.tsx          # Dashboard principal
-│   │   ├── wig/
-│   │   │   ├── [id]/
-│   │   │   │   ├── page.tsx          # Server Component
-│   │   │   │   ├── actions.ts        # Server Actions
-│   │   │   │   └── _components/      # Client Components colocalisés
-│   │   │   │       ├── lead-measure-table.tsx
-│   │   │   │       └── weekly-input.tsx
-│   │   │   └── new/
-│   │   └── settings/
+│   │   ├── layout.tsx        # Layout avec header
+│   │   └── dashboard/
+│   │       ├── page.tsx          # Dashboard principal
+│   │       ├── objectives/       # Objectifs stratégiques
+│   │       │   ├── page.tsx
+│   │       │   └── [id]/
+│   │       │       └── page.tsx
+│   │       ├── sync/             # Réunion de synchronisation
+│   │       │   └── page.tsx
+│   │       ├── members/          # Gestion des membres
+│   │       └── settings/
+│   ├── actions/              # Server Actions centralisées
+│   │   ├── objective.ts
+│   │   ├── lead-measure.ts
+│   │   ├── engagement.ts
+│   │   └── organization.ts
 │   ├── api/                  # API Routes (minimal)
 │   │   └── webhooks/         # Uniquement webhooks externes
 │   ├── layout.tsx            # Root layout
@@ -103,16 +108,19 @@ src/
 │
 ├── components/               # Composants réutilisables
 │   ├── ui/                   # shadcn/ui (ne pas modifier)
-│   ├── charts/               # Composants Tremor customisés
-│   │   ├── beat-the-goat.tsx
-│   │   └── trend-indicator.tsx
-│   ├── forms/                # Composants formulaire
-│   │   ├── wig-form.tsx
-│   │   └── measure-input.tsx
+│   ├── charts/               # Composants graphiques
+│   │   ├── progress-chart.tsx
+│   │   └── lead-measure-chart.tsx
+│   ├── objective/            # Composants Objectif
+│   │   ├── objective-form.tsx
+│   │   ├── objective-list.tsx
+│   │   └── objective-dashboard.tsx
+│   ├── sync/                 # Composants Synchronisation
+│   │   ├── sync-meeting.tsx
+│   │   └── session-timer.tsx
 │   └── layout/               # Composants layout
-│       ├── sidebar.tsx
 │       ├── header.tsx
-│       └── nav-link.tsx
+│       └── organization-switcher.tsx
 │
 ├── lib/                      # Utilitaires et configs
 │   ├── supabase/
@@ -123,11 +131,11 @@ src/
 │   ├── utils.ts              # Helpers génériques (cn, formatDate, etc.)
 │   ├── constants.ts          # Constantes globales
 │   └── validations/          # Schemas Zod
-│       ├── wig.ts
+│       ├── objective.ts
 │       └── measure.ts
 │
 ├── hooks/                    # Custom hooks
-│   ├── use-wig-status.ts
+│   ├── use-objective-status.ts
 │   └── use-weekly-measures.ts
 │
 ├── types/                    # Types TypeScript globaux
@@ -143,7 +151,7 @@ src/
 
 ```typescript
 // ✅ BON — Composants spécifiques colocalisés avec underscore
-src/app/(dashboard)/wig/[id]/
+src/app/(dashboard)/dashboard/objectives/[id]/
 ├── page.tsx                    // Server Component principal
 ├── actions.ts                  // Server Actions
 ├── loading.tsx                 // Loading state
@@ -154,8 +162,8 @@ src/app/(dashboard)/wig/[id]/
 
 // ❌ MAUVAIS — Tout dans /components global
 src/components/
-├── wig-page-lead-measure-table.tsx  // Trop spécifique pour être global
-└── wig-page-weekly-input.tsx
+├── objective-page-lead-measure-table.tsx  // Trop spécifique pour être global
+└── objective-page-weekly-input.tsx
 ```
 
 ### 2.3 Règle des imports
@@ -175,17 +183,17 @@ import { Card, CardContent } from '@/components/ui/card'
 import { AreaChart } from '@tremor/react'
 
 // 4. Composants internes
-import { WigCard } from '@/components/wig-card'
+import { ObjectiveCard } from '@/components/objective/objective-card'
 import { LeadMeasureTable } from './_components/lead-measure-table'
 
 // 5. Lib et utils
 import { prisma } from '@/lib/prisma'
 import { createServerClient } from '@/lib/supabase/server'
-import { calculateWigStatus } from '@/lib/wig-status'
+import { calculateObjectiveStatus } from '@/lib/objective-status'
 
 // 6. Types
-import type { Wig, LeadMeasure } from '@prisma/client'
-import type { WigWithMeasures } from '@/types/database'
+import type { Objective, LeadMeasure } from '@prisma/client'
+import type { ObjectiveWithMeasures } from '@/types'
 ```
 
 ---
@@ -196,14 +204,14 @@ import type { WigWithMeasures } from '@/types/database'
 
 ```typescript
 // ✅ PAR DÉFAUT — Server Component (pas de directive)
-// src/app/(dashboard)/wig/[id]/page.tsx
+// src/app/(dashboard)/dashboard/objectives/[id]/page.tsx
 import { prisma } from '@/lib/prisma'
 import { createServerClient } from '@/lib/supabase/server'
-import { LeadMeasureTable } from './_components/lead-measure-table'
+import { ObjectiveDetail } from '@/components/objective/objective-detail'
 
-export default async function WigPage({ params }: { params: { id: string } }) {
+export default async function ObjectivePage({ params }: { params: { id: string } }) {
   // Fetch direct avec Prisma — pas de useEffect, pas de useState
-  const wig = await prisma.wig.findUnique({
+  const objective = await prisma.objective.findUnique({
     where: { id: params.id },
     include: {
       leadMeasures: {
@@ -211,35 +219,25 @@ export default async function WigPage({ params }: { params: { id: string } }) {
       }
     }
   })
-  
-  if (!wig) redirect('/dashboard')
-  
-  return (
-    <div>
-      <h1>{wig.name}</h1>
-      {/* Client Component reçoit les données pré-fetchées */}
-      <LeadMeasureTable 
-        leadMeasures={wig.leadMeasures} 
-        wigId={wig.id}
-      />
-    </div>
-  )
+
+  if (!objective) redirect('/dashboard')
+
+  return <ObjectiveDetail objective={objective} />
 }
 
 // ✅ CLIENT COMPONENT — Uniquement si interactivité requise
-// src/app/(dashboard)/wig/[id]/_components/lead-measure-table.tsx
+// src/components/lead-measure/lead-measure-list.tsx
 'use client'
 
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { updateMeasureAction } from '../actions'
+import { updateMeasureAction } from '@/app/actions/lead-measure'
 
-interface LeadMeasureTableProps {
+interface LeadMeasureListProps {
   leadMeasures: LeadMeasureWithWeekly[]
-  wigId: string
+  objectiveId: string
 }
 
-export function LeadMeasureTable({ leadMeasures, wigId }: LeadMeasureTableProps) {
+export function LeadMeasureList({ leadMeasures, objectiveId }: LeadMeasureListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   // ... interactivité
 }
@@ -265,7 +263,7 @@ export function LeadMeasureTable({ leadMeasures, wigId }: LeadMeasureTableProps)
 ### 3.3 Server Actions
 
 ```typescript
-// src/app/(dashboard)/wig/[id]/actions.ts
+// src/app/(dashboard)/objectives/[id]/actions.ts
 'use server'
 
 import { revalidatePath } from 'next/cache'
@@ -315,7 +313,7 @@ export async function updateMeasureAction(
     const leadMeasure = await prisma.leadMeasure.findFirst({
       where: {
         id: parsed.data.leadMeasureId,
-        wig: {
+        objective: {
           organization: {
             memberships: { some: { profileId: user.id } }
           }
@@ -346,7 +344,7 @@ export async function updateMeasureAction(
     })
     
     // 5. Revalidation du cache
-    revalidatePath(`/wig/${leadMeasure.wigId}`)
+    revalidatePath(`/dashboard/objectives/${leadMeasure.objectiveId}`)
     
     return { success: true, data: { id: result.id } }
     
@@ -383,13 +381,13 @@ if (result.success) {
 ### 4.2 Error Boundaries
 
 ```typescript
-// src/app/(dashboard)/wig/[id]/error.tsx
+// src/app/(dashboard)/objectives/[id]/error.tsx
 'use client'
 
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
-export default function WigError({
+export default function ObjectiveError({
   error,
   reset,
 }: {
@@ -398,14 +396,14 @@ export default function WigError({
 }) {
   useEffect(() => {
     // Log vers service de monitoring (Sentry, etc.)
-    console.error('WIG Error:', error)
+    console.error('Objective Error:', error)
   }, [error])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
       <h2 className="text-xl font-semibold">Une erreur est survenue</h2>
       <p className="text-muted-foreground">
-        Impossible de charger cet objectif ambitieux.
+        Impossible de charger cet objectif stratégique.
       </p>
       <Button onClick={reset}>Réessayer</Button>
     </div>
@@ -416,11 +414,11 @@ export default function WigError({
 ### 4.3 Loading States
 
 ```typescript
-// src/app/(dashboard)/wig/[id]/loading.tsx
+// src/app/(dashboard)/objectives/[id]/loading.tsx
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
-export default function WigLoading() {
+export default function ObjectiveLoading() {
   return (
     <div className="space-y-6">
       {/* Header skeleton */}
@@ -574,17 +572,18 @@ model Organization {
   
   // Relations en dernier
   memberships Membership[]
-  wigs        Wig[]
-  
+  objectives  Objective[]
+
   // Mapping vers snake_case pour PostgreSQL
   @@map("organizations")
 }
 
 // Enum en SCREAMING_SNAKE_CASE
-enum WigStatus {
+enum ObjectiveStatus {
   ON_TRACK
   AT_RISK
   OFF_TRACK
+  ACHIEVED
 }
 
 // Index explicites pour les queries fréquentes
@@ -608,8 +607,8 @@ model WeeklyMeasure {
 
 ```typescript
 // ✅ BON — Select explicite, include minimal
-const wig = await prisma.wig.findUnique({
-  where: { id: wigId },
+const objective = await prisma.objective.findUnique({
+  where: { id: objectiveId },
   select: {
     id: true,
     name: true,
@@ -630,8 +629,8 @@ const wig = await prisma.wig.findUnique({
 })
 
 // ❌ MAUVAIS — Include all, pas de limite
-const wig = await prisma.wig.findUnique({
-  where: { id: wigId },
+const objective = await prisma.objective.findUnique({
+  where: { id: objectiveId },
   include: {
     leadMeasures: {
       include: {
@@ -650,7 +649,7 @@ const wig = await prisma.wig.findUnique({
 __tests__/
 ├── unit/                    # Tests unitaires (logique pure)
 │   ├── lib/
-│   │   └── wig-status.test.ts
+│   │   └── objective-status.test.ts
 │   └── validations/
 │       └── measure.test.ts
 │
@@ -662,7 +661,7 @@ __tests__/
 └── e2e/                     # Tests end-to-end (Playwright)
     ├── auth.spec.ts
     ├── dashboard.spec.ts
-    └── wig-flow.spec.ts
+    └── objective-flow.spec.ts
 ```
 
 ---
@@ -684,11 +683,11 @@ test:     # Ajout/modification de tests
 chore:    # Maintenance (deps, config, etc.)
 
 # Exemples
-feat(wig): ajout de la page scoreboard
+feat(objective): ajout de la page scoreboard
 fix(measure): correction du calcul hebdomadaire
 docs: mise à jour du README avec instructions Supabase
 refactor(auth): migration vers @supabase/ssr
-test(wig-status): ajout des cas limites
+test(objective-status): ajout des cas limites
 chore(deps): mise à jour de Next.js vers 15.5
 
 # Corps de commit pour contexte additionnel
@@ -742,37 +741,37 @@ refactor/server-actions-cleanup
 const data: any = await fetch(...)
 
 // ✅ TOUJOURS — Types explicites
-const data: WigResponse = await fetch(...)
+const data: ObjectiveResponse = await fetch(...)
 
 // ❌ JAMAIS — Fetch dans useEffect pour data initiale
 useEffect(() => {
-  fetch('/api/wigs').then(...)
+  fetch('/api/objectives').then(...)
 }, [])
 
 // ✅ TOUJOURS — Server Component pour data initiale
 export default async function Page() {
-  const wigs = await prisma.wig.findMany(...)
-  return <WigList wigs={wigs} />
+  const objectives = await prisma.objective.findMany(...)
+  return <ObjectiveList objectives={objectives} />
 }
 
 // ❌ JAMAIS — API Route pour mutation simple
-// app/api/wig/[id]/route.ts
+// app/api/objectives/[id]/route.ts
 export async function PUT(req: Request) { ... }
 
 // ✅ TOUJOURS — Server Action pour mutation
-// app/wig/[id]/actions.ts
+// app/dashboard/objectives/[id]/actions.ts
 'use server'
-export async function updateWigAction(formData: FormData) { ... }
+export async function updateObjectiveAction(formData: FormData) { ... }
 
 // ❌ JAMAIS — Logique métier dans les composants
-function WigCard({ wig }) {
-  const status = wig.current >= wig.target * 0.9 ? 'ON_TRACK' : 'AT_RISK'
+function ObjectiveCard({ objective }) {
+  const status = objective.current >= objective.target * 0.9 ? 'ON_TRACK' : 'AT_RISK'
 }
 
 // ✅ TOUJOURS — Logique dans lib/
-import { calculateWigStatus } from '@/lib/wig-status'
-function WigCard({ wig }) {
-  const status = calculateWigStatus(wig)
+import { calculateObjectiveStatus } from '@/lib/objective-status'
+function ObjectiveCard({ objective }) {
+  const status = calculateObjectiveStatus(objective)
 }
 
 // ❌ JAMAIS — Hardcoder des strings UI
