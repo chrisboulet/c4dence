@@ -142,6 +142,9 @@ model Organization {
   // --- Branding (optionnel) ---
   logoUrl   String?  @map("logo_url")
 
+  // --- Activation (Super Admin) ---
+  isActive  Boolean  @default(true) @map("is_active")
+
   // --- Relations ---
   memberships Membership[]
   wigs        Wig[]
