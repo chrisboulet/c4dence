@@ -1,7 +1,14 @@
 import { Resend } from 'resend'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend client (lazy to avoid crash if API key is missing)
+let resend: Resend | null = null
+
+function getResendClient(): Resend | null {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 // Email configuration
 const FROM_EMAIL = process.env.EMAIL_FROM || 'C4dence <noreply@bouletstrategies.ca>'
@@ -32,8 +39,15 @@ export async function sendInvitationEmail({
   const inviteUrl = `${APP_URL}/invite/${token}`
   const roleLabel = role === 'ADMIN' ? 'Administrateur' : 'Membre'
 
+  const client = getResendClient()
+
+  if (!client) {
+    console.warn('Resend not configured - RESEND_API_KEY missing')
+    return { success: false, error: 'Service email non configuré' }
+  }
+
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await client.emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject: `Invitation à rejoindre ${organizationName} sur C4dence`,
