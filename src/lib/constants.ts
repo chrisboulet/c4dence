@@ -5,8 +5,8 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
-  WIG: (id: string) => `/wig/${id}`,
-  CADENCE: '/cadence',
+  OBJECTIVE: (id: string) => `/objective/${id}`,
+  SYNC: '/sync',
   SETTINGS: '/settings',
 } as const
 
@@ -18,12 +18,12 @@ export const MESSAGES = {
   AUTH_ERROR: 'Erreur d\'authentification. Veuillez réessayer.',
   LOGOUT_SUCCESS: 'Déconnexion réussie.',
 
-  // WIG
-  WIG_CREATED: 'Objectif créé avec succès.',
-  WIG_UPDATED: 'Objectif mis à jour.',
-  WIG_ARCHIVED: 'Objectif archivé.',
+  // Objectifs
+  OBJECTIVE_CREATED: 'Objectif créé avec succès.',
+  OBJECTIVE_UPDATED: 'Objectif mis à jour.',
+  OBJECTIVE_ARCHIVED: 'Objectif archivé.',
 
-  // Lead Measures
+  // Indicateurs Prédictifs
   MEASURE_RECORDED: 'Mesure enregistrée.',
   MEASURE_UPDATED: 'Mesure mise à jour.',
 
@@ -40,17 +40,27 @@ export const MESSAGES = {
 } as const
 
 /**
- * Constantes 4DX
+ * Constantes Méthode C4DENCE
  */
-export const MAX_WIGS_PER_TEAM = 3
-export const MAX_LEAD_MEASURES_PER_WIG = 3
+export const MAX_OBJECTIVES_PER_TEAM = 3
+export const MAX_LEAD_MEASURES_PER_OBJECTIVE = 3
 export const MAX_ENGAGEMENTS_PER_PERSON_PER_WEEK = 2
 
 /**
- * Seuils de statut WIG (en pourcentage)
+ * Seuils de statut Objectif (en pourcentage)
  */
-export const WIG_STATUS_THRESHOLDS = {
+export const OBJECTIVE_STATUS_THRESHOLDS = {
   ON_TRACK: 0.9,   // >= 90% = vert
   AT_RISK: 0.7,    // >= 70% = jaune
   // < 70% = rouge
 } as const
+
+// Aliases de compatibilité (déprécié)
+/** @deprecated Utiliser ROUTES.OBJECTIVE */
+export const WIG_ROUTE = ROUTES.OBJECTIVE
+/** @deprecated Utiliser MAX_OBJECTIVES_PER_TEAM */
+export const MAX_WIGS_PER_TEAM = MAX_OBJECTIVES_PER_TEAM
+/** @deprecated Utiliser MAX_LEAD_MEASURES_PER_OBJECTIVE */
+export const MAX_LEAD_MEASURES_PER_WIG = MAX_LEAD_MEASURES_PER_OBJECTIVE
+/** @deprecated Utiliser OBJECTIVE_STATUS_THRESHOLDS */
+export const WIG_STATUS_THRESHOLDS = OBJECTIVE_STATUS_THRESHOLDS

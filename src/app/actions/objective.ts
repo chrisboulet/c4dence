@@ -3,24 +3,24 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
-import { checkPermission, checkWigAccess } from '@/lib/permissions'
-import type { ActionResult, CreateWigInput, UpdateWigInput, WigSummary } from '@/types'
-import type { Wig, WigStatus } from '@prisma/client'
+import { checkPermission, checkObjectiveAccess } from '@/lib/permissions'
+import type { ActionResult, CreateObjectiveInput, UpdateObjectiveInput, ObjectiveSummary } from '@/types'
+import type { Objective, ObjectiveStatus } from '@prisma/client'
 
 /**
- * Calcule le statut d'un WIG basé sur la progression vs le temps écoulé
- * 4DX: ACHIEVED quand l'objectif est atteint (currentValue >= targetValue)
+ * Calcule le statut d'un Objectif basé sur la progression vs le temps écoulé
+ * ACHIEVED quand l'objectif est atteint (currentValue >= targetValue)
  */
-function calculateWigStatus(wig: {
+function calculateObjectiveStatus(objective: {
   startValue: number
   targetValue: number
   currentValue: number
   startDate: Date
   endDate: Date
-}): WigStatus {
-  // 4DX: Vérifier si l'objectif est atteint
-  const valueRange = wig.targetValue - wig.startValue
-  const currentProgress = valueRange === 0 ? 1 : (wig.currentValue - wig.startValue) / valueRange
+}): ObjectiveStatus {
+  // Vérifier si l'objectif est atteint
+  const valueRange = objective.targetValue - objective.startValue
+  const currentProgress = valueRange === 0 ? 1 : (objective.currentValue - objective.startValue) / valueRange
 
   // Si l'objectif est atteint (100% ou plus), marquer comme ACHIEVED
   if (currentProgress >= 1) {
@@ -28,8 +28,8 @@ function calculateWigStatus(wig: {
   }
 
   const now = new Date()
-  const totalDuration = wig.endDate.getTime() - wig.startDate.getTime()
-  const elapsed = now.getTime() - wig.startDate.getTime()
+  const totalDuration = objective.endDate.getTime() - objective.startDate.getTime()
+  const elapsed = now.getTime() - objective.startDate.getTime()
   const timeProgress = Math.min(elapsed / totalDuration, 1)
 
   const expectedProgress = timeProgress
@@ -41,10 +41,10 @@ function calculateWigStatus(wig: {
 }
 
 /**
- * Récupère tous les WIGs d'une organisation
+ * Récupère tous les Objectifs d'une organisation
  * @param organizationId - ID de l'organisation (optionnel, utilise la première membership si non fourni)
  */
-export async function getWigs(organizationId?: string): Promise<ActionResult<WigSummary[]>> {
+export async function getObjectives(organizationId?: string): Promise<ActionResult<ObjectiveSummary[]>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -66,12 +66,12 @@ export async function getWigs(organizationId?: string): Promise<ActionResult<Wig
     }
 
     // Vérifier l'accès
-    const permission = await checkPermission(user.id, orgId, 'wig:read')
+    const permission = await checkPermission(user.id, orgId, 'objective:read')
     if (!permission.allowed) {
       return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
-    const wigs = await prisma.wig.findMany({
+    const objectives = await prisma.objective.findMany({
       where: {
         organizationId: orgId,
         isArchived: false,
@@ -98,17 +98,17 @@ export async function getWigs(organizationId?: string): Promise<ActionResult<Wig
       orderBy: { createdAt: 'desc' },
     })
 
-    return { success: true, data: wigs }
+    return { success: true, data: objectives }
   } catch (error) {
-    console.error('getWigs error:', error)
-    return { success: false, error: 'Erreur lors de la récupération des WIGs' }
+    console.error('getObjectives error:', error)
+    return { success: false, error: 'Erreur lors de la récupération des Objectifs' }
   }
 }
 
 /**
- * Récupère un WIG par son ID
+ * Récupère un Objectif par son ID
  */
-export async function getWig(id: string): Promise<ActionResult<Wig>> {
+export async function getObjective(id: string): Promise<ActionResult<Objective>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -117,32 +117,32 @@ export async function getWig(id: string): Promise<ActionResult<Wig>> {
       return { success: false, error: 'Non authentifié' }
     }
 
-    const access = await checkWigAccess(user.id, id, 'wig:read')
+    const access = await checkObjectiveAccess(user.id, id, 'objective:read')
     if (!access.allowed) {
-      return { success: false, error: access.error || 'WIG non trouvé' }
+      return { success: false, error: access.error || 'Objectif non trouvé' }
     }
 
-    const wig = await prisma.wig.findUnique({
+    const objective = await prisma.objective.findUnique({
       where: { id },
     })
 
-    if (!wig) {
-      return { success: false, error: 'WIG non trouvé' }
+    if (!objective) {
+      return { success: false, error: 'Objectif non trouvé' }
     }
 
-    return { success: true, data: wig }
+    return { success: true, data: objective }
   } catch (error) {
-    console.error('getWig error:', error)
-    return { success: false, error: 'Erreur lors de la récupération du WIG' }
+    console.error('getObjective error:', error)
+    return { success: false, error: "Erreur lors de la récupération de l'Objectif" }
   }
 }
 
 /**
- * Crée un nouveau WIG (OWNER/ADMIN uniquement)
+ * Crée un nouvel Objectif (OWNER/ADMIN uniquement)
  */
-export async function createWig(
-  input: Omit<CreateWigInput, 'organizationId'> & { organizationId?: string }
-): Promise<ActionResult<Wig>> {
+export async function createObjective(
+  input: Omit<CreateObjectiveInput, 'organizationId'> & { organizationId?: string }
+): Promise<ActionResult<Objective>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -164,16 +164,16 @@ export async function createWig(
       orgId = membership.organizationId
     }
 
-    // Vérifier la permission de créer un WIG
-    const permission = await checkPermission(user.id, orgId, 'wig:create')
+    // Vérifier la permission de créer un Objectif
+    const permission = await checkPermission(user.id, orgId, 'objective:create')
     if (!permission.allowed) {
       return {
         success: false,
-        error: 'Seuls les propriétaires et administrateurs peuvent créer des WIGs',
+        error: 'Seuls les propriétaires et administrateurs peuvent créer des Objectifs',
       }
     }
 
-    const wig = await prisma.wig.create({
+    const objective = await prisma.objective.create({
       data: {
         organizationId: orgId,
         name: input.name,
@@ -185,25 +185,25 @@ export async function createWig(
         startDate: input.startDate,
         endDate: input.endDate,
         status: 'AT_RISK',
-        ownerId: input.ownerId, // 4DX: Responsable du WIG
+        ownerId: input.ownerId, // Responsable de l'Objectif
       },
     })
 
     revalidatePath('/dashboard')
-    return { success: true, data: wig }
+    return { success: true, data: objective }
   } catch (error) {
-    console.error('createWig error:', error)
-    return { success: false, error: 'Erreur lors de la création du WIG' }
+    console.error('createObjective error:', error)
+    return { success: false, error: "Erreur lors de la création de l'Objectif" }
   }
 }
 
 /**
- * Met à jour un WIG existant
+ * Met à jour un Objectif existant
  *
  * MEMBER peut uniquement mettre à jour currentValue
  * OWNER/ADMIN peuvent tout modifier
  */
-export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig>> {
+export async function updateObjective(input: UpdateObjectiveInput): Promise<ActionResult<Objective>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -212,13 +212,13 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       return { success: false, error: 'Non authentifié' }
     }
 
-    // Vérifier l'accès au WIG
-    const existingWig = await prisma.wig.findUnique({
+    // Vérifier l'accès à l'Objectif
+    const existingObjective = await prisma.objective.findUnique({
       where: { id: input.id },
     })
 
-    if (!existingWig) {
-      return { success: false, error: 'WIG non trouvé' }
+    if (!existingObjective) {
+      return { success: false, error: 'Objectif non trouvé' }
     }
 
     // Déterminer si c'est une mise à jour de valeur uniquement
@@ -234,14 +234,14 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       input.ownerId === undefined
 
     // Vérifier les permissions appropriées
-    const requiredPermission = isValueUpdateOnly ? 'wig:update-value' : 'wig:update'
-    const permission = await checkPermission(user.id, existingWig.organizationId, requiredPermission)
+    const requiredPermission = isValueUpdateOnly ? 'objective:update-value' : 'objective:update'
+    const permission = await checkPermission(user.id, existingObjective.organizationId, requiredPermission)
 
     if (!permission.allowed) {
       if (!isValueUpdateOnly) {
         return {
           success: false,
-          error: 'Seuls les propriétaires et administrateurs peuvent modifier les détails du WIG',
+          error: "Seuls les propriétaires et administrateurs peuvent modifier les détails de l'Objectif",
         }
       }
       return { success: false, error: permission.error || 'Accès non autorisé' }
@@ -267,40 +267,40 @@ export async function updateWig(input: UpdateWigInput): Promise<ActionResult<Wig
       if (updateData.unit !== undefined) dataToUpdate.unit = updateData.unit
       if (updateData.startDate !== undefined) dataToUpdate.startDate = updateData.startDate
       if (updateData.endDate !== undefined) dataToUpdate.endDate = updateData.endDate
-      if (updateData.ownerId !== undefined) dataToUpdate.ownerId = updateData.ownerId // 4DX Owner
+      if (updateData.ownerId !== undefined) dataToUpdate.ownerId = updateData.ownerId
     }
 
     if (Object.keys(dataToUpdate).length === 0) {
-      return { success: true, data: existingWig }
+      return { success: true, data: existingObjective }
     }
 
-    const wig = await prisma.wig.update({
+    const objective = await prisma.objective.update({
       where: { id },
       data: dataToUpdate,
     })
 
     // Recalculer le statut
-    const newStatus = calculateWigStatus(wig)
-    if (newStatus !== wig.status) {
-      await prisma.wig.update({
+    const newStatus = calculateObjectiveStatus(objective)
+    if (newStatus !== objective.status) {
+      await prisma.objective.update({
         where: { id },
         data: { status: newStatus },
       })
     }
 
     revalidatePath('/dashboard')
-    revalidatePath(`/dashboard/wigs/${id}`)
-    return { success: true, data: { ...wig, status: newStatus } }
+    revalidatePath(`/dashboard/objectives/${id}`)
+    return { success: true, data: { ...objective, status: newStatus } }
   } catch (error) {
-    console.error('updateWig error:', error)
-    return { success: false, error: 'Erreur lors de la mise à jour du WIG' }
+    console.error('updateObjective error:', error)
+    return { success: false, error: "Erreur lors de la mise à jour de l'Objectif" }
   }
 }
 
 /**
- * Archive un WIG (soft delete) - OWNER/ADMIN uniquement
+ * Archive un Objectif (soft delete) - OWNER/ADMIN uniquement
  */
-export async function archiveWig(id: string): Promise<ActionResult<void>> {
+export async function archiveObjective(id: string): Promise<ActionResult<void>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -309,15 +309,15 @@ export async function archiveWig(id: string): Promise<ActionResult<void>> {
       return { success: false, error: 'Non authentifié' }
     }
 
-    const access = await checkWigAccess(user.id, id, 'wig:delete')
+    const access = await checkObjectiveAccess(user.id, id, 'objective:delete')
     if (!access.allowed) {
       return {
         success: false,
-        error: 'Seuls les propriétaires et administrateurs peuvent archiver des WIGs',
+        error: 'Seuls les propriétaires et administrateurs peuvent archiver des Objectifs',
       }
     }
 
-    await prisma.wig.update({
+    await prisma.objective.update({
       where: { id },
       data: {
         isArchived: true,
@@ -328,7 +328,24 @@ export async function archiveWig(id: string): Promise<ActionResult<void>> {
     revalidatePath('/dashboard')
     return { success: true, data: undefined }
   } catch (error) {
-    console.error('archiveWig error:', error)
-    return { success: false, error: "Erreur lors de l'archivage du WIG" }
+    console.error('archiveObjective error:', error)
+    return { success: false, error: "Erreur lors de l'archivage de l'Objectif" }
   }
 }
+
+// =============================================================================
+// ALIASES DE COMPATIBILITÉ (déprécié - à supprimer après migration complète)
+// =============================================================================
+
+/** @deprecated Utiliser getObjectives */
+export const getWigs = getObjectives
+/** @deprecated Utiliser getObjective */
+export const getWig = getObjective
+/** @deprecated Utiliser createObjective */
+export const createWig = createObjective
+/** @deprecated Utiliser updateObjective */
+export const updateWig = updateObjective
+/** @deprecated Utiliser archiveObjective */
+export const archiveWig = archiveObjective
+/** @deprecated Utiliser calculateObjectiveStatus */
+export const calculateWigStatus = calculateObjectiveStatus

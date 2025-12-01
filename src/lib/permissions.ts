@@ -5,21 +5,27 @@ import type { MemberRole } from '@prisma/client'
  * Permissions disponibles dans l'application
  */
 export type Permission =
-  | 'wig:create'
-  | 'wig:update'
-  | 'wig:update-value' // Mise à jour de currentValue uniquement (pour MEMBER)
-  | 'wig:delete'
-  | 'wig:read'
+  // Objective permissions (nouveau)
+  | 'objective:create'
+  | 'objective:update'
+  | 'objective:update-value' // Mise à jour de currentValue uniquement (pour MEMBER)
+  | 'objective:delete'
+  | 'objective:read'
+  // Lead Measure (Indicateur Prédictif) permissions
   | 'lead-measure:create'
   | 'lead-measure:update'
   | 'lead-measure:delete'
   | 'lead-measure:read'
+  // Weekly Measure permissions
   | 'weekly-measure:record'
+  // Engagement permissions
   | 'engagement:create'
   | 'engagement:update-own'
   | 'engagement:read'
+  // Member management
   | 'member:invite'
   | 'member:remove'
+  // Organization settings
   | 'org:update'
 
 /**
@@ -27,17 +33,17 @@ export type Permission =
  *
  * OWNER  → Tous les droits
  * ADMIN  → Tous sauf supprimer org
- * MEMBER → Lecture + mise à jour valeur WIG + engagements propres + record measures
+ * MEMBER → Lecture + mise à jour valeur Objectif + engagements propres + record measures
  */
 const permissionMatrix: Record<Permission, MemberRole[]> = {
-  // WIG permissions
-  'wig:create': ['OWNER', 'ADMIN'],
-  'wig:update': ['OWNER', 'ADMIN'],
-  'wig:update-value': ['OWNER', 'ADMIN', 'MEMBER'], // MEMBER peut mettre à jour currentValue
-  'wig:delete': ['OWNER', 'ADMIN'],
-  'wig:read': ['OWNER', 'ADMIN', 'MEMBER'],
+  // Objective permissions
+  'objective:create': ['OWNER', 'ADMIN'],
+  'objective:update': ['OWNER', 'ADMIN'],
+  'objective:update-value': ['OWNER', 'ADMIN', 'MEMBER'], // MEMBER peut mettre à jour currentValue
+  'objective:delete': ['OWNER', 'ADMIN'],
+  'objective:read': ['OWNER', 'ADMIN', 'MEMBER'],
 
-  // Lead Measure permissions
+  // Lead Measure (Indicateur Prédictif) permissions
   'lead-measure:create': ['OWNER', 'ADMIN'],
   'lead-measure:update': ['OWNER', 'ADMIN'],
   'lead-measure:delete': ['OWNER', 'ADMIN'],
@@ -114,11 +120,11 @@ export async function checkPermission(
 }
 
 /**
- * Vérifie l'accès à un WIG via son organisation
+ * Vérifie l'accès à un Objectif via son organisation
  */
-export async function checkWigAccess(
+export async function checkObjectiveAccess(
   userId: string,
-  wigId: string,
+  objectiveId: string,
   permission: Permission
 ): Promise<{
   allowed: boolean
@@ -127,28 +133,28 @@ export async function checkWigAccess(
   error?: string
 }> {
   try {
-    const wig = await prisma.wig.findUnique({
-      where: { id: wigId },
+    const objective = await prisma.objective.findUnique({
+      where: { id: objectiveId },
       select: { organizationId: true },
     })
 
-    if (!wig) {
+    if (!objective) {
       return {
         allowed: false,
         role: null,
         organizationId: null,
-        error: 'WIG non trouvé',
+        error: 'Objectif non trouvé',
       }
     }
 
-    const result = await checkPermission(userId, wig.organizationId, permission)
+    const result = await checkPermission(userId, objective.organizationId, permission)
 
     return {
       ...result,
-      organizationId: wig.organizationId,
+      organizationId: objective.organizationId,
     }
   } catch (error) {
-    console.error('checkWigAccess error:', error)
+    console.error('checkObjectiveAccess error:', error)
     return {
       allowed: false,
       role: null,

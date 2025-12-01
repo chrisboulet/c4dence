@@ -157,7 +157,7 @@ export async function createEngagement(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/cadence')
+    revalidatePath('/dashboard/sync')
     return { success: true, data: engagement }
   } catch (error) {
     console.error('createEngagement error:', error)
@@ -209,7 +209,7 @@ export async function updateEngagementStatus(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/cadence')
+    revalidatePath('/dashboard/sync')
     return { success: true, data: engagement }
   } catch (error) {
     console.error('updateEngagementStatus error:', error)
@@ -260,7 +260,7 @@ export async function deleteEngagement(id: string): Promise<ActionResult<void>> 
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/cadence')
+    revalidatePath('/dashboard/sync')
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteEngagement error:', error)
@@ -322,7 +322,7 @@ export async function getEngagementsSummary(
 
 /**
  * Compte les engagements de l'utilisateur courant pour une semaine donnée
- * Utilisé pour la limite 4DX de max 2 engagements par personne par semaine
+ * Utilisé pour appliquer la limite recommandée de max 2 engagements par personne par semaine
  */
 export async function getMyEngagementsCount(
   year: number,

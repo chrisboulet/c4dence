@@ -45,7 +45,7 @@ export default function LoginPage() {
             priority
           />
           <p className="text-muted-foreground">
-            Exécution stratégique 4DX
+            Exécution stratégique
           </p>
         </div>
 

@@ -49,7 +49,7 @@ export function BlockerWidget() {
             <div>
               <CardTitle className="text-lg">Obstacles à lever</CardTitle>
               <CardDescription>
-                4DX Phase "Clear" : Identifiez et résolvez les blocages
+                Identifiez et résolvez les blocages
               </CardDescription>
             </div>
           </div>

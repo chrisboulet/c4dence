@@ -22,42 +22,42 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createBlocker } from '@/app/actions/blocker'
-import { getWigs } from '@/app/actions/wig'
-import type { WigSummary } from '@/types'
+import { getObjectives } from '@/app/actions/objective'
+import type { ObjectiveSummary } from '@/types'
 
 type BlockerFormData = {
-  wigId: string
+  objectiveId: string
   description: string
 }
 
 type BlockerFormProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  wigId?: string // Pré-sélection si on est sur une page WIG
+  objectiveId?: string // Pré-sélection si on est sur une page Objectif
   onSuccess?: () => void
 }
 
 export function BlockerForm({
   open,
   onOpenChange,
-  wigId,
+  objectiveId,
   onSuccess,
 }: BlockerFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [wigs, setWigs] = useState<WigSummary[]>([])
+  const [objectives, setObjectives] = useState<ObjectiveSummary[]>([])
 
-  // Charger les WIGs actifs
+  // Charger les Objectifs actifs
   useEffect(() => {
-    async function fetchWigs() {
-      const result = await getWigs()
+    async function fetchObjectives() {
+      const result = await getObjectives()
       if (result.success) {
-        // Filtrer les WIGs non archivés
-        setWigs(result.data.filter(w => w.status !== 'ACHIEVED'))
+        // Filtrer les Objectifs non archivés
+        setObjectives(result.data.filter(o => o.status !== 'ACHIEVED'))
       }
     }
     if (open) {
-      fetchWigs()
+      fetchObjectives()
     }
   }, [open])
 
@@ -69,14 +69,14 @@ export function BlockerForm({
     formState: { errors },
   } = useForm<BlockerFormData>({
     defaultValues: {
-      wigId: wigId || '',
+      objectiveId: objectiveId || '',
       description: '',
     },
   })
 
   const onSubmit = async (data: BlockerFormData) => {
-    if (!data.wigId) {
-      setError('Veuillez sélectionner un WIG')
+    if (!data.objectiveId) {
+      setError('Veuillez sélectionner un Objectif')
       return
     }
     if (!data.description.trim()) {
@@ -88,7 +88,7 @@ export function BlockerForm({
     setError(null)
 
     const result = await createBlocker({
-      wigId: data.wigId,
+      objectiveId: data.objectiveId,
       description: data.description,
     })
 
@@ -110,7 +110,7 @@ export function BlockerForm({
           <DialogHeader>
             <DialogTitle>Signaler un obstacle</DialogTitle>
             <DialogDescription>
-              4DX Phase "Clear" : Identifiez les obstacles qui bloquent l'avancement de vos WIGs.
+              Identifiez les obstacles qui bloquent l'avancement de vos Objectifs.
             </DialogDescription>
           </DialogHeader>
 
@@ -121,34 +121,34 @@ export function BlockerForm({
               </div>
             )}
 
-            {/* Sélection du WIG */}
+            {/* Sélection de l'Objectif */}
             <div className="grid gap-2">
-              <Label htmlFor="wigId">WIG impacté</Label>
+              <Label htmlFor="objectiveId">Objectif impacté</Label>
               <Controller
-                name="wigId"
+                name="objectiveId"
                 control={control}
-                rules={{ required: 'Veuillez sélectionner un WIG' }}
+                rules={{ required: 'Veuillez sélectionner un Objectif' }}
                 render={({ field }) => (
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!!wigId}
+                    disabled={!!objectiveId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un WIG" />
+                      <SelectValue placeholder="Sélectionner un Objectif" />
                     </SelectTrigger>
                     <SelectContent>
-                      {wigs.map((wig) => (
-                        <SelectItem key={wig.id} value={wig.id}>
-                          {wig.name}
+                      {objectives.map((objective) => (
+                        <SelectItem key={objective.id} value={objective.id}>
+                          {objective.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.wigId && (
-                <p className="text-sm text-red-500">{errors.wigId.message}</p>
+              {errors.objectiveId && (
+                <p className="text-sm text-red-500">{errors.objectiveId.message}</p>
               )}
             </div>
 
@@ -165,7 +165,7 @@ export function BlockerForm({
                 <p className="text-sm text-red-500">{errors.description.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Décrivez clairement l'obstacle et son impact sur l'atteinte du WIG.
+                Décrivez clairement l'obstacle et son impact sur l'atteinte de l'Objectif.
               </p>
             </div>
           </div>

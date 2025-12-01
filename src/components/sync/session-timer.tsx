@@ -31,7 +31,7 @@ function formatTime(seconds: number): string {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
-export function WigSessionTimer() {
+export function SessionTimer() {
   const [isRunning, setIsRunning] = useState(false)
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(PHASES[0].duration)
@@ -116,7 +116,7 @@ export function WigSessionTimer() {
     <Card className="border-brand-purple/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Timer WIG Session</CardTitle>
+          <CardTitle className="text-lg">Timer de Session</CardTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"

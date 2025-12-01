@@ -32,7 +32,7 @@ export async function adminGetAllOrganizations() {
       _count: {
         select: {
           memberships: true,
-          wigs: true,
+          objectives: true,
         },
       },
       memberships: {
@@ -57,7 +57,7 @@ export async function adminGetAllOrganizations() {
       isActive: org.isActive,
       createdAt: org.createdAt,
       memberCount: org._count.memberships,
-      wigCount: org._count.wigs,
+      objectiveCount: org._count.objectives,
       owner: org.memberships[0]?.profile || null,
     })),
   }
@@ -146,7 +146,7 @@ export async function adminUpdateOrganization(
 export async function adminDeleteOrganization(orgId: string) {
   await verifySuperAdmin()
 
-  // Delete will cascade to memberships, wigs, etc.
+  // Delete will cascade to memberships, objectives, etc.
   await prisma.organization.delete({
     where: { id: orgId },
   })
@@ -197,7 +197,7 @@ export async function adminGetOrganizationDetails(orgId: string) {
         where: { acceptedAt: null },
         orderBy: { createdAt: 'desc' },
       },
-      wigs: {
+      objectives: {
         select: { id: true, name: true, status: true, isArchived: true },
         orderBy: { createdAt: 'desc' },
       },

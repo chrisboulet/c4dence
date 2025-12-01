@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { WigDashboard } from '@/components/wig/wig-dashboard'
+import { ObjectiveDashboard } from '@/components/objective/objective-dashboard'
 import { getCurrentWeek } from '@/lib/week'
 
 export default async function DashboardPage() {
@@ -23,12 +23,12 @@ export default async function DashboardPage() {
         </div>
         <div className="text-right hidden sm:block">
           <p className="text-sm text-muted-foreground">Focus sur l'essentiel</p>
-          <p className="text-lg font-semibold text-brand-cyan">4 Disciplines</p>
+          <p className="text-lg font-semibold text-brand-cyan">4 Piliers</p>
         </div>
       </div>
 
-      {/* WIG Dashboard */}
-      <WigDashboard />
+      {/* Objective Dashboard */}
+      <ObjectiveDashboard />
     </div>
   )
 }

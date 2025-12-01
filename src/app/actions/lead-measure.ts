@@ -3,15 +3,15 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
-import { checkWigAccess } from '@/lib/permissions'
+import { checkObjectiveAccess } from '@/lib/permissions'
 import type { ActionResult, CreateLeadMeasureInput, RecordWeeklyMeasureInput } from '@/types'
 import type { LeadMeasure, WeeklyMeasure } from '@prisma/client'
 
 /**
- * Récupère les Lead Measures d'un WIG
+ * Récupère les Lead Measures d'un Objectif
  * Tous les membres peuvent lire
  */
-export async function getLeadMeasures(wigId: string): Promise<ActionResult<(LeadMeasure & { weeklyMeasures: WeeklyMeasure[] })[]>> {
+export async function getLeadMeasures(objectiveId: string): Promise<ActionResult<(LeadMeasure & { weeklyMeasures: WeeklyMeasure[] })[]>> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -20,13 +20,13 @@ export async function getLeadMeasures(wigId: string): Promise<ActionResult<(Lead
       return { success: false, error: 'Non authentifié' }
     }
 
-    const access = await checkWigAccess(user.id, wigId, 'lead-measure:read')
+    const access = await checkObjectiveAccess(user.id, objectiveId, 'lead-measure:read')
     if (!access.allowed) {
       return { success: false, error: access.error || 'Accès non autorisé' }
     }
 
     const leadMeasures = await prisma.leadMeasure.findMany({
-      where: { wigId },
+      where: { objectiveId: objectiveId },
       include: {
         weeklyMeasures: {
           orderBy: [{ year: 'desc' }, { weekNumber: 'desc' }],
@@ -63,7 +63,7 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
       return { success: false, error: 'Non authentifié' }
     }
 
-    const access = await checkWigAccess(user.id, input.wigId, 'lead-measure:create')
+    const access = await checkObjectiveAccess(user.id, input.objectiveId, 'lead-measure:create')
     if (!access.allowed) {
       return {
         success: false,
@@ -73,23 +73,23 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
 
     // Obtenir le prochain sortOrder
     const lastMeasure = await prisma.leadMeasure.findFirst({
-      where: { wigId: input.wigId },
+      where: { objectiveId: input.objectiveId },
       orderBy: { sortOrder: 'desc' },
     })
 
     const leadMeasure = await prisma.leadMeasure.create({
       data: {
-        wigId: input.wigId,
+        objectiveId: input.objectiveId,
         name: input.name,
         description: input.description,
         targetPerWeek: input.targetPerWeek,
         unit: input.unit,
         sortOrder: (lastMeasure?.sortOrder ?? -1) + 1,
-        assignedToId: input.assignedToId, // 4DX: Responsable
+        assignedToId: input.assignedToId, // Responsable
       },
     })
 
-    revalidatePath(`/dashboard/wigs/${input.wigId}`)
+    revalidatePath(`/dashboard/objectives/${input.objectiveId}`)
     return { success: true, data: leadMeasure }
   } catch (error) {
     console.error('createLeadMeasure error:', error)
@@ -103,7 +103,7 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
  */
 export async function updateLeadMeasure(
   id: string,
-  input: Partial<Omit<CreateLeadMeasureInput, 'wigId'>> & { assignedToId?: string }
+  input: Partial<Omit<CreateLeadMeasureInput, 'objectiveId'>> & { assignedToId?: string }
 ): Promise<ActionResult<LeadMeasure>> {
   try {
     const supabase = await createClient()
@@ -121,7 +121,7 @@ export async function updateLeadMeasure(
       return { success: false, error: 'Mesure non trouvée' }
     }
 
-    const access = await checkWigAccess(user.id, existing.wigId, 'lead-measure:update')
+    const access = await checkObjectiveAccess(user.id, existing.objectiveId, 'lead-measure:update')
     if (!access.allowed) {
       return {
         success: false,
@@ -136,11 +136,11 @@ export async function updateLeadMeasure(
         description: input.description,
         targetPerWeek: input.targetPerWeek,
         unit: input.unit,
-        assignedToId: input.assignedToId, // 4DX: Responsable
+        assignedToId: input.assignedToId, // Responsable
       },
     })
 
-    revalidatePath(`/dashboard/wigs/${existing.wigId}`)
+    revalidatePath(`/dashboard/objectives/${existing.objectiveId}`)
     return { success: true, data: leadMeasure }
   } catch (error) {
     console.error('updateLeadMeasure error:', error)
@@ -169,7 +169,7 @@ export async function deleteLeadMeasure(id: string): Promise<ActionResult<void>>
       return { success: false, error: 'Mesure non trouvée' }
     }
 
-    const access = await checkWigAccess(user.id, existing.wigId, 'lead-measure:delete')
+    const access = await checkObjectiveAccess(user.id, existing.objectiveId, 'lead-measure:delete')
     if (!access.allowed) {
       return {
         success: false,
@@ -181,7 +181,7 @@ export async function deleteLeadMeasure(id: string): Promise<ActionResult<void>>
       where: { id },
     })
 
-    revalidatePath(`/dashboard/wigs/${existing.wigId}`)
+    revalidatePath(`/dashboard/objectives/${existing.objectiveId}`)
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteLeadMeasure error:', error)
@@ -210,7 +210,7 @@ export async function recordWeeklyMeasure(input: RecordWeeklyMeasureInput): Prom
       return { success: false, error: 'Mesure non trouvée' }
     }
 
-    const access = await checkWigAccess(user.id, leadMeasure.wigId, 'weekly-measure:record')
+    const access = await checkObjectiveAccess(user.id, leadMeasure.objectiveId, 'weekly-measure:record')
     if (!access.allowed) {
       return { success: false, error: access.error || 'Accès non autorisé' }
     }
@@ -237,7 +237,7 @@ export async function recordWeeklyMeasure(input: RecordWeeklyMeasureInput): Prom
       },
     })
 
-    revalidatePath(`/dashboard/wigs/${leadMeasure.wigId}`)
+    revalidatePath(`/dashboard/objectives/${leadMeasure.objectiveId}`)
     revalidatePath('/dashboard')
     return { success: true, data: weeklyMeasure }
   } catch (error) {

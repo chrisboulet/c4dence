@@ -8,34 +8,34 @@ import { Alert, AlertIcon, AlertTitle, AlertDescription } from '@/components/ui/
 import { Skeleton } from '@/components/ui/skeleton'
 import { ConfettiCelebration } from '@/components/ui/confetti-celebration'
 import { WinningIndicator } from '@/components/ui/trend-arrow'
-import { WigForm } from './wig-form'
-import { WigList } from './wig-list'
+import { ObjectiveForm } from './objective-form'
+import { ObjectiveList } from './objective-list'
 import { EngagementWidget } from '@/components/engagement/engagement-widget'
 import { useOrganization } from '@/components/providers/organization-provider'
-import { getWigs } from '@/app/actions/wig'
+import { getObjectives } from '@/app/actions/objective'
 import { getEngagementsSummary } from '@/app/actions/engagement'
 import { getCurrentWeek } from '@/lib/week'
-import type { WigSummary } from '@/types'
+import type { ObjectiveSummary } from '@/types'
 
-type WigDashboardProps = {
-  initialWigs?: WigSummary[]
+type ObjectiveDashboardProps = {
+  initialObjectives?: ObjectiveSummary[]
 }
 
-export function WigDashboard({ initialWigs }: WigDashboardProps) {
+export function ObjectiveDashboard({ initialObjectives }: ObjectiveDashboardProps) {
   const { currentOrg, isLoading: isOrgLoading } = useOrganization()
-  const [wigs, setWigs] = useState<WigSummary[]>(initialWigs || [])
-  const [isLoading, setIsLoading] = useState(!initialWigs)
+  const [objectives, setObjectives] = useState<ObjectiveSummary[]>(initialObjectives || [])
+  const [isLoading, setIsLoading] = useState(!initialObjectives)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [engagementPending, setEngagementPending] = useState(0)
   const [showConfetti, setShowConfetti] = useState(false)
   const [previousAchievedCount, setPreviousAchievedCount] = useState(0)
   const currentWeek = getCurrentWeek()
 
-  const fetchWigs = useCallback(async (orgId: string) => {
+  const fetchObjectives = useCallback(async (orgId: string) => {
     setIsLoading(true)
-    const result = await getWigs(orgId)
+    const result = await getObjectives(orgId)
     if (result.success) {
-      setWigs(result.data)
+      setObjectives(result.data)
     }
     setIsLoading(false)
   }, [])
@@ -50,25 +50,25 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
   // Re-fetch when organization changes
   useEffect(() => {
     if (currentOrg && !isOrgLoading) {
-      fetchWigs(currentOrg.organizationId)
+      fetchObjectives(currentOrg.organizationId)
       fetchEngagementsSummary(currentOrg.organizationId)
     }
-  }, [currentOrg, isOrgLoading, fetchWigs, fetchEngagementsSummary])
+  }, [currentOrg, isOrgLoading, fetchObjectives, fetchEngagementsSummary])
 
   const handleRefresh = () => {
     if (currentOrg) {
-      fetchWigs(currentOrg.organizationId)
+      fetchObjectives(currentOrg.organizationId)
     }
   }
 
   // Calculs KPIs
-  const activeWigsCount = wigs.length
-  const onTrackCount = wigs.filter((w) => w.status === 'ON_TRACK').length
-  const atRiskCount = wigs.filter((w) => w.status === 'AT_RISK').length
-  const offTrackCount = wigs.filter((w) => w.status === 'OFF_TRACK').length
-  const achievedCount = wigs.filter((w) => w.status === 'ACHIEVED').length
+  const activeObjectivesCount = objectives.length
+  const onTrackCount = objectives.filter((o) => o.status === 'ON_TRACK').length
+  const atRiskCount = objectives.filter((o) => o.status === 'AT_RISK').length
+  const offTrackCount = objectives.filter((o) => o.status === 'OFF_TRACK').length
+  const achievedCount = objectives.filter((o) => o.status === 'ACHIEVED').length
 
-  // Déclencher confetti quand un nouveau WIG est ACHIEVED
+  // Déclencher confetti quand un nouvel objectif est atteint
   useEffect(() => {
     if (achievedCount > previousAchievedCount && previousAchievedCount > 0) {
       setShowConfetti(true)
@@ -77,35 +77,26 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
     setPreviousAchievedCount(achievedCount)
   }, [achievedCount, previousAchievedCount])
 
-  // Constante 4DX
-  const MAX_RECOMMENDED_WIGS = 3
+  const MAX_RECOMMENDED_OBJECTIVES = 3
 
   return (
     <div className="space-y-6">
-      {/* Indicateur WINNING/LOSING - 4DX Discipline 3 */}
-      {!isLoading && activeWigsCount > 0 && (
+      {/* Indicateur VICTOIRE/DÉFAITE - Pilier 3 */}
+      {!isLoading && activeObjectivesCount > 0 && (
         <div className="flex justify-center">
-          <WinningIndicator wigs={wigs} />
+          <WinningIndicator objectives={objectives} />
         </div>
       )}
 
-      {/* Warning 4DX - Trop de WIGs */}
-      {!isLoading && activeWigsCount > MAX_RECOMMENDED_WIGS && (
+      {/* Warning - Trop d'objectifs */}
+      {!isLoading && activeObjectivesCount > MAX_RECOMMENDED_OBJECTIVES && (
         <Alert variant="warning">
           <AlertIcon variant="warning" />
-          <AlertTitle>Attention : {activeWigsCount} WIGs actifs</AlertTitle>
+          <AlertTitle>Attention : {activeObjectivesCount} Objectifs actifs</AlertTitle>
           <AlertDescription>
-            La méthodologie 4DX recommande de se concentrer sur{' '}
+            Il est recommandé de se concentrer sur{' '}
             <strong>2-3 objectifs maximum</strong> pour maximiser les chances de
-            succès. Envisagez d'archiver ou de prioriser vos WIGs.
-            <a
-              href="https://www.franklincovey.com/the-4-disciplines/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 ml-2 underline hover:no-underline"
-            >
-              En savoir plus <ExternalLink className="h-3 w-3" />
-            </a>
+            succès. Envisagez d'archiver ou de prioriser vos objectifs.
           </AlertDescription>
         </Alert>
       )}
@@ -119,10 +110,10 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
               <div className="p-2 rounded-lg bg-brand-purple/10">
                 <Target className="h-4 w-4 text-brand-purple" />
               </div>
-              <CardDescription>WIGs actifs</CardDescription>
+              <CardDescription>Objectifs actifs</CardDescription>
             </div>
             <CardTitle className="text-4xl mt-2">
-              {isLoading ? <Skeleton className="h-10 w-16" /> : activeWigsCount}
+              {isLoading ? <Skeleton className="h-10 w-16" /> : activeObjectivesCount}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -139,7 +130,7 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
               <div className="p-2 rounded-lg bg-brand-cyan/10">
                 <TrendingUp className="h-4 w-4 text-brand-cyan" />
               </div>
-              <CardDescription>Statut des WIGs</CardDescription>
+              <CardDescription>Statut des Objectifs</CardDescription>
             </div>
             {isLoading ? (
               <Skeleton className="h-10 w-32 mt-2" />
@@ -192,19 +183,19 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
         </Card>
       </div>
 
-      {/* Section WIGs */}
+      {/* Section Objectifs */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Vos objectifs ambitieux (WIGs)</CardTitle>
+              <CardTitle>Vos objectifs stratégiques</CardTitle>
               <CardDescription>
-                Discipline 1 : Se concentrer sur l'essentiel
+                Pilier 1 : Se concentrer sur l'essentiel
               </CardDescription>
             </div>
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Nouveau WIG
+              Nouvel Objectif
             </Button>
           </div>
         </CardHeader>
@@ -216,7 +207,7 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
               ))}
             </div>
           ) : (
-            <WigList wigs={wigs} onRefresh={handleRefresh} />
+            <ObjectiveList objectives={objectives} onRefresh={handleRefresh} />
           )}
         </CardContent>
       </Card>
@@ -225,7 +216,7 @@ export function WigDashboard({ initialWigs }: WigDashboardProps) {
       <EngagementWidget />
 
       {/* Form Modal */}
-      <WigForm
+      <ObjectiveForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         onSuccess={handleRefresh}

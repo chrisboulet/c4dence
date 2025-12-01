@@ -12,12 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { updateWig } from '@/app/actions/wig'
+import { updateObjective } from '@/app/actions/objective'
 
 type UpdateValueDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  wigId: string
+  objectiveId: string
   currentValue: number
   unit: string
   onSuccess?: () => void
@@ -26,7 +26,7 @@ type UpdateValueDialogProps = {
 export function UpdateValueDialog({
   open,
   onOpenChange,
-  wigId,
+  objectiveId,
   currentValue,
   unit,
   onSuccess,
@@ -47,7 +47,7 @@ export function UpdateValueDialog({
       return
     }
 
-    const result = await updateWig({ id: wigId, currentValue: numValue })
+    const result = await updateObjective({ id: objectiveId, currentValue: numValue })
     setIsSubmitting(false)
 
     if (result.success) {

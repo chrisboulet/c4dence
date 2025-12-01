@@ -111,7 +111,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Méthodologie</span>
-              <span>4DX</span>
+              <span>Méthode C4DENCE</span>
             </div>
             <div className="pt-4 text-center text-xs text-muted-foreground">
               Propulsé par{' '}

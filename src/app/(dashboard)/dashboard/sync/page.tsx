@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { CadenceMeeting } from '@/components/cadence/cadence-meeting'
+import { SyncMeeting } from '@/components/sync/sync-meeting'
 import { getCurrentWeek } from '@/lib/week'
 
-export default async function CadencePage() {
+export default async function SyncPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const currentWeek = getCurrentWeek()
@@ -12,9 +12,9 @@ export default async function CadencePage() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-muted-foreground mb-1">Discipline 4</p>
+          <p className="text-muted-foreground mb-1">Pilier 4</p>
           <h1 className="text-3xl font-bold">
-            Réunion de <span className="text-gradient">Cadence</span>
+            Réunion de <span className="text-gradient">Synchronisation</span>
           </h1>
           <p className="text-muted-foreground mt-2">
             Semaine {currentWeek.weekNumber}, {currentWeek.year}
@@ -22,8 +22,8 @@ export default async function CadencePage() {
         </div>
       </div>
 
-      {/* Cadence Meeting Component */}
-      <CadenceMeeting />
+      {/* Sync Meeting Component */}
+      <SyncMeeting />
     </div>
   )
 }

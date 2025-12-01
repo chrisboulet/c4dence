@@ -153,7 +153,7 @@ export async function getOrganization(id: string): Promise<ActionResult<Organiza
  */
 export async function updateOrganization(
   id: string,
-  data: Partial<Pick<Organization, 'name' | 'cadenceDay' | 'cadenceTime' | 'logoUrl'>>
+  data: Partial<Pick<Organization, 'name' | 'syncDay' | 'syncTime' | 'logoUrl'>>
 ): Promise<ActionResult<Organization>> {
   try {
     const supabase = await createClient()

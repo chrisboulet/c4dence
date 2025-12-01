@@ -41,7 +41,7 @@ type OrgMember = {
 type LeadMeasureFormProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  wigId: string
+  objectiveId: string
   leadMeasure?: LeadMeasure | null
   onSuccess?: () => void
 }
@@ -49,7 +49,7 @@ type LeadMeasureFormProps = {
 export function LeadMeasureForm({
   open,
   onOpenChange,
-  wigId,
+  objectiveId,
   leadMeasure,
   onSuccess,
 }: LeadMeasureFormProps) {
@@ -112,12 +112,12 @@ export function LeadMeasureForm({
       description: data.description || undefined,
       targetPerWeek: parseFloat(data.targetPerWeek) || 0,
       unit: data.unit,
-      assignedToId: data.assignedToId || undefined, // 4DX: Responsable
+      assignedToId: data.assignedToId || undefined,
     }
 
     const result = isEditing
       ? await updateLeadMeasure(leadMeasure.id, input)
-      : await createLeadMeasure({ wigId, ...input })
+      : await createLeadMeasure({ objectiveId, ...input })
 
     setIsSubmitting(false)
 
@@ -136,11 +136,11 @@ export function LeadMeasureForm({
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>
-              {isEditing ? 'Modifier la mesure' : 'Nouvelle mesure prédictive'}
+              {isEditing ? 'Modifier l\'indicateur' : 'Nouvel indicateur prédictif'}
             </DialogTitle>
             <DialogDescription>
               {isEditing
-                ? 'Modifiez les paramètres de cette mesure prédictive.'
+                ? 'Modifiez les paramètres de cet indicateur prédictif.'
                 : 'Définissez une action influençable et prédictive du résultat.'}
             </DialogDescription>
           </DialogHeader>
@@ -153,7 +153,7 @@ export function LeadMeasureForm({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="name">Nom de la mesure</Label>
+              <Label htmlFor="name">Nom de l'indicateur</Label>
               <Input
                 id="name"
                 placeholder="Ex: Appels de prospection"
@@ -173,7 +173,6 @@ export function LeadMeasureForm({
               />
             </div>
 
-            {/* 4DX: Responsable de la mesure */}
             <div className="grid gap-2">
               <Label htmlFor="assignedToId">Assigné à</Label>
               <Controller
@@ -195,7 +194,7 @@ export function LeadMeasureForm({
                 )}
               />
               <p className="text-xs text-muted-foreground">
-                4DX : Chaque mesure doit avoir un responsable
+                Chaque indicateur doit avoir un responsable
               </p>
             </div>
 
@@ -235,7 +234,7 @@ export function LeadMeasureForm({
                 ? 'Enregistrement...'
                 : isEditing
                 ? 'Enregistrer'
-                : 'Créer la mesure'}
+                : 'Créer l\'indicateur'}
             </Button>
           </DialogFooter>
         </form>

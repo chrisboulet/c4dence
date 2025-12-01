@@ -1,11 +1,11 @@
 // =============================================================================
 // C4DENCE — Schema Prisma
 // =============================================================================
-// Application de gestion d'exécution stratégique basée sur la méthodologie 4DX
-// (The 4 Disciplines of Execution)
+// Application de gestion d'exécution stratégique basée sur la Méthode C4DENCE
+// (Les 4 Piliers de l'Exécution Stratégique)
 //
-// Version : 1.0
-// Date    : 30 novembre 2025
+// Version : 2.0
+// Date    : 1 décembre 2025
 // Auteur  : Boulet Stratégies TI
 // =============================================================================
 
@@ -26,12 +26,12 @@ datasource db {
 // ÉNUMÉRATIONS
 // =============================================================================
 
-/// Statut calculé d'un WIG basé sur la progression vs la cible
-/// Règle de calcul (voir lib/wig-status.ts) :
+/// Statut calculé d'un Objectif Prioritaire basé sur la progression vs la cible
+/// Règle de calcul (voir lib/objective-status.ts) :
 /// - ON_TRACK  : progression >= 90% de la cible attendue à cette date
 /// - AT_RISK   : progression entre 70% et 90%
 /// - OFF_TRACK : progression < 70%
-enum WigStatus {
+enum ObjectiveStatus {
   ON_TRACK   // 🟢 En bonne voie
   AT_RISK    // 🟡 À risque
   OFF_TRACK  // 🔴 Hors piste
@@ -53,13 +53,13 @@ enum BlockerStatus {
 /// Détermine les permissions dans l'application
 enum MemberRole {
   OWNER   // Propriétaire : tous les droits, facturation, suppression org
-  ADMIN   // Admin : gestion des membres, tous les WIGs
-  MEMBER  // Membre : lecture/écriture sur WIGs assignés uniquement
+  ADMIN   // Admin : gestion des membres, tous les Objectifs
+  MEMBER  // Membre : lecture/écriture sur Objectifs assignés uniquement
 
   @@schema("c4dence")
 }
 
-/// Statut d'un engagement pris lors d'une réunion de cadence
+/// Statut d'un engagement pris lors d'une réunion de synchronisation
 enum EngagementStatus {
   PENDING    // ⏳ En attente — engagement pris, pas encore réalisé
   COMPLETED  // ✅ Complété — engagement réalisé dans les délais
@@ -69,8 +69,8 @@ enum EngagementStatus {
   @@schema("c4dence")
 }
 
-/// Jour de la semaine pour la réunion de cadence
-enum CadenceDay {
+/// Jour de la semaine pour la réunion de synchronisation
+enum SyncDay {
   MONDAY
   TUESDAY
   WEDNESDAY
@@ -108,8 +108,8 @@ model Profile {
   // --- Relations ---
   memberships    Membership[]   // Organisations dont l'utilisateur est membre
   engagements    Engagement[]   // Engagements pris par l'utilisateur
-  ownedWigs      Wig[]          @relation("WigOwner") // WIGs dont l'utilisateur est responsable
-  assignedMeasures LeadMeasure[] @relation("MeasureAssignee") // Mesures assignées
+  ownedObjectives Objective[]   @relation("ObjectiveOwner") // Objectifs dont l'utilisateur est responsable
+  assignedMeasures LeadMeasure[] @relation("MeasureAssignee") // Indicateurs assignés
   reportedBlockers Blocker[]    @relation("BlockerReporter") // Obstacles signalés
 
   @@schema("c4dence")
@@ -117,9 +117,9 @@ model Profile {
 }
 
 /// Organisation — Entité principale de regroupement
-/// 
+///
 /// Représente une entreprise, une équipe, ou un département.
-/// Tous les WIGs appartiennent à une organisation.
+/// Tous les Objectifs appartiennent à une organisation.
 /// Multi-tenant : les données sont isolées par organisation via RLS.
 /// 
 /// Exemples :
@@ -135,9 +135,9 @@ model Organization {
   name      String                        // Nom affiché : "FLB Solutions Alimentaires"
   slug      String   @unique              // URL-friendly : "flb-solutions"
   
-  // --- Paramètres de cadence (Discipline 4) ---
-  cadenceDay  CadenceDay @default(MONDAY) @map("cadence_day")  // Jour de la réunion hebdo
-  cadenceTime String     @default("09:00") @map("cadence_time") // Heure (format HH:mm)
+  // --- Paramètres de synchronisation (Pilier 4 : Rythme de Responsabilité) ---
+  syncDay  SyncDay @default(MONDAY) @map("sync_day")  // Jour de la réunion hebdo
+  syncTime String  @default("09:00") @map("sync_time") // Heure (format HH:mm)
 
   // --- Branding (optionnel) ---
   logoUrl   String?  @map("logo_url")
@@ -147,7 +147,7 @@ model Organization {
 
   // --- Relations ---
   memberships Membership[]
-  wigs        Wig[]
+  objectives  Objective[]
   invitations Invitation[]
 
   @@schema("c4dence")
@@ -155,12 +155,12 @@ model Organization {
 }
 
 /// Membership — Relation many-to-many entre Profile et Organization
-/// 
+///
 /// Un utilisateur peut être membre de plusieurs organisations.
 /// Le rôle détermine les permissions :
 /// - OWNER  : 1 seul par org, gère facturation et suppression
-/// - ADMIN  : Gère membres et tous les WIGs
-/// - MEMBER : Accès lecture/écriture aux WIGs assignés
+/// - ADMIN  : Gère membres et tous les Objectifs
+/// - MEMBER : Accès lecture/écriture aux Objectifs assignés
 model Membership {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -184,25 +184,25 @@ model Membership {
 }
 
 // =============================================================================
-// MODÈLES 4DX
+// MODÈLES MÉTHODE C4DENCE
 // =============================================================================
 
-/// WIG — Wildly Important Goal (Objectif Absolument Prioritaire)
-/// 
-/// Discipline 1 : Se concentrer sur l'essentiel
-/// Un WIG est un objectif stratégique mesurable avec une échéance.
-/// 
+/// Objective — Objectif Prioritaire (OP)
+///
+/// Pilier 1 : Focus Stratégique
+/// Un Objectif est un objectif stratégique mesurable avec une échéance.
+///
 /// Format recommandé : "De X à Y d'ici [date]"
 /// Exemples :
 /// - "Augmenter le CA de 2.5M$ à 3.2M$ d'ici le 31 décembre 2025"
 /// - "Réduire le taux de retour de 8% à 3% d'ici le 30 juin 2025"
 /// - "Atteindre 150 clients actifs (actuellement 89) d'ici le 31 mars 2025"
-/// 
-/// Règles 4DX :
-/// - Maximum 2-3 WIGs actifs par équipe
+///
+/// Bonnes pratiques :
+/// - Maximum 2-3 Objectifs actifs par équipe
 /// - Doit être mesurable objectivement
 /// - L'échéance crée l'urgence
-model Wig {
+model Objective {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -211,17 +211,17 @@ model Wig {
   organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  // --- Responsable du WIG (4DX: accountability) ---
-  // Note: Optionnel pour compatibilité avec WIGs existants, mais requis à la création
+  // --- Responsable de l'Objectif (accountability) ---
+  // Note: Optionnel pour compatibilité avec Objectifs existants, mais requis à la création
   ownerId        String?      @map("owner_id")
-  owner          Profile?     @relation("WigOwner", fields: [ownerId], references: [id])
+  owner          Profile?     @relation("ObjectiveOwner", fields: [ownerId], references: [id])
 
-  // --- Définition du WIG ---
+  // --- Définition de l'Objectif ---
   name           String       // Nom court : "Croissance CA 2025"
   description    String?      // Description complète avec contexte
-  
-  // --- Métriques (Lag Measure / Mesure de résultat) ---
-  // La mesure de résultat = ce qu'on veut atteindre
+
+  // --- Métriques (Indicateur de Résultat) ---
+  // L'indicateur de résultat = ce qu'on veut atteindre
   // Exemple : Chiffre d'affaires, Taux de satisfaction, Nombre de clients
   startValue     Float        @map("start_value")   // Valeur de départ : 2500000
   targetValue    Float        @map("target_value")  // Valeur cible : 3200000
@@ -229,14 +229,14 @@ model Wig {
   unit           String       @default("")          // Unité : "$", "%", "clients"
 
   // --- Période ---
-  startDate      DateTime     @map("start_date")    // Date de début du WIG
+  startDate      DateTime     @map("start_date")    // Date de début de l'Objectif
   endDate        DateTime     @map("end_date")      // Date d'échéance
 
   // --- Statut ---
   // IMPORTANT : Ce champ est dénormalisé pour performance.
-  // Il est recalculé par un job CRON ou lors de la mise à jour des mesures.
-  // Voir lib/wig-status.ts pour l'algorithme de calcul.
-  status         WigStatus    @default(AT_RISK)
+  // Il est recalculé par un job CRON ou lors de la mise à jour des indicateurs.
+  // Voir lib/objective-status.ts pour l'algorithme de calcul.
+  status         ObjectiveStatus @default(AT_RISK)
 
   // --- Archivage ---
   isArchived     Boolean      @default(false) @map("is_archived")
@@ -251,29 +251,29 @@ model Wig {
   @@index([status])
   @@index([isArchived])
   @@schema("c4dence")
-  @@map("wigs")
+  @@map("objectives")
 }
 
-/// LeadMeasure — Mesure Prédictive
-/// 
-/// Discipline 2 : Agir sur les mesures prédictives
-/// Une mesure prédictive est une action INFLUENÇABLE et PRÉDICTIVE du résultat.
-/// 
+/// LeadMeasure — Indicateur Prédictif (IP)
+///
+/// Pilier 2 : Actions Prédictives
+/// Un indicateur prédictif est une action INFLUENÇABLE et PRÉDICTIVE du résultat.
+///
 /// Caractéristiques :
 /// - INFLUENÇABLE : L'équipe peut agir directement dessus
-/// - PRÉDICTIVE : Corrélée avec l'atteinte du WIG
-/// 
-/// Exemples pour WIG "Augmenter CA de 2.5M$ à 3.2M$" :
+/// - PRÉDICTIVE : Corrélée avec l'atteinte de l'Objectif
+///
+/// Exemples pour Objectif "Augmenter CA de 2.5M$ à 3.2M$" :
 /// - "Nombre d'appels de prospection par semaine" (cible: 50)
 /// - "Nombre de démos produit par semaine" (cible: 10)
 /// - "Nombre de propositions envoyées par semaine" (cible: 5)
-/// 
+///
 /// Anti-exemples (NON prédictifs) :
 /// - "Nombre de ventes" (c'est le résultat, pas l'action)
-/// - "CA généré" (c'est le WIG lui-même)
-/// 
-/// Règles 4DX :
-/// - Maximum 2-3 mesures prédictives par WIG
+/// - "CA généré" (c'est l'Objectif lui-même)
+///
+/// Bonnes pratiques :
+/// - Maximum 2-3 indicateurs prédictifs par Objectif
 /// - Doit être mesurable chaque semaine
 /// - L'équipe doit pouvoir influencer directement
 model LeadMeasure {
@@ -281,11 +281,11 @@ model LeadMeasure {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // --- Relation WIG ---
-  wigId     String   @map("wig_id")
-  wig       Wig      @relation(fields: [wigId], references: [id], onDelete: Cascade)
+  // --- Relation Objectif ---
+  objectiveId String   @map("objective_id")
+  objective   Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
 
-  // --- Responsable de la mesure (4DX: accountability) ---
+  // --- Responsable de l'indicateur (accountability) ---
   assignedToId   String?      @map("assigned_to_id")
   assignedTo     Profile?     @relation("MeasureAssignee", fields: [assignedToId], references: [id])
 
@@ -305,16 +305,16 @@ model LeadMeasure {
   weeklyMeasures WeeklyMeasure[]
   engagements    Engagement[]   @relation("EngagementMeasure")
 
-  @@index([wigId])
+  @@index([objectiveId])
   @@index([assignedToId])
   @@schema("c4dence")
   @@map("lead_measures")
 }
 
-/// WeeklyMeasure — Mesure hebdomadaire d'une LeadMeasure
-/// 
-/// Discipline 3 : Tenir un tableau de résultats convaincant
-/// Chaque semaine, l'équipe enregistre sa performance sur chaque mesure prédictive.
+/// WeeklyMeasure — Mesure hebdomadaire d'un Indicateur Prédictif
+///
+/// Pilier 3 : Visibilité Continue
+/// Chaque semaine, l'équipe enregistre sa performance sur chaque indicateur prédictif.
 /// 
 /// Le numéro de semaine suit la norme ISO 8601 :
 /// - Semaine 1 = première semaine contenant un jeudi
@@ -378,22 +378,22 @@ model Invitation {
   @@map("invitations")
 }
 
-/// Engagement — Engagement pris lors d'une réunion de cadence
-/// 
-/// Discipline 4 : Créer une cadence de responsabilisation
+/// Engagement — Engagement pris lors d'une réunion de synchronisation
+///
+/// Pilier 4 : Rythme de Responsabilité
 /// Lors de la réunion hebdomadaire, chaque membre prend 1-2 engagements
 /// spécifiques pour la semaine à venir.
-/// 
+///
 /// Format recommandé : Verbe d'action + Objet + Délai
 /// Exemples :
 /// - "Appeler les 10 prospects chauds de la liste avant mercredi"
 /// - "Finaliser la proposition ABC Corp avant vendredi 17h"
 /// - "Relancer les 3 devis en attente"
-/// 
-/// Règles 4DX :
+///
+/// Bonnes pratiques :
 /// - 1-2 engagements par personne par semaine (pas plus!)
 /// - Doit être complétable en 1 semaine
-/// - Lié aux mesures prédictives (actions qui font avancer le score)
+/// - Lié aux indicateurs prédictifs (actions qui font avancer le score)
 /// 
 /// Lors de la réunion suivante :
 /// 1. Chacun rapporte sur ses engagements de la semaine passée
@@ -420,7 +420,7 @@ model Engagement {
   // --- Contenu de l'engagement ---
   description String  // "Appeler les 10 prospects chauds avant mercredi"
 
-  // --- Lien optionnel vers une Lead Measure (4DX: impact sur le score) ---
+  // --- Lien optionnel vers un Indicateur Prédictif (impact sur le score) ---
   leadMeasureId String?      @map("lead_measure_id")
   leadMeasure   LeadMeasure? @relation("EngagementMeasure", fields: [leadMeasureId], references: [id])
 
@@ -442,10 +442,10 @@ model Engagement {
   @@map("engagements")
 }
 
-/// Blocker — Obstacle signalé lors d'une réunion de cadence
+/// Blocker — Obstacle signalé lors d'une réunion de synchronisation
 ///
-/// Discipline 4 : Phase "Clear" de la WIG Session
-/// Les obstacles sont des problèmes qui bloquent l'avancement d'un WIG
+/// Pilier 4 : Phase "Clear" de la Session de Synchronisation
+/// Les obstacles sont des problèmes qui bloquent l'avancement d'un Objectif
 /// et qui nécessitent une action ou une escalade.
 ///
 /// Exemples :
@@ -457,9 +457,9 @@ model Blocker {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  // --- Quel WIG est impacté ---
-  wigId        String        @map("wig_id")
-  wig          Wig           @relation(fields: [wigId], references: [id], onDelete: Cascade)
+  // --- Quel Objectif est impacté ---
+  objectiveId  String        @map("objective_id")
+  objective    Objective     @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
 
   // --- Qui a signalé l'obstacle ---
   reportedById String        @map("reported_by_id")
@@ -474,7 +474,7 @@ model Blocker {
   resolvedAt   DateTime?     @map("resolved_at")
   resolution   String?       // Comment l'obstacle a été résolu
 
-  @@index([wigId])
+  @@index([objectiveId])
   @@index([reportedById])
   @@index([status])
   @@schema("c4dence")
@@ -489,28 +489,28 @@ model Blocker {
 // SQL manuelles dans prisma/migrations/
 
 // Exemple de vue utile (à créer via migration SQL) :
-// 
-// CREATE VIEW wig_progress AS
-// SELECT 
-//   w.id as wig_id,
-//   w.name,
-//   w.start_value,
-//   w.target_value,
-//   w.current_value,
-//   w.start_date,
-//   w.end_date,
+//
+// CREATE VIEW objective_progress AS
+// SELECT
+//   o.id as objective_id,
+//   o.name,
+//   o.start_value,
+//   o.target_value,
+//   o.current_value,
+//   o.start_date,
+//   o.end_date,
 //   -- Progression en pourcentage
-//   CASE 
-//     WHEN w.target_value = w.start_value THEN 100
-//     ELSE ROUND(((w.current_value - w.start_value) / (w.target_value - w.start_value)) * 100, 1)
+//   CASE
+//     WHEN o.target_value = o.start_value THEN 100
+//     ELSE ROUND(((o.current_value - o.start_value) / (o.target_value - o.start_value)) * 100, 1)
 //   END as progress_percent,
 //   -- Jours écoulés vs total
-//   EXTRACT(DAY FROM (NOW() - w.start_date)) as days_elapsed,
-//   EXTRACT(DAY FROM (w.end_date - w.start_date)) as total_days,
+//   EXTRACT(DAY FROM (NOW() - o.start_date)) as days_elapsed,
+//   EXTRACT(DAY FROM (o.end_date - o.start_date)) as total_days,
 //   -- Progression temporelle en pourcentage
-//   ROUND(EXTRACT(DAY FROM (NOW() - w.start_date)) / NULLIF(EXTRACT(DAY FROM (w.end_date - w.start_date)), 0) * 100, 1) as time_progress_percent
-// FROM wigs w
-// WHERE w.is_archived = false;
+//   ROUND(EXTRACT(DAY FROM (NOW() - o.start_date)) / NULLIF(EXTRACT(DAY FROM (o.end_date - o.start_date)), 0) * 100, 1) as time_progress_percent
+// FROM objectives o
+// WHERE o.is_archived = false;
 
 // =============================================================================
 // NOTES D'IMPLÉMENTATION
@@ -522,7 +522,7 @@ model Blocker {
 // - profiles : Lecture/écriture uniquement son propre profil
 // - organizations : Via membership
 // - memberships : OWNER/ADMIN peuvent gérer
-// - wigs, lead_measures, weekly_measures : Via organization membership
+// - objectives, lead_measures, weekly_measures : Via organization membership
 // - engagements : Lecture org, écriture soi-même
 //
 // Voir le fichier SQL séparé : prisma/rls-policies.sql
@@ -534,16 +534,16 @@ model Blocker {
 //
 // Voir : supabase/migrations/
 
-// 3. CALCUL DU STATUT WIG
-// -----------------------
+// 3. CALCUL DU STATUT OBJECTIF
+// ----------------------------
 // Le statut est recalculé :
 // - À chaque mise à jour de WeeklyMeasure (via Server Action)
 // - Via CRON job quotidien (pour rattraper les edge cases)
 //
-// Algorithme dans : lib/wig-status.ts
+// Algorithme dans : lib/objective-status.ts
 
 // 4. SOFT DELETE
 // --------------
-// Les WIGs utilisent isArchived plutôt que suppression.
+// Les Objectifs utilisent isArchived plutôt que suppression.
 // Les autres entités utilisent CASCADE via foreign keys.
-// Un WIG archivé reste visible en lecture seule.
+// Un Objectif archivé reste visible en lecture seule.

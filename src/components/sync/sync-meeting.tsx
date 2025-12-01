@@ -9,14 +9,14 @@ import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EngagementWidget } from '@/components/engagement/engagement-widget'
 import { LeadMeasureChart } from '@/components/charts/lead-measure-chart'
-import { WigSessionTimer } from '@/components/cadence/wig-session-timer'
+import { SessionTimer } from '@/components/sync/session-timer'
 import { WinningIndicator } from '@/components/ui/trend-arrow'
 import { BlockerWidget } from '@/components/blocker/blocker-widget'
 import { useOrganization } from '@/components/providers/organization-provider'
-import { getWigs } from '@/app/actions/wig'
+import { getObjectives } from '@/app/actions/objective'
 import { getEngagements } from '@/app/actions/engagement'
 import { getCurrentWeek } from '@/lib/week'
-import type { WigSummary, EngagementWithProfile } from '@/types'
+import type { ObjectiveSummary, EngagementWithProfile } from '@/types'
 
 type WeeklyStats = {
   totalEngagements: number
@@ -25,9 +25,9 @@ type WeeklyStats = {
   missedEngagements: number
 }
 
-export function CadenceMeeting() {
+export function SyncMeeting() {
   const { currentOrg, isLoading: isOrgLoading } = useOrganization()
-  const [wigs, setWigs] = useState<WigSummary[]>([])
+  const [objectives, setObjectives] = useState<ObjectiveSummary[]>([])
   const [engagements, setEngagements] = useState<EngagementWithProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [weekOffset, setWeekOffset] = useState(0)
@@ -50,13 +50,13 @@ export function CadenceMeeting() {
   const fetchData = useCallback(async (orgId: string) => {
     setIsLoading(true)
 
-    const [wigsResult, engagementsResult] = await Promise.all([
-      getWigs(orgId),
+    const [objectivesResult, engagementsResult] = await Promise.all([
+      getObjectives(orgId),
       getEngagements(currentWeek.year, currentWeek.weekNumber, orgId),
     ])
 
-    if (wigsResult.success) {
-      setWigs(wigsResult.data)
+    if (objectivesResult.success) {
+      setObjectives(objectivesResult.data)
     }
     if (engagementsResult.success) {
       setEngagements(engagementsResult.data)
@@ -80,10 +80,10 @@ export function CadenceMeeting() {
     missedEngagements: engagements.filter(e => e.status === 'MISSED').length,
   }
 
-  const onTrackWigs = wigs.filter(w => w.status === 'ON_TRACK').length
-  const atRiskWigs = wigs.filter(w => w.status === 'AT_RISK').length
-  const offTrackWigs = wigs.filter(w => w.status === 'OFF_TRACK').length
-  const achievedWigs = wigs.filter(w => w.status === 'ACHIEVED').length
+  const onTrackObjectives = objectives.filter(w => w.status === 'ON_TRACK').length
+  const atRiskObjectives = objectives.filter(w => w.status === 'AT_RISK').length
+  const offTrackObjectives = objectives.filter(w => w.status === 'OFF_TRACK').length
+  const achievedObjectives = objectives.filter(w => w.status === 'ACHIEVED').length
 
   const completionRate = stats.totalEngagements > 0
     ? Math.round((stats.completedEngagements / stats.totalEngagements) * 100)
@@ -91,10 +91,10 @@ export function CadenceMeeting() {
 
   return (
     <div className="space-y-6">
-      {/* WINNING/LOSING Indicator - 4DX Discipline 3 */}
-      {!isLoading && wigs.length > 0 && (
+      {/* VICTOIRE/DÉFAITE Indicator - Pilier 3 */}
+      {!isLoading && objectives.length > 0 && (
         <div className="flex justify-center">
-          <WinningIndicator wigs={wigs} />
+          <WinningIndicator objectives={objectives} />
         </div>
       )}
 
@@ -141,7 +141,7 @@ export function CadenceMeeting() {
 
       {/* KPIs Row */}
       <div className="grid gap-4 md:grid-cols-4">
-        {/* WIG Status */}
+        {/* Objectif Status */}
         <Card className="relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-brand-purple/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="pb-2">
@@ -149,7 +149,7 @@ export function CadenceMeeting() {
               <div className="p-2 rounded-lg bg-brand-purple/10">
                 <Target className="h-4 w-4 text-brand-purple" />
               </div>
-              <CardDescription>WIGs</CardDescription>
+              <CardDescription>Objectifs</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -157,23 +157,23 @@ export function CadenceMeeting() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="flex items-center gap-3">
-                {achievedWigs > 0 && (
+                {achievedObjectives > 0 && (
                   <div className="flex items-center gap-1">
                     <Trophy className="w-3 h-3 text-status-on-track" />
-                    <span className="text-lg font-bold text-status-on-track">{achievedWigs}</span>
+                    <span className="text-lg font-bold text-status-on-track">{achievedObjectives}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-status-on-track" />
-                  <span className="text-lg font-bold">{onTrackWigs}</span>
+                  <span className="text-lg font-bold">{onTrackObjectives}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-status-at-risk" />
-                  <span className="text-lg font-bold">{atRiskWigs}</span>
+                  <span className="text-lg font-bold">{atRiskObjectives}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-status-off-track" />
-                  <span className="text-lg font-bold">{offTrackWigs}</span>
+                  <span className="text-lg font-bold">{offTrackObjectives}</span>
                 </div>
               </div>
             )}
@@ -252,15 +252,15 @@ export function CadenceMeeting() {
 
       {/* Main Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* WIGs Progress */}
+        {/* Objectifs Progress */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-brand-purple" />
-              Progression des WIGs
+              Progression des Objectifs
             </CardTitle>
             <CardDescription>
-              Discipline 1: Focus sur l'essentiel
+              Pilier 1: Focus sur l'essentiel
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -269,30 +269,30 @@ export function CadenceMeeting() {
                 <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-16 w-full" />
               </div>
-            ) : wigs.length === 0 ? (
+            ) : objectives.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Aucun WIG actif
+                Aucun objectif actif
               </p>
             ) : (
-              wigs.map((wig) => {
-                const progress = wig.targetValue !== wig.startValue
-                  ? ((wig.currentValue - wig.startValue) / (wig.targetValue - wig.startValue)) * 100
+              objectives.map((objective) => {
+                const progress = objective.targetValue !== objective.startValue
+                  ? ((objective.currentValue - objective.startValue) / (objective.targetValue - objective.startValue)) * 100
                   : 100
 
                 return (
-                  <div key={wig.id} className="space-y-2 p-3 rounded-lg bg-secondary/50">
+                  <div key={objective.id} className="space-y-2 p-3 rounded-lg bg-secondary/50">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate flex-1">{wig.name}</span>
+                      <span className="font-medium truncate flex-1">{objective.name}</span>
                       <Badge
                         variant={
-                          wig.status === 'ACHIEVED' ? 'achieved' :
-                          wig.status === 'ON_TRACK' ? 'on-track' :
-                          wig.status === 'AT_RISK' ? 'at-risk' : 'off-track'
+                          objective.status === 'ACHIEVED' ? 'achieved' :
+                          objective.status === 'ON_TRACK' ? 'on-track' :
+                          objective.status === 'AT_RISK' ? 'at-risk' : 'off-track'
                         }
                       >
-                        {wig.status === 'ACHIEVED' ? 'Atteint 🏆' :
-                         wig.status === 'ON_TRACK' ? 'En bonne voie' :
-                         wig.status === 'AT_RISK' ? 'À risque' : 'Hors piste'}
+                        {objective.status === 'ACHIEVED' ? 'Atteint' :
+                         objective.status === 'ON_TRACK' ? 'En bonne voie' :
+                         objective.status === 'AT_RISK' ? 'À risque' : 'Hors piste'}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2">
@@ -302,8 +302,8 @@ export function CadenceMeeting() {
                       </span>
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Actuel: {wig.currentValue} {wig.unit}</span>
-                      <span>Cible: {wig.targetValue} {wig.unit}</span>
+                      <span>Actuel: {objective.currentValue} {objective.unit}</span>
+                      <span>Cible: {objective.targetValue} {objective.unit}</span>
                     </div>
                   </div>
                 )
@@ -320,7 +320,7 @@ export function CadenceMeeting() {
               Engagements de l'équipe
             </CardTitle>
             <CardDescription>
-              Discipline 4: Maintenir une cadence de responsabilité
+              Pilier 4: Maintenir une synchronisation de responsabilité
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -381,18 +381,18 @@ export function CadenceMeeting() {
       {/* My Engagements Section */}
       <EngagementWidget />
 
-      {/* Obstacles Section - 4DX Phase Clear */}
+      {/* Obstacles Section - Phase Clear */}
       <BlockerWidget />
 
-      {/* WIG Session Timer and Agenda */}
+      {/* Session Timer and Agenda */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* WIG Session Timer - 4DX Discipline 4 */}
-        <WigSessionTimer />
+        {/* Session Timer - Pilier 4 */}
+        <SessionTimer />
 
-        {/* Cadence Checklist */}
+        {/* Synchronisation Checklist */}
         <Card className="border-brand-purple/30 bg-gradient-to-br from-brand-purple/5 to-transparent">
           <CardHeader>
-            <CardTitle className="text-lg">Agenda de la réunion de Cadence</CardTitle>
+            <CardTitle className="text-lg">Agenda de la réunion de Synchronisation</CardTitle>
           <CardDescription>
             Les 5 étapes clés pour une réunion efficace
           </CardDescription>

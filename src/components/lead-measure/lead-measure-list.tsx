@@ -26,7 +26,7 @@ type LeadMeasureWithWeekly = LeadMeasure & {
 const MAX_RECOMMENDED_LEAD_MEASURES = 3
 
 type LeadMeasureListProps = {
-  wigId: string
+  objectiveId: string
   leadMeasures: LeadMeasureWithWeekly[]
   currentWeek: { year: number; weekNumber: number }
   onRefresh: () => void
@@ -50,7 +50,7 @@ function calculateWeeklyAverage(measures: WeeklyMeasure[]): number {
 }
 
 export function LeadMeasureList({
-  wigId,
+  objectiveId,
   leadMeasures,
   currentWeek,
   onRefresh,
@@ -58,7 +58,7 @@ export function LeadMeasureList({
   const [editingMeasure, setEditingMeasure] = useState<LeadMeasure | null>(null)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette mesure prédictive?')) return
+    if (!confirm('Supprimer cet indicateur prédictif?')) return
     const result = await deleteLeadMeasure(id)
     if (result.success) {
       onRefresh()
@@ -70,7 +70,7 @@ export function LeadMeasureList({
       <Card>
         <CardContent className="py-10 text-center">
           <Target className="mx-auto h-12 w-12 text-muted-foreground/50" />
-          <p className="mt-4 text-lg font-medium">Aucune mesure prédictive</p>
+          <p className="mt-4 text-lg font-medium">Aucun indicateur prédictif</p>
           <p className="text-sm text-muted-foreground">
             Ajoutez des actions influençables qui prédisent l'atteinte de votre objectif.
           </p>
@@ -81,14 +81,13 @@ export function LeadMeasureList({
 
   return (
     <>
-      {/* Warning 4DX - Trop de Lead Measures */}
       {leadMeasures.length > MAX_RECOMMENDED_LEAD_MEASURES && (
         <Alert variant="warning" className="mb-4">
           <AlertIcon variant="warning" />
-          <AlertTitle>{leadMeasures.length} mesures prédictives</AlertTitle>
+          <AlertTitle>{leadMeasures.length} indicateurs prédictifs</AlertTitle>
           <AlertDescription>
-            4DX recommande de se concentrer sur{' '}
-            <strong>2-3 mesures prédictives maximum</strong> par WIG pour maximiser l'impact.
+            Il est recommandé de se concentrer sur{' '}
+            <strong>2-3 indicateurs prédictifs maximum</strong> par objectif pour maximiser l'impact.
           </AlertDescription>
         </Alert>
       )}
@@ -215,7 +214,7 @@ export function LeadMeasureList({
         <LeadMeasureForm
           open={!!editingMeasure}
           onOpenChange={(open) => !open && setEditingMeasure(null)}
-          wigId={wigId}
+          objectiveId={objectiveId}
           leadMeasure={editingMeasure}
           onSuccess={onRefresh}
         />

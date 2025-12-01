@@ -108,7 +108,7 @@ function getInvitationEmailHtml({
           <tr>
             <td style="padding: 30px 40px; background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%); border-radius: 12px 12px 0 0; text-align: center;">
               <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700;">C4dence</h1>
-              <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Exécution Stratégique 4DX</p>
+              <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Exécution Stratégique</p>
             </td>
           </tr>
 
@@ -157,7 +157,7 @@ function getInvitationEmailHtml({
           <tr>
             <td style="padding: 20px; text-align: center;">
               <p style="margin: 0; color: #a1a1aa; font-size: 12px;">
-                C4dence — Plateforme d'exécution stratégique basée sur la méthodologie 4DX
+                C4dence — Plateforme d'exécution stratégique
               </p>
               <p style="margin: 8px 0 0; color: #a1a1aa; font-size: 12px;">
                 © ${new Date().getFullYear()} Boulet Stratégies TI
@@ -199,7 +199,7 @@ ${inviteUrl}
 Cette invitation expire dans 7 jours.
 
 ---
-C4dence — Plateforme d'exécution stratégique basée sur la méthodologie 4DX
+C4dence — Plateforme d'exécution stratégique
 © ${new Date().getFullYear()} Boulet Stratégies TI
 `
 }

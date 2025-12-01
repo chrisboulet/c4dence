@@ -281,41 +281,41 @@ export default function OrganizationDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* WIGs */}
+        {/* Objectifs */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg">WIGs ({organization.wigs.length})</CardTitle>
+              <CardTitle className="text-lg">Objectifs ({organization.objectives?.length || organization.wigs?.length || 0})</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            {organization.wigs.length === 0 ? (
+            {(organization.objectives?.length || organization.wigs?.length || 0) === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                Aucun WIG créé
+                Aucun Objectif créé
               </p>
             ) : (
               <div className="space-y-2">
-                {organization.wigs.map((wig: any) => (
+                {(organization.objectives || organization.wigs || []).map((objective: any) => (
                   <div
-                    key={wig.id}
+                    key={objective.id}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{wig.name}</span>
-                      {wig.isArchived && (
+                      <span className="font-medium">{objective.name}</span>
+                      {objective.isArchived && (
                         <Badge variant="secondary">Archivé</Badge>
                       )}
                     </div>
                     <Badge
                       variant={
-                        wig.status === 'ON_TRACK' ? 'on-track' :
-                        wig.status === 'AT_RISK' ? 'at-risk' : 'off-track'
+                        objective.status === 'ON_TRACK' ? 'on-track' :
+                        objective.status === 'AT_RISK' ? 'at-risk' : 'off-track'
                       }
                     >
-                      {wig.status === 'ON_TRACK' ? 'En bonne voie' :
-                       wig.status === 'AT_RISK' ? 'À risque' :
-                       wig.status === 'ACHIEVED' ? 'Atteint' : 'Hors piste'}
+                      {objective.status === 'ON_TRACK' ? 'En bonne voie' :
+                       objective.status === 'AT_RISK' ? 'À risque' :
+                       objective.status === 'ACHIEVED' ? 'Atteint' : 'Hors piste'}
                     </Badge>
                   </div>
                 ))}

@@ -22,16 +22,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { WigForm } from './wig-form'
-import { archiveWig } from '@/app/actions/wig'
-import type { WigSummary, WigStatus } from '@/types'
+import { ObjectiveForm } from './objective-form'
+import { archiveObjective } from '@/app/actions/objective'
+import type { ObjectiveSummary, ObjectiveStatus } from '@/types'
 
-type WigListProps = {
-  wigs: WigSummary[]
+type ObjectiveListProps = {
+  objectives: ObjectiveSummary[]
   onRefresh: () => void
 }
 
-function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-track' | 'achieved' {
+function getStatusVariant(status: ObjectiveStatus): 'on-track' | 'at-risk' | 'off-track' | 'achieved' {
   switch (status) {
     case 'ON_TRACK':
       return 'on-track'
@@ -46,7 +46,7 @@ function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-trac
   }
 }
 
-function getStatusLabel(status: WigStatus): string {
+function getStatusLabel(status: ObjectiveStatus): string {
   switch (status) {
     case 'ON_TRACK':
       return 'En bonne voie'
@@ -61,10 +61,10 @@ function getStatusLabel(status: WigStatus): string {
   }
 }
 
-function calculateProgress(wig: WigSummary): number {
-  const range = wig.targetValue - wig.startValue
+function calculateProgress(objective: ObjectiveSummary): number {
+  const range = objective.targetValue - objective.startValue
   if (range === 0) return 100
-  const progress = ((wig.currentValue - wig.startValue) / range) * 100
+  const progress = ((objective.currentValue - objective.startValue) / range) * 100
   return Math.min(Math.max(progress, 0), 100)
 }
 
@@ -78,23 +78,23 @@ function formatValue(value: number, unit: string): string {
   return `${value.toLocaleString('fr-CA')} ${unit}`
 }
 
-export function WigList({ wigs, onRefresh }: WigListProps) {
-  const [editingWig, setEditingWig] = useState<WigSummary | null>(null)
+export function ObjectiveList({ objectives, onRefresh }: ObjectiveListProps) {
+  const [editingObjective, setEditingObjective] = useState<ObjectiveSummary | null>(null)
 
   const handleArchive = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir archiver ce WIG?')) return
-    const result = await archiveWig(id)
+    if (!confirm('Êtes-vous sûr de vouloir archiver cet objectif?')) return
+    const result = await archiveObjective(id)
     if (result.success) {
       onRefresh()
     }
   }
 
-  if (wigs.length === 0) {
+  if (objectives.length === 0) {
     return (
       <Card>
         <CardContent className="py-10 text-center">
           <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground/50" />
-          <p className="mt-4 text-lg font-medium">Aucun WIG créé</p>
+          <p className="mt-4 text-lg font-medium">Aucun Objectif créé</p>
           <p className="text-sm text-muted-foreground">
             Commencez par définir votre premier objectif stratégique.
           </p>
@@ -106,16 +106,16 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {wigs.map((wig) => {
-          const progress = calculateProgress(wig)
+        {objectives.map((objective) => {
+          const progress = calculateProgress(objective)
           return (
-            <Card key={wig.id} className="relative">
+            <Card key={objective.id} className="relative">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-lg">{wig.name}</CardTitle>
-                    <Badge variant={getStatusVariant(wig.status)}>
-                      {getStatusLabel(wig.status)}
+                    <CardTitle className="text-lg">{objective.name}</CardTitle>
+                    <Badge variant={getStatusVariant(objective.status)}>
+                      {getStatusLabel(objective.status)}
                     </Badge>
                   </div>
                   <DropdownMenu>
@@ -125,12 +125,12 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingWig(wig)}>
+                      <DropdownMenuItem onClick={() => setEditingObjective(objective)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Modifier
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleArchive(wig.id)}
+                        onClick={() => handleArchive(objective.id)}
                         className="text-red-600"
                       >
                         <Archive className="mr-2 h-4 w-4" />
@@ -153,39 +153,38 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
                   <div>
                     <p className="text-muted-foreground">Actuel</p>
                     <p className="font-semibold">
-                      {formatValue(wig.currentValue, wig.unit)}
+                      {formatValue(objective.currentValue, objective.unit)}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Cible</p>
                     <p className="font-semibold">
-                      {formatValue(wig.targetValue, wig.unit)}
+                      {formatValue(objective.targetValue, objective.unit)}
                     </p>
                   </div>
                 </div>
 
-                {/* Responsable du WIG */}
-                {wig.owner && (
+                {objective.owner && (
                   <div className="flex items-center gap-2 pt-2 border-t">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              {wig.owner.avatarUrl && (
-                                <AvatarImage src={wig.owner.avatarUrl} alt={wig.owner.fullName || ''} />
+                              {objective.owner.avatarUrl && (
+                                <AvatarImage src={objective.owner.avatarUrl} alt={objective.owner.fullName || ''} />
                               )}
                               <AvatarFallback className="text-xs">
-                                {getInitials(wig.owner.fullName)}
+                                {getInitials(objective.owner.fullName)}
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-xs text-muted-foreground">
-                              {wig.owner.fullName || 'Responsable'}
+                              {objective.owner.fullName || 'Responsable'}
                             </span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Responsable : {wig.owner.fullName}</p>
+                          <p>Responsable : {objective.owner.fullName}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -194,10 +193,10 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
 
                 <div className="flex items-center justify-between pt-2 border-t">
                   <p className="text-xs text-muted-foreground">
-                    Échéance: {format(new Date(wig.endDate), 'd MMMM yyyy', { locale: fr })}
+                    Échéance: {format(new Date(objective.endDate), 'd MMMM yyyy', { locale: fr })}
                   </p>
                   <Link
-                    href={`/dashboard/wigs/${wig.id}`}
+                    href={`/dashboard/objectives/${objective.id}`}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     Détails <ChevronRight className="h-3 w-3" />
@@ -209,11 +208,11 @@ export function WigList({ wigs, onRefresh }: WigListProps) {
         })}
       </div>
 
-      {editingWig && (
-        <WigForm
-          open={!!editingWig}
-          onOpenChange={(open) => !open && setEditingWig(null)}
-          wig={editingWig as any}
+      {editingObjective && (
+        <ObjectiveForm
+          open={!!editingObjective}
+          onOpenChange={(open) => !open && setEditingObjective(null)}
+          objective={editingObjective as any}
           onSuccess={onRefresh}
         />
       )}

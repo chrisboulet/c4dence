@@ -277,7 +277,7 @@ function BlockerCard({
                 <p className="text-sm">{blocker.description}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className="text-xs">
-                    {blocker.wig.name}
+                    {blocker.objective.name}
                   </Badge>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Avatar className="h-4 w-4">

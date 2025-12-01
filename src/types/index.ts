@@ -2,21 +2,21 @@
 // C4DENCE — Types TypeScript
 // =============================================================================
 // Types additionnels pour compléter les types générés par Prisma.
-// 
+//
 // Usage :
-// - Les types de base (Wig, LeadMeasure, etc.) viennent de @prisma/client
+// - Les types de base (Objective, LeadMeasure, etc.) viennent de @prisma/client
 // - Ce fichier définit les types composés et les DTOs
 // =============================================================================
 
 import type {
-  Wig,
+  Objective,
   LeadMeasure,
   WeeklyMeasure,
   Engagement,
   Profile,
   Organization,
   Membership,
-  WigStatus,
+  ObjectiveStatus,
   MemberRole,
   EngagementStatus,
 } from '@prisma/client'
@@ -27,26 +27,26 @@ import type {
 
 /**
  * LeadMeasure avec ses mesures hebdomadaires
- * Utilisé dans : Scoreboard, détail WIG
+ * Utilisé dans : Tableau de Score, détail Objectif
  */
 export type LeadMeasureWithWeekly = LeadMeasure & {
   weeklyMeasures: WeeklyMeasure[]
 }
 
 /**
- * WIG complet avec toutes ses relations
- * Utilisé dans : Page détail WIG, édition
+ * Objectif complet avec toutes ses relations
+ * Utilisé dans : Page détail Objectif, édition
  */
-export type WigWithMeasures = Wig & {
+export type ObjectiveWithMeasures = Objective & {
   leadMeasures: LeadMeasureWithWeekly[]
 }
 
 /**
- * WIG pour le dashboard (données minimales)
- * Utilisé dans : Dashboard principal, liste des WIGs
+ * Objectif pour le dashboard (données minimales)
+ * Utilisé dans : Dashboard principal, liste des Objectifs
  */
-export type WigSummary = Pick<
-  Wig,
+export type ObjectiveSummary = Pick<
+  Objective,
   | 'id'
   | 'name'
   | 'status'
@@ -87,21 +87,21 @@ export type MemberWithProfile = Membership & {
 
 /**
  * Engagement avec le profil de la personne
- * Utilisé dans : Réunion de cadence, historique
+ * Utilisé dans : Réunion de synchronisation, historique
  */
 export type EngagementWithProfile = Engagement & {
   profile: Pick<Profile, 'id' | 'fullName' | 'avatarUrl'>
 }
 
 /**
- * Blocker avec le profil du reporter et le WIG associé
- * Utilisé dans : Page Cadence, section Obstacles
+ * Blocker avec le profil du reporter et l'Objectif associé
+ * Utilisé dans : Page Synchronisation, section Obstacles
  */
 export type BlockerWithProfile = {
   id: string
   createdAt: Date
   updatedAt: Date
-  wigId: string
+  objectiveId: string
   reportedById: string
   description: string
   status: 'OPEN' | 'ESCALATED' | 'RESOLVED'
@@ -109,7 +109,7 @@ export type BlockerWithProfile = {
   resolvedAt: Date | null
   resolution: string | null
   reportedBy: Pick<Profile, 'id' | 'fullName' | 'avatarUrl'>
-  wig: Pick<Wig, 'id' | 'name'>
+  objective: Pick<Objective, 'id' | 'name'>
 }
 
 // =============================================================================
@@ -117,7 +117,7 @@ export type BlockerWithProfile = {
 // =============================================================================
 
 /**
- * Point de données pour le chart "Beat the GOAT"
+ * Point de données pour le chart de progression
  * Compare la progression réelle vs la progression attendue
  */
 export type ProgressDataPoint = {
@@ -132,7 +132,7 @@ export type ProgressDataPoint = {
 }
 
 /**
- * Données pour le chart de mesure prédictive
+ * Données pour le chart d'indicateur prédictif
  * Historique hebdomadaire avec comparaison à la cible
  */
 export type LeadMeasureChartData = {
@@ -172,9 +172,9 @@ export type ActionResult<T = void> =
   | { success: false; error: string }
 
 /**
- * Input pour créer un WIG
+ * Input pour créer un Objectif
  */
-export type CreateWigInput = {
+export type CreateObjectiveInput = {
   organizationId: string
   name: string
   description?: string
@@ -183,28 +183,28 @@ export type CreateWigInput = {
   unit: string
   startDate: Date
   endDate: Date
-  ownerId?: string // 4DX: Responsable du WIG
+  ownerId?: string // Responsable de l'Objectif
 }
 
 /**
- * Input pour mettre à jour un WIG
+ * Input pour mettre à jour un Objectif
  */
-export type UpdateWigInput = Partial<CreateWigInput> & {
+export type UpdateObjectiveInput = Partial<CreateObjectiveInput> & {
   id: string
   currentValue?: number
-  ownerId?: string // 4DX: Responsable du WIG
+  ownerId?: string // Responsable de l'Objectif
 }
 
 /**
- * Input pour créer une LeadMeasure
+ * Input pour créer un Indicateur Prédictif
  */
 export type CreateLeadMeasureInput = {
-  wigId: string
+  objectiveId: string
   name: string
   description?: string
   targetPerWeek: number
   unit: string
-  assignedToId?: string // 4DX: Responsable de la mesure
+  assignedToId?: string // Responsable de l'indicateur
 }
 
 /**
@@ -232,7 +232,7 @@ export type CreateEngagementInput = {
  * Input pour créer un blocker (obstacle)
  */
 export type CreateBlockerInput = {
-  wigId: string
+  objectiveId: string
   description: string
 }
 
@@ -321,23 +321,23 @@ export type PageProps<T extends Record<string, string> = {}> = {
 export type PageWithIdProps = PageProps<{ id: string }>
 
 // =============================================================================
-// TYPES POUR LA RÉUNION DE CADENCE
+// TYPES POUR LA RÉUNION DE SYNCHRONISATION
 // =============================================================================
 
 /**
- * Données complètes pour une réunion de cadence
+ * Données complètes pour une réunion de synchronisation
  * Regroupe tout ce qui est nécessaire pour la réunion hebdo
  */
-export type CadenceMeetingData = {
+export type SyncMeetingData = {
   /** Semaine courante (ISO) */
   currentWeek: {
     year: number
     weekNumber: number
   }
   /** Organisation */
-  organization: Pick<Organization, 'id' | 'name' | 'cadenceDay' | 'cadenceTime'>
-  /** WIGs actifs avec leurs mesures */
-  wigs: WigWithMeasures[]
+  organization: Pick<Organization, 'id' | 'name' | 'syncDay' | 'syncTime'>
+  /** Objectifs actifs avec leurs indicateurs */
+  objectives: ObjectiveWithMeasures[]
   /** Engagements de la semaine passée (à rapporter) */
   previousEngagements: EngagementWithProfile[]
   /** Engagements de la semaine courante */
@@ -383,7 +383,7 @@ export type StringKeys<T> = {
  */
 export type SearchFilters = {
   query?: string
-  status?: WigStatus | 'all'
+  status?: ObjectiveStatus | 'all'
   dateRange?: {
     from: Date
     to: Date
@@ -396,7 +396,7 @@ export type SearchFilters = {
 // Pour éviter d'importer depuis deux endroits différents
 
 export type {
-  Wig,
+  Objective,
   LeadMeasure,
   WeeklyMeasure,
   Engagement,
@@ -404,8 +404,24 @@ export type {
   Organization,
   Membership,
   Blocker,
-  WigStatus,
+  ObjectiveStatus,
   MemberRole,
   EngagementStatus,
   BlockerStatus,
+  SyncDay,
 } from '@prisma/client'
+
+// =============================================================================
+// ALIASES DE COMPATIBILITÉ (déprécié - à supprimer après migration complète)
+// =============================================================================
+
+/** @deprecated Utiliser ObjectiveWithMeasures */
+export type WigWithMeasures = ObjectiveWithMeasures
+/** @deprecated Utiliser ObjectiveSummary */
+export type WigSummary = ObjectiveSummary
+/** @deprecated Utiliser CreateObjectiveInput */
+export type CreateWigInput = CreateObjectiveInput
+/** @deprecated Utiliser UpdateObjectiveInput */
+export type UpdateWigInput = UpdateObjectiveInput
+/** @deprecated Utiliser SyncMeetingData */
+export type CadenceMeetingData = SyncMeetingData

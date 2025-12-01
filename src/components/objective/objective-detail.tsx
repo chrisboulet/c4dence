@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { WigForm } from './wig-form'
+import { ObjectiveForm } from './objective-form'
 import { UpdateValueDialog } from './update-value-dialog'
 import { ProgressChart } from '@/components/charts/progress-chart'
 import { LeadMeasureChart } from '@/components/charts/lead-measure-chart'
@@ -18,17 +18,17 @@ import { LeadMeasureForm } from '@/components/lead-measure/lead-measure-form'
 import { LeadMeasureList } from '@/components/lead-measure/lead-measure-list'
 import { getLeadMeasures } from '@/app/actions/lead-measure'
 import { getCurrentWeek } from '@/lib/week'
-import type { Wig, LeadMeasure, WeeklyMeasure, WigStatus } from '@prisma/client'
+import type { Objective, LeadMeasure, WeeklyMeasure, ObjectiveStatus } from '@prisma/client'
 
-type WigWithMeasures = Wig & {
+type ObjectiveWithMeasures = Objective & {
   leadMeasures: (LeadMeasure & { weeklyMeasures: WeeklyMeasure[] })[]
 }
 
-type WigDetailProps = {
-  wig: WigWithMeasures
+type ObjectiveDetailProps = {
+  objective: ObjectiveWithMeasures
 }
 
-function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-track' | 'achieved' {
+function getStatusVariant(status: ObjectiveStatus): 'on-track' | 'at-risk' | 'off-track' | 'achieved' {
   switch (status) {
     case 'ACHIEVED': return 'achieved'
     case 'ON_TRACK': return 'on-track'
@@ -38,7 +38,7 @@ function getStatusVariant(status: WigStatus): 'on-track' | 'at-risk' | 'off-trac
   }
 }
 
-function getStatusLabel(status: WigStatus): string {
+function getStatusLabel(status: ObjectiveStatus): string {
   switch (status) {
     case 'ACHIEVED': return 'Atteint'
     case 'ON_TRACK': return 'En bonne voie'
@@ -48,10 +48,10 @@ function getStatusLabel(status: WigStatus): string {
   }
 }
 
-function calculateProgress(wig: Wig): number {
-  const range = wig.targetValue - wig.startValue
+function calculateProgress(objective: Objective): number {
+  const range = objective.targetValue - objective.startValue
   if (range === 0) return 100
-  const progress = ((wig.currentValue - wig.startValue) / range) * 100
+  const progress = ((objective.currentValue - objective.startValue) / range) * 100
   return Math.min(Math.max(progress, 0), 100)
 }
 
@@ -81,27 +81,25 @@ function generateLeadMeasureChartData(leadMeasure: LeadMeasure & { weeklyMeasure
   }))
 }
 
-function generateProgressChartData(wig: Wig) {
-  const startDate = new Date(wig.startDate)
-  const endDate = new Date(wig.endDate)
+function generateProgressChartData(objective: Objective) {
+  const startDate = new Date(objective.startDate)
+  const endDate = new Date(objective.endDate)
   const now = new Date()
 
   const totalWeeks = Math.max(differenceInWeeks(endDate, startDate), 1)
   const currentWeekNum = Math.min(differenceInWeeks(now, startDate), totalWeeks)
 
   const data: { week: string; Réel: number; Cible: number }[] = []
-  const weeklyIncrement = (wig.targetValue - wig.startValue) / totalWeeks
+  const weeklyIncrement = (objective.targetValue - objective.startValue) / totalWeeks
 
   for (let i = 0; i <= totalWeeks; i++) {
     const weekDate = addWeeks(startDate, i)
     const weekLabel = `S${format(weekDate, 'w')}`
-    const targetValue = wig.startValue + (weeklyIncrement * i)
+    const targetValue = objective.startValue + (weeklyIncrement * i)
 
-    // Pour les semaines passées et la semaine courante, on interpole vers la valeur actuelle
-    // Pour les semaines futures, on ne montre que la cible
     if (i <= currentWeekNum) {
       const progress = currentWeekNum > 0 ? i / currentWeekNum : 0
-      const actualValue = wig.startValue + ((wig.currentValue - wig.startValue) * progress)
+      const actualValue = objective.startValue + ((objective.currentValue - objective.startValue) * progress)
       data.push({
         week: weekLabel,
         Réel: Math.round(actualValue * 100) / 100,
@@ -110,34 +108,34 @@ function generateProgressChartData(wig: Wig) {
     } else {
       data.push({
         week: weekLabel,
-        Réel: Math.round(wig.currentValue * 100) / 100,
+        Réel: Math.round(objective.currentValue * 100) / 100,
         Cible: Math.round(targetValue * 100) / 100,
       })
     }
   }
 
-  return data.slice(0, 12) // Max 12 semaines pour lisibilité
+  return data.slice(0, 12)
 }
 
-export function WigDetail({ wig: initialWig }: WigDetailProps) {
+export function ObjectiveDetail({ objective: initialObjective }: ObjectiveDetailProps) {
   const router = useRouter()
-  const [wig, setWig] = useState(initialWig)
-  const [leadMeasures, setLeadMeasures] = useState(initialWig.leadMeasures)
-  const [isEditWigOpen, setIsEditWigOpen] = useState(false)
+  const [objective, setObjective] = useState(initialObjective)
+  const [leadMeasures, setLeadMeasures] = useState(initialObjective.leadMeasures)
+  const [isEditObjectiveOpen, setIsEditObjectiveOpen] = useState(false)
   const [isAddMeasureOpen, setIsAddMeasureOpen] = useState(false)
   const [isUpdateValueOpen, setIsUpdateValueOpen] = useState(false)
   const currentWeek = getCurrentWeek()
 
-  const progressChartData = generateProgressChartData(wig)
+  const progressChartData = generateProgressChartData(objective)
 
   const fetchLeadMeasures = useCallback(async () => {
-    const result = await getLeadMeasures(wig.id)
+    const result = await getLeadMeasures(objective.id)
     if (result.success) {
       setLeadMeasures(result.data)
     }
-  }, [wig.id])
+  }, [objective.id])
 
-  const progress = calculateProgress(wig)
+  const progress = calculateProgress(objective)
 
   return (
     <div className="space-y-6">
@@ -150,29 +148,29 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{wig.name}</h1>
-            <Badge variant={getStatusVariant(wig.status)}>
-              {getStatusLabel(wig.status)}
+            <h1 className="text-2xl font-bold">{objective.name}</h1>
+            <Badge variant={getStatusVariant(objective.status)}>
+              {getStatusLabel(objective.status)}
             </Badge>
           </div>
-          {wig.description && (
-            <p className="text-muted-foreground mt-1">{wig.description}</p>
+          {objective.description && (
+            <p className="text-muted-foreground mt-1">{objective.description}</p>
           )}
         </div>
-        <Button variant="outline" onClick={() => setIsEditWigOpen(true)}>
+        <Button variant="outline" onClick={() => setIsEditObjectiveOpen(true)}>
           <Pencil className="mr-2 h-4 w-4" />
           Modifier
         </Button>
       </div>
 
-      {/* Progression WIG */}
+      {/* Progression Objectif */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Progression vers l'objectif</CardTitle>
               <CardDescription>
-                Discipline 1: Mesure de résultat (Lag Measure)
+                Pilier 1: Mesure de résultat (Lag Measure)
               </CardDescription>
             </div>
             <Button
@@ -188,9 +186,9 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>{formatValue(wig.startValue, wig.unit)}</span>
+              <span>{formatValue(objective.startValue, objective.unit)}</span>
               <span className="font-medium">{Math.round(progress)}%</span>
-              <span>{formatValue(wig.targetValue, wig.unit)}</span>
+              <span>{formatValue(objective.targetValue, objective.unit)}</span>
             </div>
             <Progress value={progress} className="h-3" />
           </div>
@@ -198,21 +196,21 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
           <div className="grid grid-cols-3 gap-4 pt-2">
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Départ</p>
-              <p className="text-xl font-bold">{formatValue(wig.startValue, wig.unit)}</p>
+              <p className="text-xl font-bold">{formatValue(objective.startValue, objective.unit)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Actuel</p>
-              <p className="text-xl font-bold text-brand-cyan">{formatValue(wig.currentValue, wig.unit)}</p>
+              <p className="text-xl font-bold text-brand-cyan">{formatValue(objective.currentValue, objective.unit)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Cible</p>
-              <p className="text-xl font-bold">{formatValue(wig.targetValue, wig.unit)}</p>
+              <p className="text-xl font-bold">{formatValue(objective.targetValue, objective.unit)}</p>
             </div>
           </div>
 
           <div className="flex justify-between text-sm text-muted-foreground pt-2 border-t">
-            <span>Début: {format(new Date(wig.startDate), 'd MMM yyyy', { locale: fr })}</span>
-            <span>Échéance: {format(new Date(wig.endDate), 'd MMM yyyy', { locale: fr })}</span>
+            <span>Début: {format(new Date(objective.startDate), 'd MMM yyyy', { locale: fr })}</span>
+            <span>Échéance: {format(new Date(objective.endDate), 'd MMM yyyy', { locale: fr })}</span>
           </div>
         </CardContent>
       </Card>
@@ -221,9 +219,9 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
       <ProgressChart
         title="Tableau de bord - Progression"
         data={progressChartData}
-        unit={wig.unit}
-        startValue={wig.startValue}
-        targetValue={wig.targetValue}
+        unit={objective.unit}
+        startValue={objective.startValue}
+        targetValue={objective.targetValue}
       />
 
       {/* Lead Measures */}
@@ -233,7 +231,7 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
             <div>
               <CardTitle className="text-lg">Mesures prédictives</CardTitle>
               <CardDescription>
-                Discipline 2: Actions influençables et prédictives
+                Pilier 2: Actions influençables et prédictives
               </CardDescription>
             </div>
             <Button onClick={() => setIsAddMeasureOpen(true)}>
@@ -244,7 +242,7 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
         </CardHeader>
         <CardContent>
           <LeadMeasureList
-            wigId={wig.id}
+            objectiveId={objective.id}
             leadMeasures={leadMeasures}
             currentWeek={currentWeek}
             onRefresh={fetchLeadMeasures}
@@ -252,13 +250,13 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
         </CardContent>
       </Card>
 
-      {/* Lead Measure Charts - Discipline 3: Scoreboard */}
+      {/* Lead Measure Charts - Pilier 3: Scoreboard */}
       {leadMeasures.length > 0 && (
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold">Tableau de bord</h2>
             <p className="text-sm text-muted-foreground">
-              Discipline 3: Maintenir un tableau de bord engageant
+              Pilier 3: Maintenir un tableau de bord engageant
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -279,26 +277,26 @@ export function WigDetail({ wig: initialWig }: WigDetailProps) {
       )}
 
       {/* Modals */}
-      <WigForm
-        open={isEditWigOpen}
-        onOpenChange={setIsEditWigOpen}
-        wig={wig}
+      <ObjectiveForm
+        open={isEditObjectiveOpen}
+        onOpenChange={setIsEditObjectiveOpen}
+        objective={objective}
         onSuccess={() => router.refresh()}
       />
 
       <LeadMeasureForm
         open={isAddMeasureOpen}
         onOpenChange={setIsAddMeasureOpen}
-        wigId={wig.id}
+        objectiveId={objective.id}
         onSuccess={fetchLeadMeasures}
       />
 
       <UpdateValueDialog
         open={isUpdateValueOpen}
         onOpenChange={setIsUpdateValueOpen}
-        wigId={wig.id}
-        currentValue={wig.currentValue}
-        unit={wig.unit}
+        objectiveId={objective.id}
+        currentValue={objective.currentValue}
+        unit={objective.unit}
         onSuccess={() => router.refresh()}
       />
     </div>

@@ -48,7 +48,7 @@ interface Organization {
   isActive: boolean
   createdAt: Date
   memberCount: number
-  wigCount: number
+  objectiveCount: number
   owner: { fullName: string | null; email: string } | null
 }
 
@@ -103,7 +103,7 @@ export default function AdminPage() {
 
   const activeCount = organizations.filter(o => o.isActive).length
   const totalMembers = organizations.reduce((sum, o) => sum + o.memberCount, 0)
-  const totalWigs = organizations.reduce((sum, o) => sum + o.wigCount, 0)
+  const totalObjectives = organizations.reduce((sum, o) => sum + o.objectiveCount, 0)
 
   return (
     <div className="space-y-6">
@@ -129,8 +129,8 @@ export default function AdminPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total WIGs</CardDescription>
-            <CardTitle className="text-3xl">{totalWigs}</CardTitle>
+            <CardDescription>Total Objectifs</CardDescription>
+            <CardTitle className="text-3xl">{totalObjectives}</CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -196,7 +196,7 @@ export default function AdminPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Target className="h-4 w-4" />
-                        {org.wigCount}
+                        {org.objectiveCount}
                       </span>
                     </div>
 

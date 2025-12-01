@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { WigForm } from './wig-form'
+import { ObjectiveForm } from './objective-form'
 import { useOrganization } from '@/components/providers/organization-provider'
-import { getWigs } from '@/app/actions/wig'
-import type { WigSummary } from '@/types'
+import { getObjectives } from '@/app/actions/objective'
+import type { ObjectiveSummary } from '@/types'
 
 function getStatusConfig(status: string) {
   switch (status) {
@@ -49,17 +49,17 @@ function formatValue(value: number, unit: string): string {
   return `${value.toLocaleString('fr-CA')} ${unit}`
 }
 
-export function WigsPage() {
+export function ObjectivesPage() {
   const { currentOrg, isLoading: isOrgLoading } = useOrganization()
-  const [wigs, setWigs] = useState<WigSummary[]>([])
+  const [objectives, setObjectives] = useState<ObjectiveSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
 
-  const fetchWigs = useCallback(async (orgId: string) => {
+  const fetchObjectives = useCallback(async (orgId: string) => {
     setIsLoading(true)
-    const result = await getWigs(orgId)
+    const result = await getObjectives(orgId)
     if (result.success) {
-      setWigs(result.data)
+      setObjectives(result.data)
     }
     setIsLoading(false)
   }, [])
@@ -67,13 +67,13 @@ export function WigsPage() {
   // Re-fetch when organization changes
   useEffect(() => {
     if (currentOrg && !isOrgLoading) {
-      fetchWigs(currentOrg.organizationId)
+      fetchObjectives(currentOrg.organizationId)
     }
-  }, [currentOrg, isOrgLoading, fetchWigs])
+  }, [currentOrg, isOrgLoading, fetchObjectives])
 
-  const onTrack = wigs.filter((w) => w.status === 'ON_TRACK').length
-  const atRisk = wigs.filter((w) => w.status === 'AT_RISK').length
-  const offTrack = wigs.filter((w) => w.status === 'OFF_TRACK').length
+  const onTrack = objectives.filter((o) => o.status === 'ON_TRACK').length
+  const atRisk = objectives.filter((o) => o.status === 'AT_RISK').length
+  const offTrack = objectives.filter((o) => o.status === 'OFF_TRACK').length
 
   return (
     <div className="space-y-6">
@@ -81,8 +81,8 @@ export function WigsPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total WIGs</CardDescription>
-            <CardTitle className="text-3xl">{wigs.length}</CardTitle>
+            <CardDescription>Total Objectifs</CardDescription>
+            <CardTitle className="text-3xl">{objectives.length}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -114,19 +114,19 @@ export function WigsPage() {
         </Card>
       </div>
 
-      {/* WIGs List */}
+      {/* Objectifs List */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Tous vos WIGs</CardTitle>
+              <CardTitle>Tous vos Objectifs</CardTitle>
               <CardDescription>
-                Gérez vos objectifs vitalement importants
+                Gérez vos objectifs stratégiques
               </CardDescription>
             </div>
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Nouveau WIG
+              Nouvel Objectif
             </Button>
           </div>
         </CardHeader>
@@ -137,29 +137,29 @@ export function WigsPage() {
                 <Skeleton key={i} className="h-24 w-full" />
               ))}
             </div>
-          ) : wigs.length === 0 ? (
+          ) : objectives.length === 0 ? (
             <div className="text-center py-12">
               <Target className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-medium">Aucun WIG créé</h3>
+              <h3 className="mt-4 text-lg font-medium">Aucun Objectif créé</h3>
               <p className="text-muted-foreground mt-1">
-                Commencez par créer votre premier objectif ambitieux
+                Commencez par créer votre premier objectif stratégique
               </p>
               <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Créer un WIG
+                Créer un Objectif
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {wigs.map((wig) => {
-                const statusConfig = getStatusConfig(wig.status)
+              {objectives.map((objective) => {
+                const statusConfig = getStatusConfig(objective.status)
                 const StatusIcon = statusConfig.icon
-                const progress = wig.targetValue !== wig.startValue
-                  ? ((wig.currentValue - wig.startValue) / (wig.targetValue - wig.startValue)) * 100
+                const progress = objective.targetValue !== objective.startValue
+                  ? ((objective.currentValue - objective.startValue) / (objective.targetValue - objective.startValue)) * 100
                   : 100
 
                 return (
-                  <Link key={wig.id} href={`/dashboard/wigs/${wig.id}`}>
+                  <Link key={objective.id} href={`/dashboard/objectives/${objective.id}`}>
                     <Card className="hover:bg-secondary/50 transition-colors cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">
@@ -169,7 +169,7 @@ export function WigsPage() {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold truncate">{wig.name}</h3>
+                              <h3 className="font-semibold truncate">{objective.name}</h3>
                               <Badge variant={statusConfig.variant}>
                                 {statusConfig.label}
                               </Badge>
@@ -189,11 +189,11 @@ export function WigsPage() {
 
                             <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                               <span>
-                                Actuel: {formatValue(wig.currentValue, wig.unit)}
+                                Actuel: {formatValue(objective.currentValue, objective.unit)}
                               </span>
                               <span>→</span>
                               <span>
-                                Cible: {formatValue(wig.targetValue, wig.unit)}
+                                Cible: {formatValue(objective.targetValue, objective.unit)}
                               </span>
                             </div>
                           </div>
@@ -211,10 +211,10 @@ export function WigsPage() {
       </Card>
 
       {/* Form Modal */}
-      <WigForm
+      <ObjectiveForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
-        onSuccess={() => currentOrg && fetchWigs(currentOrg.organizationId)}
+        onSuccess={() => currentOrg && fetchObjectives(currentOrg.organizationId)}
       />
     </div>
   )

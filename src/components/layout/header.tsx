@@ -18,8 +18,8 @@ import { useOrganization } from '@/components/providers/organization-provider'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'WIGs', href: '/dashboard/wigs', icon: Target },
-  { name: 'Cadence', href: '/dashboard/cadence', icon: Calendar },
+  { name: 'Objectifs', href: '/dashboard/objectives', icon: Target },
+  { name: 'Synchronisation', href: '/dashboard/sync', icon: Calendar },
 ]
 
 type HeaderProps = {

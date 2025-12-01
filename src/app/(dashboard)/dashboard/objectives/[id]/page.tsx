@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
-import { WigDetail } from '@/components/wig/wig-detail'
+import { ObjectiveDetail } from '@/components/objective/objective-detail'
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
-export default async function WigPage({ params }: Props) {
+export default async function ObjectivePage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -16,7 +16,7 @@ export default async function WigPage({ params }: Props) {
     notFound()
   }
 
-  const wig = await prisma.wig.findUnique({
+  const objective = await prisma.objective.findUnique({
     where: { id },
     include: {
       leadMeasures: {
@@ -31,7 +31,7 @@ export default async function WigPage({ params }: Props) {
     },
   })
 
-  if (!wig) {
+  if (!objective) {
     notFound()
   }
 
@@ -39,7 +39,7 @@ export default async function WigPage({ params }: Props) {
   const membership = await prisma.membership.findFirst({
     where: {
       profileId: user.id,
-      organizationId: wig.organizationId,
+      organizationId: objective.organizationId,
     },
   })
 
@@ -47,5 +47,5 @@ export default async function WigPage({ params }: Props) {
     notFound()
   }
 
-  return <WigDetail wig={wig} />
+  return <ObjectiveDetail objective={objective} />
 }

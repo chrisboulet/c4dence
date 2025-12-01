@@ -10,8 +10,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'C4DENCE — Exécution Stratégique 4DX',
-  description: 'Gérez vos objectifs ambitieux (WIGs) et mesurez votre progression avec la méthodologie 4DX',
+  title: 'C4DENCE — Exécution Stratégique',
+  description: 'Gérez vos objectifs prioritaires et mesurez votre progression avec la Méthode C4DENCE',
   icons: {
     icon: [
       { url: '/favicon.png', type: 'image/png' },

@@ -57,7 +57,7 @@ export default function OnboardingPage() {
           />
           <CardTitle className="text-2xl">Bienvenue sur C4DENCE</CardTitle>
           <CardDescription>
-            Créez votre première organisation pour commencer à suivre vos objectifs 4DX.
+            Créez votre première organisation pour commencer à suivre vos objectifs prioritaires.
           </CardDescription>
         </CardHeader>
 

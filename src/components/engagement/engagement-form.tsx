@@ -105,7 +105,7 @@ export function EngagementForm({
       return
     }
 
-    // 4DX: Vérifier la limite de 2 engagements par semaine
+    // Vérifier la limite de 2 engagements par semaine
     if (engagementCount >= MAX_ENGAGEMENTS_PER_WEEK) {
       setPendingData(data)
       setShowLimitWarning(true)
@@ -142,14 +142,14 @@ export function EngagementForm({
                 </div>
               )}
 
-              {/* 4DX Warning: Max 2 engagements per week */}
+              {/* Warning: Max 2 engagements per week */}
               {engagementCount >= MAX_ENGAGEMENTS_PER_WEEK && (
                 <Alert variant="warning">
                   <AlertIcon variant="warning" />
-                  <AlertTitle>Limite 4DX atteinte</AlertTitle>
+                  <AlertTitle>Limite atteinte</AlertTitle>
                   <AlertDescription>
                     Vous avez déjà {engagementCount} engagement{engagementCount > 1 ? 's' : ''} cette semaine.
-                    La méthodologie 4DX recommande <strong>1-2 engagements maximum</strong> par personne
+                    La Méthode C4DENCE recommande <strong>1-2 engagements maximum</strong> par personne
                     pour maximiser les chances de succès.
                   </AlertDescription>
                 </Alert>
@@ -198,7 +198,7 @@ export function EngagementForm({
             <AlertDialogDescription>
               Vous avez déjà {engagementCount} engagement{engagementCount > 1 ? 's' : ''} cette semaine.
               <br /><br />
-              La méthodologie 4DX recommande de se limiter à <strong>1-2 engagements</strong> par
+              La Méthode C4DENCE recommande de se limiter à <strong>1-2 engagements</strong> par
               semaine pour maximiser votre focus et vos chances de succès.
               <br /><br />
               Êtes-vous sûr de vouloir ajouter un engagement supplémentaire?

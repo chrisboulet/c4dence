@@ -14,7 +14,7 @@ type ConfettiCelebrationProps = {
 
 /**
  * Composant de célébration avec confettis
- * Utilisé pour célébrer l'atteinte d'un objectif (WIG ACHIEVED)
+ * Utilisé pour célébrer l'atteinte d'un Objectif (ACHIEVED)
  */
 export function ConfettiCelebration({
   trigger,

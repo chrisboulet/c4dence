@@ -15,7 +15,7 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80',
         outline: 'text-foreground',
-        // Statuts 4DX
+        // Statuts Objectif
         'on-track':
           'border-transparent bg-status-on-track/20 text-status-on-track font-semibold',
         'at-risk':

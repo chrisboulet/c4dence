@@ -36,22 +36,22 @@ export async function getBlockers(
     }
 
     // Vérifier l'accès
-    const permission = await checkPermission(user.id, orgId, 'wig:read')
+    const permission = await checkPermission(user.id, orgId, 'objective:read')
     if (!permission.allowed) {
       return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
-    // Récupérer les WIGs de l'organisation pour filtrer les blockers
-    const wigs = await prisma.wig.findMany({
+    // Récupérer les Objectifs de l'organisation pour filtrer les blockers
+    const objectives = await prisma.objective.findMany({
       where: { organizationId: orgId, isArchived: false },
       select: { id: true },
     })
 
-    const wigIds = wigs.map(w => w.id)
+    const objectiveIds = objectives.map(o => o.id)
 
     const blockers = await prisma.blocker.findMany({
       where: {
-        wigId: { in: wigIds },
+        objectiveId: { in: objectiveIds },
         ...(status && status !== 'all' ? { status } : {}),
       },
       include: {
@@ -62,7 +62,7 @@ export async function getBlockers(
             avatarUrl: true,
           },
         },
-        wig: {
+        objective: {
           select: {
             id: true,
             name: true,
@@ -83,10 +83,10 @@ export async function getBlockers(
 }
 
 /**
- * Récupère les blockers pour un WIG spécifique
+ * Récupère les blockers pour un Objectif spécifique
  */
-export async function getBlockersForWig(
-  wigId: string,
+export async function getBlockersForObjective(
+  objectiveId: string,
   status?: 'OPEN' | 'ESCALATED' | 'RESOLVED' | 'all'
 ): Promise<ActionResult<BlockerWithProfile[]>> {
   try {
@@ -97,24 +97,24 @@ export async function getBlockersForWig(
       return { success: false, error: 'Non authentifié' }
     }
 
-    // Vérifier que le WIG existe et que l'utilisateur y a accès
-    const wig = await prisma.wig.findUnique({
-      where: { id: wigId },
+    // Vérifier que l'Objectif existe et que l'utilisateur y a accès
+    const objective = await prisma.objective.findUnique({
+      where: { id: objectiveId },
       select: { organizationId: true },
     })
 
-    if (!wig) {
-      return { success: false, error: 'WIG non trouvé' }
+    if (!objective) {
+      return { success: false, error: 'Objectif non trouvé' }
     }
 
-    const permission = await checkPermission(user.id, wig.organizationId, 'wig:read')
+    const permission = await checkPermission(user.id, objective.organizationId, 'objective:read')
     if (!permission.allowed) {
       return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
     const blockers = await prisma.blocker.findMany({
       where: {
-        wigId,
+        objectiveId,
         ...(status && status !== 'all' ? { status } : {}),
       },
       include: {
@@ -125,7 +125,7 @@ export async function getBlockersForWig(
             avatarUrl: true,
           },
         },
-        wig: {
+        objective: {
           select: {
             id: true,
             name: true,
@@ -137,7 +137,7 @@ export async function getBlockersForWig(
 
     return { success: true, data: blockers as BlockerWithProfile[] }
   } catch (error) {
-    console.error('getBlockersForWig error:', error)
+    console.error('getBlockersForObjective error:', error)
     return { success: false, error: 'Erreur lors de la récupération des obstacles' }
   }
 }
@@ -157,25 +157,25 @@ export async function createBlocker(
       return { success: false, error: 'Non authentifié' }
     }
 
-    // Vérifier que le WIG existe
-    const wig = await prisma.wig.findUnique({
-      where: { id: input.wigId },
+    // Vérifier que l'Objectif existe
+    const objective = await prisma.objective.findUnique({
+      where: { id: input.objectiveId },
       select: { organizationId: true },
     })
 
-    if (!wig) {
-      return { success: false, error: 'WIG non trouvé' }
+    if (!objective) {
+      return { success: false, error: 'Objectif non trouvé' }
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, wig.organizationId, 'wig:read')
+    const permission = await checkPermission(user.id, objective.organizationId, 'objective:read')
     if (!permission.allowed) {
       return { success: false, error: permission.error || 'Accès non autorisé' }
     }
 
     const blocker = await prisma.blocker.create({
       data: {
-        wigId: input.wigId,
+        objectiveId: input.objectiveId,
         reportedById: user.id,
         description: input.description,
         status: 'OPEN',
@@ -183,7 +183,7 @@ export async function createBlocker(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/cadence')
+    revalidatePath('/dashboard/sync')
     return { success: true, data: blocker }
   } catch (error) {
     console.error('createBlocker error:', error)
@@ -208,7 +208,7 @@ export async function updateBlocker(
     const existing = await prisma.blocker.findUnique({
       where: { id: input.id },
       include: {
-        wig: { select: { organizationId: true } },
+        objective: { select: { organizationId: true } },
       },
     })
 
@@ -217,7 +217,7 @@ export async function updateBlocker(
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, existing.wig.organizationId, 'wig:read')
+    const permission = await checkPermission(user.id, existing.objective.organizationId, 'objective:read')
     if (!permission.allowed) {
       return { success: false, error: permission.error || 'Accès non autorisé' }
     }
@@ -233,7 +233,7 @@ export async function updateBlocker(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/cadence')
+    revalidatePath('/dashboard/sync')
     return { success: true, data: blocker }
   } catch (error) {
     console.error('updateBlocker error:', error)
@@ -257,7 +257,7 @@ export async function deleteBlocker(id: string): Promise<ActionResult<void>> {
     const existing = await prisma.blocker.findUnique({
       where: { id },
       include: {
-        wig: { select: { organizationId: true } },
+        objective: { select: { organizationId: true } },
       },
     })
 
@@ -269,7 +269,7 @@ export async function deleteBlocker(id: string): Promise<ActionResult<void>> {
     const membership = await prisma.membership.findFirst({
       where: {
         profileId: user.id,
-        organizationId: existing.wig.organizationId,
+        organizationId: existing.objective.organizationId,
       },
     })
 
@@ -287,7 +287,7 @@ export async function deleteBlocker(id: string): Promise<ActionResult<void>> {
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/cadence')
+    revalidatePath('/dashboard/sync')
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteBlocker error:', error)

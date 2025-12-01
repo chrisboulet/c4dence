@@ -14,7 +14,7 @@ type TrendArrowProps = {
 }
 
 /**
- * Composant TrendArrow - 4DX Discipline 3
+ * Composant TrendArrow - Pilier 3
  * Compare la valeur actuelle avec la précédente et affiche une flèche
  * ↑ vert si amélioration
  * ↓ rouge si régression
@@ -76,21 +76,21 @@ export function TrendArrow({
 }
 
 type WinningIndicatorProps = {
-  wigs: Array<{ status: string }>
+  objectives: Array<{ status: string }>
   className?: string
 }
 
 /**
- * Indicateur WINNING/LOSING - 4DX Discipline 3
+ * Indicateur VICTOIRE/DÉFAITE - Pilier 3
  * Affiche si l'équipe gagne ou perd en 5 secondes
  */
-export function WinningIndicator({ wigs, className }: WinningIndicatorProps) {
-  if (wigs.length === 0) return null
+export function WinningIndicator({ objectives, className }: WinningIndicatorProps) {
+  if (objectives.length === 0) return null
 
-  const onTrackCount = wigs.filter(
+  const onTrackCount = objectives.filter(
     (w) => w.status === 'ON_TRACK' || w.status === 'ACHIEVED'
   ).length
-  const winningRatio = onTrackCount / wigs.length
+  const winningRatio = onTrackCount / objectives.length
 
   const isWinning = winningRatio > 0.5
 
@@ -100,7 +100,7 @@ export function WinningIndicator({ wigs, className }: WinningIndicatorProps) {
         'inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-status-on-track/20 text-status-on-track font-bold text-2xl md:text-4xl',
         className
       )}>
-        <span>WINNING</span>
+        <span>VICTOIRE</span>
         <span>🏆</span>
       </div>
     )
@@ -111,7 +111,7 @@ export function WinningIndicator({ wigs, className }: WinningIndicatorProps) {
       'inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-status-off-track/20 text-status-off-track font-bold text-2xl md:text-4xl',
       className
     )}>
-      <span>LOSING</span>
+      <span>DÉFAITE</span>
       <span>⚠️</span>
     </div>
   )
