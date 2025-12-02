@@ -19,11 +19,11 @@ C4DENCE utilise trois niveaux de rôles :
 | Action | Propriétaire | Admin | Membre |
 |--------|:------------:|:-----:|:------:|
 | Voir le tableau de bord | ✅ | ✅ | ✅ |
-| Saisir des données Lead Measures | ✅ | ✅ | ✅ |
+| Saisir des données Indicateurs Prédictifs | ✅ | ✅ | ✅ |
 | Prendre des engagements | ✅ | ✅ | ✅ |
-| Créer un WIG | ✅ | ✅ | ❌ |
-| Modifier un WIG | ✅ | ✅ | ❌ |
-| Supprimer un WIG | ✅ | ✅ | ❌ |
+| Créer un Objectif Prioritaire | ✅ | ✅ | ❌ |
+| Modifier un Objectif Prioritaire | ✅ | ✅ | ❌ |
+| Supprimer un Objectif Prioritaire | ✅ | ✅ | ❌ |
 | Inviter des membres | ✅ | ✅ | ❌ |
 | Retirer des membres | ✅ | ❌ | ❌ |
 | Modifier les rôles | ✅ | ❌ | ❌ |
@@ -44,16 +44,16 @@ C4DENCE utilise trois niveaux de rôles :
 
 ![Paramètres](images/18-settings-desktop.png)
 
-### Configurer le jour et l'heure de cadence
+### Configurer le jour et l'heure de synchronisation
 
 Pour rappeler à votre équipe le moment de la réunion hebdomadaire :
 
 1. Allez dans **Paramètres**
-2. Section **Cadence**
+2. Section **Synchronisation**
 3. Sélectionnez :
    - **Jour** : Lundi, Mardi, etc.
    - **Heure** : 09:00, 14:00, etc.
-4. L'équipe verra ce rappel sur la page Cadence
+4. L'équipe verra ce rappel sur la page Synchronisation
 
 **Recommandations :**
 - Choisissez un moment où **tout le monde** est disponible
@@ -109,13 +109,13 @@ Vous pouvez voir et annuler les invitations non acceptées :
 
 ---
 
-## Gestion des WIGs
+## Gestion des Objectifs Prioritaires
 
-### Créer un WIG efficace
+### Créer un Objectif Prioritaire efficace
 
-En tant qu'Admin/Owner, vous pouvez créer des WIGs :
+En tant qu'Admin/Owner, vous pouvez créer des Objectifs Prioritaires :
 
-1. Depuis le **Dashboard**, cliquez sur **+ Nouveau WIG**
+1. Depuis le **Dashboard**, cliquez sur **+ Nouvel Objectif**
 2. Remplissez les champs :
 
 | Champ | Description | Exemple |
@@ -127,13 +127,13 @@ En tant qu'Admin/Owner, vous pouvez créer des WIGs :
 | **Unité** | Type de mesure | $ |
 | **Date de début** | Début du suivi | 01/01/2025 |
 | **Date de fin** | Échéance | 31/03/2026 |
-| **Responsable** | Membre accountable | Marie Dupont |
+| **Propriétaire** | Membre accountable | Marie Dupont |
 
 3. Cliquez sur **Créer**
 
-### Modifier un WIG
+### Modifier un Objectif Prioritaire
 
-1. Ouvrez le WIG depuis le dashboard ou la liste WIGs
+1. Ouvrez l'Objectif depuis le dashboard ou la liste
 2. Cliquez sur **Modifier** (icône crayon)
 3. Ajustez les valeurs nécessaires
 4. Sauvegardez
@@ -141,40 +141,40 @@ En tant qu'Admin/Owner, vous pouvez créer des WIGs :
 **Cas d'usage :**
 - Correction d'une erreur de saisie
 - Ajustement de la cible (en équipe!)
-- Changement de responsable
+- Changement de propriétaire
 
-### Archiver un WIG terminé
+### Archiver un Objectif terminé
 
-Quand un WIG est atteint ou abandonné :
+Quand un Objectif Prioritaire est atteint ou abandonné :
 
-1. Ouvrez le WIG
+1. Ouvrez l'Objectif
 2. Mettez le statut à **Atteint** ou modifiez selon le contexte
-3. Le WIG reste visible dans l'historique
+3. L'Objectif reste visible dans l'historique
 
-**Recommandation** : Célébrez les WIGs atteints avec votre équipe!
+**Recommandation** : Célébrez les Objectifs atteints avec votre équipe!
 
-### Supprimer un WIG
+### Supprimer un Objectif Prioritaire
 
 *À utiliser avec précaution*
 
 La suppression est définitive et efface toutes les données associées :
-- Lead Measures
+- Indicateurs Prédictifs
 - Données hebdomadaires
 - Historique de progression
 
 Pour supprimer :
-1. Ouvrez le WIG
+1. Ouvrez l'Objectif
 2. Menu **⋯** → **Supprimer**
 3. Confirmez la suppression
 
 ---
 
-## Gestion des Lead Measures
+## Gestion des Indicateurs Prédictifs
 
-### Ajouter une Lead Measure à un WIG
+### Ajouter un Indicateur Prédictif à un Objectif
 
-1. Ouvrez le détail d'un WIG
-2. Section **Mesures prédictives**
+1. Ouvrez le détail d'un Objectif Prioritaire
+2. Section **Indicateurs Prédictifs**
 3. Cliquez sur **+ Ajouter**
 4. Configurez :
 
@@ -187,8 +187,8 @@ Pour supprimer :
 
 ### Bonnes pratiques
 
-- **2-3 Lead Measures maximum** par WIG
-- Chaque Lead Measure devrait être **assignée à quelqu'un**
+- **2-3 Indicateurs Prédictifs maximum** par Objectif
+- Chaque Indicateur devrait être **assigné à quelqu'un**
 - La cible doit être **atteignable mais ambitieuse**
 
 ---
@@ -199,19 +199,19 @@ Pour supprimer :
 
 Avant de démarrer C4DENCE avec votre équipe :
 
-1. **Définissez vos WIGs ensemble** — L'adhésion vient de la co-création
-2. **Formez sur la méthodologie 4DX** — Utilisez le Guide Méthodologie
-3. **Planifiez la première cadence** — Fixez un créneau récurrent
-4. **Assignez les responsabilités** — Chaque Lead Measure a un propriétaire
+1. **Définissez vos Objectifs Prioritaires ensemble** — L'adhésion vient de la co-création
+2. **Formez sur la Méthode C4DENCE** — Utilisez le Manuel de la Méthode
+3. **Planifiez la première synchronisation** — Fixez un créneau récurrent
+4. **Assignez les responsabilités** — Chaque Indicateur Prédictif a un propriétaire
 
 ### Former les nouveaux membres
 
 Quand un nouveau membre rejoint :
 
 1. Partagez le **Guide Utilisateur**
-2. Expliquez le contexte des WIGs en cours
-3. Assignez-lui une Lead Measure si pertinent
-4. Incluez-le dès la prochaine cadence
+2. Expliquez le contexte des Objectifs en cours
+3. Assignez-lui un Indicateur Prédictif si pertinent
+4. Incluez-le dès la prochaine réunion de synchronisation
 
 ### Maintenir la discipline sur le long terme
 
@@ -220,16 +220,16 @@ Le plus grand défi n'est pas de démarrer, mais de **maintenir l'effort** :
 | Défi | Solution |
 |------|----------|
 | Les réunions sont annulées | Bloquez le créneau dans tous les agendas, c'est sacré |
-| Les données ne sont pas saisies | Rappelez avant la cadence, célébrez ceux qui saisissent |
+| Les données ne sont pas saisies | Rappelez avant la synchronisation, célébrez ceux qui saisissent |
 | Les engagements sont vagues | Exigez le format "Je vais [action spécifique]" |
 | L'équipe perd l'intérêt | Montrez les progrès, célébrez les victoires |
 
 ### Checklist hebdomadaire admin
 
-Avant chaque réunion de cadence :
+Avant chaque réunion de synchronisation :
 
-- [ ] Vérifier que les Lead Measures sont à jour
-- [ ] Préparer le scoreboard (automatique dans C4DENCE)
+- [ ] Vérifier que les Indicateurs Prédictifs sont à jour
+- [ ] Préparer le Tableau de Score (automatique dans C4DENCE)
 - [ ] Identifier les blocages potentiels
 - [ ] Préparer 1-2 questions de coaching si nécessaire
 
@@ -258,12 +258,12 @@ Avant chaque réunion de cadence :
 **Si le problème persiste :**
 - Contactez le support : support@bouletstrategies.ca
 
-### Un membre ne voit pas le bon WIG
+### Un membre ne voit pas le bon Objectif
 
 **Vérifiez :**
 1. Le membre est bien dans la bonne organisation
-2. Le WIG n'a pas été supprimé
-3. Les filtres ne cachent pas le WIG
+2. L'Objectif n'a pas été supprimé
+3. Les filtres ne cachent pas l'Objectif
 
 ### Questions fréquentes des admins
 
