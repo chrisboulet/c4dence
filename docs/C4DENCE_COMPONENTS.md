@@ -38,12 +38,12 @@ src/components/
 │   ├── header.tsx               # Barre supérieure
 │   └── organization-switcher.tsx # Sélecteur d'org
 │
-├── wig/                      # Objectifs ambitieux (WIGs)
-│   ├── wigs-page.tsx            # Liste complète des WIGs
-│   ├── wig-dashboard.tsx        # Dashboard avec stats
-│   ├── wig-detail.tsx           # Détail d'un WIG
-│   ├── wig-list.tsx             # Liste simple
-│   ├── wig-form.tsx             # Création/édition
+├── objective/                # Objectifs stratégiques
+│   ├── objectives-page.tsx      # Liste complète des objectifs
+│   ├── objective-dashboard.tsx  # Dashboard avec stats
+│   ├── objective-detail.tsx     # Détail d'un objectif
+│   ├── objective-list.tsx       # Liste simple
+│   ├── objective-form.tsx       # Création/édition
 │   └── update-value-dialog.tsx  # Mise à jour valeur actuelle
 │
 ├── lead-measure/             # Mesures prédictives
@@ -56,17 +56,17 @@ src/components/
 │   ├── engagement-list.tsx      # Liste des engagements
 │   └── engagement-form.tsx      # Création d'engagement
 │
-├── blocker/                  # Obstacles (4DX "Clear")
+├── blocker/                  # Obstacles
 │   ├── blocker-widget.tsx       # Widget dashboard
 │   ├── blocker-list.tsx         # Liste des blockers
 │   └── blocker-form.tsx         # Signalement d'obstacle
 │
-├── cadence/                  # Réunions de cadence
-│   ├── cadence-meeting.tsx      # Page réunion complète
-│   └── wig-session-timer.tsx    # Timer focus WIG
+├── sync/                     # Réunions de synchronisation
+│   ├── sync-meeting.tsx         # Page réunion complète
+│   └── session-timer.tsx        # Timer focus objectif
 │
 └── charts/                   # Visualisations
-    ├── progress-chart.tsx       # Progression WIG
+    ├── progress-chart.tsx       # Progression objectif
     └── lead-measure-chart.tsx   # Barres mesures prédictives
 
 src/app/
@@ -155,58 +155,58 @@ const queryClient = new QueryClient({
 
 ---
 
-## 4. Composants WIG
+## 4. Composants Objective
 
-### 4.1 WigsPage
+### 4.1 ObjectivesPage
 
-**Fichier** : `components/wig/wigs-page.tsx`
-**Rôle** : Page complète listant tous les WIGs avec statistiques
+**Fichier** : `components/objective/objectives-page.tsx`
+**Rôle** : Page complète listant tous les objectifs avec statistiques
 
 **Contenu** :
 1. Cartes stats : Total, En bonne voie, À risque, Hors piste
-2. Liste des WIGs avec progression et statut
-3. Bouton "Nouveau WIG" ouvrant WigForm
+2. Liste des objectifs avec progression et statut
+3. Bouton "Nouvel objectif" ouvrant ObjectiveForm
 
 **Pattern data-fetching** :
 ```typescript
 const { currentOrg } = useOrganization()
 useEffect(() => {
-  if (currentOrg) fetchWigs(currentOrg.organizationId)
+  if (currentOrg) fetchObjectives(currentOrg.organizationId)
 }, [currentOrg])
 ```
 
 ---
 
-### 4.2 WigDashboard
+### 4.2 ObjectiveDashboard
 
-**Fichier** : `components/wig/wig-dashboard.tsx`
-**Rôle** : Vue dashboard condensée des WIGs pour la page d'accueil
-
----
-
-### 4.3 WigDetail
-
-**Fichier** : `components/wig/wig-detail.tsx`
-**Rôle** : Détail complet d'un WIG avec ses lead measures
+**Fichier** : `components/objective/objective-dashboard.tsx`
+**Rôle** : Vue dashboard condensée des objectifs pour la page d'accueil
 
 ---
 
-### 4.4 WigForm
+### 4.3 ObjectiveDetail
 
-**Fichier** : `components/wig/wig-form.tsx`
-**Rôle** : Dialog pour créer ou modifier un WIG
+**Fichier** : `components/objective/objective-detail.tsx`
+**Rôle** : Détail complet d'un objectif avec ses lead measures
+
+---
+
+### 4.4 ObjectiveForm
+
+**Fichier** : `components/objective/objective-form.tsx`
+**Rôle** : Dialog pour créer ou modifier un objectif
 
 ```typescript
-interface WigFormProps {
+interface ObjectiveFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  wig?: Wig                    // Si fourni = mode édition
+  objective?: Objective        // Si fourni = mode édition
   onSuccess?: () => void       // Callback après succès
 }
 ```
 
 **Champs** :
-- `name` : Nom du WIG
+- `name` : Nom de l'objectif
 - `description` : Description optionnelle
 - `startValue` : Valeur de départ
 - `targetValue` : Valeur cible
@@ -218,8 +218,8 @@ interface WigFormProps {
 
 ### 4.5 UpdateValueDialog
 
-**Fichier** : `components/wig/update-value-dialog.tsx`
-**Rôle** : Dialog simple pour mettre à jour la valeur actuelle d'un WIG
+**Fichier** : `components/objective/update-value-dialog.tsx`
+**Rôle** : Dialog simple pour mettre à jour la valeur actuelle d'un objectif
 
 ---
 
@@ -228,7 +228,7 @@ interface WigFormProps {
 ### 5.1 LeadMeasureList
 
 **Fichier** : `components/lead-measure/lead-measure-list.tsx`
-**Rôle** : Liste des mesures prédictives d'un WIG
+**Rôle** : Liste des mesures prédictives d'un objectif
 
 ---
 
@@ -239,7 +239,7 @@ interface WigFormProps {
 
 ```typescript
 interface LeadMeasureFormProps {
-  wigId: string
+  objectiveId: string
   open: boolean
   onOpenChange: (open: boolean) => void
   leadMeasure?: LeadMeasure    // Mode édition si fourni
@@ -308,7 +308,6 @@ interface EngagementFormProps {
 
 **Affichage** :
 - Icône AlertTriangle avec bordure orange
-- Description "4DX Phase Clear"
 - Compteur actifs
 - Liste des blockers
 - Bouton "Signaler"
@@ -334,25 +333,25 @@ interface EngagementFormProps {
 
 ---
 
-## 8. Composants Cadence
+## 8. Composants Sync
 
-### 8.1 CadenceMeeting
+### 8.1 SyncMeeting
 
-**Fichier** : `components/cadence/cadence-meeting.tsx`
-**Rôle** : Page complète de réunion de cadence 4DX
+**Fichier** : `components/sync/sync-meeting.tsx`
+**Rôle** : Page complète de réunion de synchronisation
 
-**Structure 4DX** :
+**Structure** :
 1. **Account** : Revue des engagements passés
-2. **Scoreboard** : Visualisation des WIGs
+2. **Scoreboard** : Visualisation des objectifs
 3. **Plan** : Nouveaux engagements
 4. **Clear** : Obstacles à lever
 
 ---
 
-### 8.2 WigSessionTimer
+### 8.2 SessionTimer
 
-**Fichier** : `components/cadence/wig-session-timer.tsx`
-**Rôle** : Timer pour focus sur un WIG spécifique
+**Fichier** : `components/sync/session-timer.tsx`
+**Rôle** : Timer pour focus sur un objectif spécifique
 
 ---
 
@@ -361,7 +360,7 @@ interface EngagementFormProps {
 ### 9.1 ProgressChart
 
 **Fichier** : `components/charts/progress-chart.tsx`
-**Rôle** : Graphique de progression d'un WIG (réel vs cible)
+**Rôle** : Graphique de progression d'un objectif (réel vs cible)
 
 ---
 
@@ -499,7 +498,7 @@ export function MyComponent() {
 
 | Contexte | Icône |
 |----------|-------|
-| WIG / Objectif | `Target` |
+| Objectif | `Target` |
 | Lead Measure | `TrendingUp` |
 | Engagement | `CheckSquare` |
 | Blocker / Obstacle | `AlertTriangle` |
@@ -538,7 +537,7 @@ Avant de créer un nouveau composant :
 ### Pages
 
 #### /admin (Organizations List)
-- Stats : total orgs, actives, membres, WIGs
+- Stats : total orgs, actives, membres, objectifs
 - Liste des organisations avec actions
 - Création nouvelle organisation avec invitation owner
 
@@ -546,7 +545,7 @@ Avant de créer un nouveau composant :
 - Détail d'une organisation
 - Gestion des membres (rôle, suppression)
 - Invitations en attente
-- Vue des WIGs
+- Vue des objectifs
 
 #### /admin/users
 - Liste de tous les utilisateurs
@@ -559,7 +558,7 @@ Avant de créer un nouveau composant :
 - `adminUpdateOrganization()` — Modifie nom/isActive
 - `adminDeleteOrganization()` — Supprime org (cascade)
 - `adminToggleOrganization()` — Active/désactive
-- `adminGetOrganizationDetails()` — Détail avec membres/WIGs
+- `adminGetOrganizationDetails()` — Détail avec membres/objectifs
 - `adminSendInvitation()` — Invite un membre
 - `adminCancelInvitation()` — Annule invitation
 - `adminUpdateMemberRole()` — Change rôle membre

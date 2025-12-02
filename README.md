@@ -194,8 +194,6 @@ Ouvrir [http://localhost:3000](http://localhost:3000)
 
 ## Structure du Projet
 
-> **Note** : Les noms de dossiers et fichiers dans le code source utilisent la nomenclature technique originale (`wigs`, `cadence`, `lead-measure`). L'interface utilisateur et la documentation utilisent la terminologie de la Méthode C4DENCE (Objectifs Prioritaires, Synchronisation, Indicateurs Prédictifs).
-
 ```
 src/
 ├── app/                    # Next.js App Router
@@ -210,8 +208,8 @@ src/
 │   │   └── users/         # Liste utilisateurs
 │   ├── dashboard/         # Routes protégées
 │   │   ├── page.tsx       # Dashboard principal
-│   │   ├── wigs/          # Liste et détail Objectifs Prioritaires
-│   │   ├── cadence/       # Réunion de Synchronisation
+│   │   ├── objectives/    # Objectifs stratégiques
+│   │   ├── sync/          # Réunion de Synchronisation
 │   │   ├── members/       # Gestion membres
 │   │   └── settings/      # Paramètres organisation
 │   └── actions/           # Server Actions
@@ -219,10 +217,10 @@ src/
 │   ├── ui/                # shadcn/ui
 │   ├── providers/         # React Context
 │   ├── layout/            # Header, navigation
-│   ├── wig/               # Composants Objectif Prioritaire
+│   ├── objective/         # Composants Objectif stratégique
 │   ├── lead-measure/      # Indicateurs Prédictifs
 │   ├── engagement/        # Engagements
-│   ├── cadence/           # Synchronisation meeting
+│   ├── sync/              # Synchronisation meeting
 │   └── charts/            # Tremor charts
 ├── lib/                   # Utilitaires
 │   ├── prisma.ts          # Client Prisma
@@ -268,8 +266,8 @@ src/
 ### Dashboard
 ![Dashboard](docs/images/02-dashboard-desktop.png)
 
-### Liste des WIGs
-![WIGs](docs/images/05-wigs-list-desktop.png)
+### Liste des Objectifs
+![Objectifs](docs/images/05-wigs-list-desktop.png)
 
 ### Page Synchronisation
 ![Synchronisation](docs/images/12-cadence-page-desktop.png)

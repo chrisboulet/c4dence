@@ -11,7 +11,7 @@ C4DENCE utilise trois niveaux de rôles :
 | Rôle | Permissions |
 |------|-------------|
 | **Propriétaire** (Owner) | Accès complet, peut supprimer l'organisation, transférer la propriété |
-| **Administrateur** (Admin) | Gérer les membres, créer/modifier les WIGs, configurer les paramètres |
+| **Administrateur** (Admin) | Gérer les membres, créer/modifier les objectifs, configurer les paramètres |
 | **Membre** (Member) | Voir les données, saisir ses Lead Measures, prendre des engagements |
 
 ### Tableau des permissions détaillé

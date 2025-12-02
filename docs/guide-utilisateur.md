@@ -303,7 +303,7 @@ Voir la section [Inviter votre équipe](#inviter-votre-équipe) ci-dessus.
 | Action | Comment |
 |--------|---------|
 | Voir le tableau de bord | Cliquez sur **Dashboard** dans le menu |
-| Créer un WIG | Bouton **+ Nouveau WIG** |
+| Créer un objectif | Bouton **+ Nouvel objectif** |
 | Saisir une donnée | Cliquez sur la cellule dans le tableau Lead Measures |
 | Prendre un engagement | Bouton **+ Ajouter** dans la section Engagements |
 

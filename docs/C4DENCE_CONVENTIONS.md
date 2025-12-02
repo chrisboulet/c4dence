@@ -711,7 +711,7 @@ fix/description-bug  # Corrections
 refactor/description # Refactoring
 
 # Exemples
-feat/wig-scoreboard
+feat/objective-scoreboard
 fix/weekly-measure-validation
 refactor/server-actions-cleanup
 ```
