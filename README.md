@@ -194,6 +194,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000)
 
 ## Structure du Projet
 
+> **Note** : Les noms de dossiers et fichiers dans le code source utilisent la nomenclature technique originale (`wigs`, `cadence`, `lead-measure`). L'interface utilisateur et la documentation utilisent la terminologie de la Méthode C4DENCE (Objectifs Prioritaires, Synchronisation, Indicateurs Prédictifs).
+
 ```
 src/
 ├── app/                    # Next.js App Router

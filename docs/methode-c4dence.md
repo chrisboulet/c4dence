@@ -4,7 +4,9 @@
 
 ---
 
-> 📘 **Pour une documentation complète**, consultez le [Manuel de la Méthode C4DENCE](../METHODE_C4DENCE_MANUEL.md)
+> 📘 **Pour une documentation complète de la méthodologie**, consultez le [Manuel de la Méthode C4DENCE](../METHODE_C4DENCE_MANUEL.md)
+
+> 💡 Ce guide rapide est destiné aux utilisateurs de l'application C4DENCE. Il explique les concepts clés de la méthodologie tels qu'ils sont implémentés dans l'application.
 
 ---
 
