@@ -3,13 +3,13 @@
 </p>
 
 <p align="center">
-  <strong>Plateforme d'exécution stratégique basée sur les 4 Disciplines de l'Exécution</strong>
+  <strong>Plateforme d'exécution stratégique basée sur la Méthode C4DENCE</strong>
 </p>
 
 <p align="center">
   <a href="https://c4dence.bouletstrategies.ca">Live Demo</a> •
+  <a href="METHODE_C4DENCE_MANUEL.md">Manuel de la Méthode</a> •
   <a href="docs/guide-utilisateur.md">Guide Utilisateur</a> •
-  <a href="docs/methodologie-4dx.md">Méthodologie 4DX</a> •
   <a href="docs/guide-admin.md">Guide Admin</a>
 </p>
 
@@ -31,47 +31,58 @@
 
 ## Vue d'ensemble
 
-**C4DENCE** transforme vos objectifs stratégiques en résultats mesurables grâce à la méthodologie **4DX** (4 Disciplines of Execution) de FranklinCovey.
+**C4DENCE** transforme vos objectifs stratégiques en résultats mesurables grâce à la **Méthode C4DENCE** — une méthodologie éprouvée d'exécution stratégique en 4 piliers.
 
-> *"80% des stratégies échouent non pas à cause d'une mauvaise stratégie, mais d'une mauvaise exécution."*
+> *"La stratégie sans exécution n'est qu'une illusion. L'exécution sans stratégie n'est que de l'agitation."*
 
 ### Pourquoi C4DENCE?
 
 | Problème | Solution C4DENCE |
 |----------|------------------|
-| Trop d'objectifs = aucun focus | **Discipline 1** : Focus sur 2-3 WIGs essentiels |
-| On mesure les résultats trop tard | **Discipline 2** : Lead Measures prédictives |
-| L'équipe ne sait pas si elle gagne | **Discipline 3** : Scoreboard visuel et clair |
-| Les urgences prennent le dessus | **Discipline 4** : Cadence hebdomadaire sacrée |
+| Trop d'objectifs = aucun focus | **Pilier 1** : Focus sur 2-3 Objectifs Prioritaires |
+| On mesure les résultats trop tard | **Pilier 2** : Indicateurs Prédictifs mesurables |
+| L'équipe ne sait pas si elle gagne | **Pilier 3** : Tableau de Score visuel et clair |
+| Les urgences prennent le dessus | **Pilier 4** : Rythme de Synchronisation hebdomadaire |
+
+### Les 4 Piliers de la Méthode C4DENCE
+
+| Pilier | Nom | Description |
+|--------|-----|-------------|
+| **Pilier 1** | Focus Stratégique | Définir 2-3 Objectifs Prioritaires maximum |
+| **Pilier 2** | Actions Prédictives | Identifier les Indicateurs Prédictifs qui influencent le résultat |
+| **Pilier 3** | Visibilité Continue | Maintenir un Tableau de Score visible (Victoire ou Danger en 5 secondes) |
+| **Pilier 4** | Rythme de Responsabilité | Réunions de Synchronisation hebdomadaires avec engagements |
+
+> 📘 Pour une explication complète de la méthodologie, consultez le [Manuel de la Méthode C4DENCE](METHODE_C4DENCE_MANUEL.md).
 
 ---
 
 ## Fonctionnalités
 
-### WIGs (Wildly Important Goals)
+### Objectifs Prioritaires (OP)
 - Format "De X à Y d'ici [date]"
-- Progression visuelle avec indicateur WINNING/LOSING
+- Progression visuelle avec indicateur VICTOIRE/DANGER
 - Statuts automatiques : En bonne voie / À risque / Hors piste
-- Attribution de responsable
+- Attribution de propriétaire
 
-### Lead Measures (Mesures Prédictives)
+### Indicateurs Prédictifs (IP)
 - Actions hebdomadaires mesurables
 - Cibles par semaine configurables
-- Tendances avec flèches directionnelles
+- Tendances avec flèches directionnelles (↑↓→)
 - Charts de performance
 
-### Scoreboard (Tableau de Bord)
+### Tableau de Score
 - Dashboard avec KPIs temps réel
 - Charts Tremor pour visualisations
-- Progression WIG vs trajectoire idéale
-- Indicateur WINNING/LOSING prominent
+- Progression OP vs trajectoire idéale
+- Indicateur VICTOIRE/DANGER proéminent
 
-### Cadence (Responsabilité)
+### Synchronisation (Rythme de Responsabilité)
 - Page de réunion dédiée avec timer
 - Navigation par semaine
-- Engagements par membre
+- Engagements par membre (max 2)
 - Gestion des obstacles
-- Agenda structuré en 5 étapes
+- Agenda structuré en 5 phases
 
 ### Multi-Tenant
 - Organisations isolées
@@ -175,8 +186,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000)
 
 | Document | Description | Audience |
 |----------|-------------|----------|
-| [Guide Utilisateur](docs/guide-utilisateur.md) | Prise en main complète | Tous les utilisateurs |
-| [Méthodologie 4DX](docs/methodologie-4dx.md) | Comprendre les 4 disciplines | Leaders, Managers |
+| [Manuel de la Méthode C4DENCE](METHODE_C4DENCE_MANUEL.md) | La méthodologie complète des 4 Piliers | Leaders, Managers, Tous |
+| [Guide Utilisateur](docs/guide-utilisateur.md) | Prise en main de l'application | Tous les utilisateurs |
 | [Guide Administrateur](docs/guide-admin.md) | Configuration et gestion | Admins, Owners |
 
 ---
@@ -197,8 +208,8 @@ src/
 │   │   └── users/         # Liste utilisateurs
 │   ├── dashboard/         # Routes protégées
 │   │   ├── page.tsx       # Dashboard principal
-│   │   ├── wigs/          # Liste et détail WIGs
-│   │   ├── cadence/       # Réunion de cadence
+│   │   ├── wigs/          # Liste et détail Objectifs Prioritaires
+│   │   ├── cadence/       # Réunion de Synchronisation
 │   │   ├── members/       # Gestion membres
 │   │   └── settings/      # Paramètres organisation
 │   └── actions/           # Server Actions
@@ -206,10 +217,10 @@ src/
 │   ├── ui/                # shadcn/ui
 │   ├── providers/         # React Context
 │   ├── layout/            # Header, navigation
-│   ├── wig/               # Composants WIG
-│   ├── lead-measure/      # Lead Measures
+│   ├── wig/               # Composants Objectif Prioritaire
+│   ├── lead-measure/      # Indicateurs Prédictifs
 │   ├── engagement/        # Engagements
-│   ├── cadence/           # Cadence meeting
+│   ├── cadence/           # Synchronisation meeting
 │   └── charts/            # Tremor charts
 ├── lib/                   # Utilitaires
 │   ├── prisma.ts          # Client Prisma
@@ -229,11 +240,11 @@ src/
 | Couleur | Hex | Usage |
 |---------|-----|-------|
 | Purple | `#684bf8` | Primaire, actions |
-| Cyan | `#11e6ba` | Success, On-track |
-| Gold | `#fcdc76` | Warning, At-risk |
+| Cyan | `#11e6ba` | Success, En bonne voie |
+| Gold | `#fcdc76` | Warning, À risque |
 | Lime | `#9bef8e` | Success secondaire |
 
-### Statuts WIG
+### Statuts Objectif Prioritaire
 
 | Statut | Couleur | Condition |
 |--------|---------|-----------|
@@ -258,8 +269,8 @@ src/
 ### Liste des WIGs
 ![WIGs](docs/images/05-wigs-list-desktop.png)
 
-### Page Cadence
-![Cadence](docs/images/12-cadence-page-desktop.png)
+### Page Synchronisation
+![Synchronisation](docs/images/12-cadence-page-desktop.png)
 
 ### Gestion des Membres
 ![Members](docs/images/17-members-desktop.png)
@@ -283,16 +294,16 @@ C4DENCE s'adapte à tous les écrans :
 
 ## Roadmap
 
-- [x] WIGs avec progression
-- [x] Lead Measures hebdomadaires
-- [x] Scoreboard avec charts
-- [x] Cadence meeting
+- [x] Objectifs Prioritaires avec progression
+- [x] Indicateurs Prédictifs hebdomadaires
+- [x] Tableau de Score avec charts
+- [x] Réunion de Synchronisation
 - [x] Multi-tenant avec invitations
 - [x] Emails d'invitation (Resend)
 - [x] Microsoft 365 OAuth (multi-tenant)
 - [x] Module Super Admin
 - [ ] Export PDF des rapports
-- [ ] Notifications (rappels cadence)
+- [ ] Notifications (rappels synchronisation)
 - [ ] Intégration calendrier
 - [ ] API publique
 
