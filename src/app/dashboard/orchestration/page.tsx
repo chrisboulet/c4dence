@@ -1,7 +1,10 @@
+import Link from 'next/link'
+import { Calendar } from 'lucide-react'
 import { FloorStatusCard } from "@/components/dashboard/orchestration/FloorStatusCard"
 import { PillarsStatusCard } from "@/components/dashboard/orchestration/PillarsStatusCard"
 import { TimeAllocationGauge } from "@/components/dashboard/orchestration/TimeAllocationGauge"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import { getTimeAllocation } from "@/lib/data/time-allocation"
 import { getCurrentOrganizationId } from "@/lib/data/organization"
 
@@ -58,7 +61,13 @@ export default async function OrchestrationPage() {
                 {/* Quick Actions / Sync placeholder */}
                 <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
                     <h3 className="font-semibold mb-4">📅 Prochaine Synchronisation</h3>
-                    <p className="text-sm text-muted-foreground">Lundi 9:00 (Mode A)</p>
+                    <p className="text-sm text-muted-foreground mb-4">Lundi 9:00 (Mode A)</p>
+                    <Button asChild className="w-full">
+                        <Link href="/dashboard/orchestration/sync">
+                            <Calendar className="mr-2 h-4 w-4" />
+                            Démarrer la synchronisation
+                        </Link>
+                    </Button>
                 </div>
             </div>
         </div>

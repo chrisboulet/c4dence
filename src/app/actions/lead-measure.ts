@@ -89,7 +89,7 @@ export async function createLeadMeasure(input: CreateLeadMeasureInput): Promise<
       },
     })
 
-    revalidatePath(`/dashboard/objectives/${input.objectiveId}`)
+    revalidatePath(`/dashboard/piliers/objectifs/${input.objectiveId}`)
     return { success: true, data: leadMeasure }
   } catch (error) {
     console.error('createLeadMeasure error:', error)
@@ -140,7 +140,7 @@ export async function updateLeadMeasure(
       },
     })
 
-    revalidatePath(`/dashboard/objectives/${existing.objectiveId}`)
+    revalidatePath(`/dashboard/piliers/objectifs/${existing.objectiveId}`)
     return { success: true, data: leadMeasure }
   } catch (error) {
     console.error('updateLeadMeasure error:', error)
@@ -181,7 +181,7 @@ export async function deleteLeadMeasure(id: string): Promise<ActionResult<void>>
       where: { id },
     })
 
-    revalidatePath(`/dashboard/objectives/${existing.objectiveId}`)
+    revalidatePath(`/dashboard/piliers/objectifs/${existing.objectiveId}`)
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteLeadMeasure error:', error)
@@ -237,7 +237,7 @@ export async function recordWeeklyMeasure(input: RecordWeeklyMeasureInput): Prom
       },
     })
 
-    revalidatePath(`/dashboard/objectives/${leadMeasure.objectiveId}`)
+    revalidatePath(`/dashboard/piliers/objectifs/${leadMeasure.objectiveId}`)
     revalidatePath('/dashboard')
     return { success: true, data: weeklyMeasure }
   } catch (error) {

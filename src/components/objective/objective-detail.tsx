@@ -142,7 +142,7 @@ export function ObjectiveDetail({ objective: initialObjective }: ObjectiveDetail
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard">
+          <Link href="/dashboard/piliers/objectifs">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>

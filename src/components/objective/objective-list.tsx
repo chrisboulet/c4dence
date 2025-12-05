@@ -196,7 +196,7 @@ export function ObjectiveList({ objectives, onRefresh }: ObjectiveListProps) {
                     Échéance: {format(new Date(objective.endDate), 'd MMMM yyyy', { locale: fr })}
                   </p>
                   <Link
-                    href={`/dashboard/objectives/${objective.id}`}
+                    href={`/dashboard/piliers/objectifs/${objective.id}`}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     Détails <ChevronRight className="h-3 w-3" />

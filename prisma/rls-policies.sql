@@ -20,7 +20,7 @@ CREATE SCHEMA IF NOT EXISTS c4dence;
 ALTER TABLE c4dence.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE c4dence.organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE c4dence.memberships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE c4dence.wigs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE c4dence.objectives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE c4dence.lead_measures ENABLE ROW LEVEL SECURITY;
 ALTER TABLE c4dence.weekly_measures ENABLE ROW LEVEL SECURITY;
 ALTER TABLE c4dence.engagements ENABLE ROW LEVEL SECURITY;
@@ -157,51 +157,51 @@ CREATE POLICY "memberships_delete" ON c4dence.memberships
   );
 
 -- =============================================================================
--- WIGS
+-- OBJECTIVES
 -- =============================================================================
 
 -- Lecture : Membre de l'organisation
-CREATE POLICY "wigs_select_member" ON c4dence.wigs
+CREATE POLICY "objectives_select_member" ON c4dence.objectives
   FOR SELECT
   USING (
     EXISTS (
       SELECT 1 FROM c4dence.memberships
-      WHERE c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      WHERE c4dence.memberships.organization_id = c4dence.objectives.organization_id
       AND c4dence.memberships.profile_id = auth.uid()
     )
   );
 
 -- Insert : OWNER ou ADMIN
-CREATE POLICY "wigs_insert_admin" ON c4dence.wigs
+CREATE POLICY "objectives_insert_admin" ON c4dence.objectives
   FOR INSERT
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM c4dence.memberships
-      WHERE c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      WHERE c4dence.memberships.organization_id = c4dence.objectives.organization_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
     )
   );
 
 -- Update : OWNER ou ADMIN
-CREATE POLICY "wigs_update_admin" ON c4dence.wigs
+CREATE POLICY "objectives_update_admin" ON c4dence.objectives
   FOR UPDATE
   USING (
     EXISTS (
       SELECT 1 FROM c4dence.memberships
-      WHERE c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      WHERE c4dence.memberships.organization_id = c4dence.objectives.organization_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
     )
   );
 
 -- Delete : OWNER ou ADMIN (soft delete préféré via is_archived)
-CREATE POLICY "wigs_delete_admin" ON c4dence.wigs
+CREATE POLICY "objectives_delete_admin" ON c4dence.objectives
   FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM c4dence.memberships
-      WHERE c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      WHERE c4dence.memberships.organization_id = c4dence.objectives.organization_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
     )
@@ -216,9 +216,9 @@ CREATE POLICY "lead_measures_select_member" ON c4dence.lead_measures
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM c4dence.wigs
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
-      WHERE c4dence.wigs.id = c4dence.lead_measures.wig_id
+      SELECT 1 FROM c4dence.objectives
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
+      WHERE c4dence.objectives.id = c4dence.lead_measures.objective_id
       AND c4dence.memberships.profile_id = auth.uid()
     )
   );
@@ -228,9 +228,9 @@ CREATE POLICY "lead_measures_insert_admin" ON c4dence.lead_measures
   FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM c4dence.wigs
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
-      WHERE c4dence.wigs.id = c4dence.lead_measures.wig_id
+      SELECT 1 FROM c4dence.objectives
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
+      WHERE c4dence.objectives.id = c4dence.lead_measures.objective_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
     )
@@ -241,9 +241,9 @@ CREATE POLICY "lead_measures_update_admin" ON c4dence.lead_measures
   FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM c4dence.wigs
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
-      WHERE c4dence.wigs.id = c4dence.lead_measures.wig_id
+      SELECT 1 FROM c4dence.objectives
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
+      WHERE c4dence.objectives.id = c4dence.lead_measures.objective_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
     )
@@ -254,9 +254,9 @@ CREATE POLICY "lead_measures_delete_admin" ON c4dence.lead_measures
   FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM c4dence.wigs
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
-      WHERE c4dence.wigs.id = c4dence.lead_measures.wig_id
+      SELECT 1 FROM c4dence.objectives
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
+      WHERE c4dence.objectives.id = c4dence.lead_measures.objective_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
     )
@@ -272,8 +272,8 @@ CREATE POLICY "weekly_measures_select_member" ON c4dence.weekly_measures
   USING (
     EXISTS (
       SELECT 1 FROM c4dence.lead_measures
-      JOIN c4dence.wigs ON c4dence.wigs.id = c4dence.lead_measures.wig_id
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      JOIN c4dence.objectives ON c4dence.objectives.id = c4dence.lead_measures.objective_id
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
       WHERE c4dence.lead_measures.id = c4dence.weekly_measures.lead_measure_id
       AND c4dence.memberships.profile_id = auth.uid()
     )
@@ -285,8 +285,8 @@ CREATE POLICY "weekly_measures_insert_member" ON c4dence.weekly_measures
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM c4dence.lead_measures
-      JOIN c4dence.wigs ON c4dence.wigs.id = c4dence.lead_measures.wig_id
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      JOIN c4dence.objectives ON c4dence.objectives.id = c4dence.lead_measures.objective_id
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
       WHERE c4dence.lead_measures.id = c4dence.weekly_measures.lead_measure_id
       AND c4dence.memberships.profile_id = auth.uid()
     )
@@ -298,8 +298,8 @@ CREATE POLICY "weekly_measures_update_member" ON c4dence.weekly_measures
   USING (
     EXISTS (
       SELECT 1 FROM c4dence.lead_measures
-      JOIN c4dence.wigs ON c4dence.wigs.id = c4dence.lead_measures.wig_id
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      JOIN c4dence.objectives ON c4dence.objectives.id = c4dence.lead_measures.objective_id
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
       WHERE c4dence.lead_measures.id = c4dence.weekly_measures.lead_measure_id
       AND c4dence.memberships.profile_id = auth.uid()
     )
@@ -311,8 +311,8 @@ CREATE POLICY "weekly_measures_delete_admin" ON c4dence.weekly_measures
   USING (
     EXISTS (
       SELECT 1 FROM c4dence.lead_measures
-      JOIN c4dence.wigs ON c4dence.wigs.id = c4dence.lead_measures.wig_id
-      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.wigs.organization_id
+      JOIN c4dence.objectives ON c4dence.objectives.id = c4dence.lead_measures.objective_id
+      JOIN c4dence.memberships ON c4dence.memberships.organization_id = c4dence.objectives.organization_id
       WHERE c4dence.lead_measures.id = c4dence.weekly_measures.lead_measure_id
       AND c4dence.memberships.profile_id = auth.uid()
       AND c4dence.memberships.role IN ('OWNER', 'ADMIN')
@@ -447,7 +447,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 4. Pour tester les policies :
 --    SET LOCAL role TO 'authenticated';
 --    SET LOCAL request.jwt.claim.sub TO 'user-uuid-here';
---    SELECT * FROM c4dence.wigs;
+--    SELECT * FROM c4dence.objectives;
 --
 -- 5. Les policies JOIN sont plus coûteuses. Pour les tables fréquemment
 --    accédées, considérer la dénormalisation ou des fonctions SECURITY DEFINER.

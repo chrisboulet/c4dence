@@ -206,10 +206,12 @@ src/
 │   │   ├── page.tsx       # Liste organisations
 │   │   ├── organizations/ # Détail organisation
 │   │   └── users/         # Liste utilisateurs
-│   ├── dashboard/         # Routes protégées
-│   │   ├── page.tsx       # Dashboard principal
-│   │   ├── objectives/    # Objectifs stratégiques
-│   │   ├── sync/          # Réunion de Synchronisation
+│   ├── dashboard/         # Routes protégées (Layout)
+│   │   ├── piliers/       # Piliers (Stratégie)
+│   │   │   ├── objectifs/ # Objectifs Prioritaires
+│   │   │   └── page.tsx   # Vue d'ensemble Piliers
+│   │   ├── plancher/      # Plancher (Opérationnel)
+│   │   ├── orchestration/ # Synchronisation & Rythme
 │   │   ├── members/       # Gestion membres
 │   │   └── settings/      # Paramètres organisation
 │   └── actions/           # Server Actions

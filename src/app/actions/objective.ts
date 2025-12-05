@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
 import { checkPermission, checkObjectiveAccess } from '@/lib/permissions'
+import { createObjectiveSchema, updateObjectiveSchema } from '@/lib/schemas'
 import type { ActionResult, CreateObjectiveInput, UpdateObjectiveInput, ObjectiveSummary } from '@/types'
 import type { Objective, ObjectiveStatus } from '@prisma/client'
 
@@ -141,9 +142,15 @@ export async function getObjective(id: string): Promise<ActionResult<Objective>>
  * Crée un nouvel Objectif (OWNER/ADMIN uniquement)
  */
 export async function createObjective(
-  input: Omit<CreateObjectiveInput, 'organizationId'> & { organizationId?: string }
+  rawInput: unknown
 ): Promise<ActionResult<Objective>> {
   try {
+    const validationResult = createObjectiveSchema.safeParse(rawInput)
+    if (!validationResult.success) {
+      return { success: false, error: validationResult.error.issues[0].message }
+    }
+    const input = validationResult.data
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -203,8 +210,14 @@ export async function createObjective(
  * MEMBER peut uniquement mettre à jour currentValue
  * OWNER/ADMIN peuvent tout modifier
  */
-export async function updateObjective(input: UpdateObjectiveInput): Promise<ActionResult<Objective>> {
+export async function updateObjective(rawInput: unknown): Promise<ActionResult<Objective>> {
   try {
+    const validationResult = updateObjectiveSchema.safeParse(rawInput)
+    if (!validationResult.success) {
+      return { success: false, error: validationResult.error.issues[0].message }
+    }
+    const input = validationResult.data
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -289,7 +302,7 @@ export async function updateObjective(input: UpdateObjectiveInput): Promise<Acti
     }
 
     revalidatePath('/dashboard')
-    revalidatePath(`/dashboard/objectives/${id}`)
+    revalidatePath(`/dashboard/piliers/objectifs/${id}`)
     return { success: true, data: { ...objective, status: newStatus } }
   } catch (error) {
     console.error('updateObjective error:', error)

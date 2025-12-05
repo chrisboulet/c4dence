@@ -159,7 +159,7 @@ export function ObjectivesPage() {
                   : 100
 
                 return (
-                  <Link key={objective.id} href={`/dashboard/objectives/${objective.id}`}>
+                  <Link key={objective.id} href={`/dashboard/piliers/objectifs/${objective.id}`}>
                     <Card className="hover:bg-secondary/50 transition-colors cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">

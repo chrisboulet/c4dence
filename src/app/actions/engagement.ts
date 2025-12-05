@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
 import { checkPermission } from '@/lib/permissions'
+import { createEngagementSchema } from '@/lib/schemas'
 import type { ActionResult, CreateEngagementInput, UpdateEngagementStatusInput, EngagementWithProfile } from '@/types'
 import type { Engagement } from '@prisma/client'
 
@@ -117,9 +118,15 @@ export async function getMyEngagements(
  * Tous les membres peuvent créer des engagements
  */
 export async function createEngagement(
-  input: Omit<CreateEngagementInput, 'organizationId'> & { organizationId?: string }
+  rawInput: unknown
 ): Promise<ActionResult<Engagement>> {
   try {
+    const validationResult = createEngagementSchema.safeParse(rawInput)
+    if (!validationResult.success) {
+      return { success: false, error: validationResult.error.issues[0].message }
+    }
+    const input = validationResult.data
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -157,7 +164,7 @@ export async function createEngagement(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/sync')
+    revalidatePath('/dashboard/orchestration/sync')
     return { success: true, data: engagement }
   } catch (error) {
     console.error('createEngagement error:', error)
@@ -209,7 +216,7 @@ export async function updateEngagementStatus(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/sync')
+    revalidatePath('/dashboard/orchestration/sync')
     return { success: true, data: engagement }
   } catch (error) {
     console.error('updateEngagementStatus error:', error)
@@ -260,7 +267,7 @@ export async function deleteEngagement(id: string): Promise<ActionResult<void>> 
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/sync')
+    revalidatePath('/dashboard/orchestration/sync')
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteEngagement error:', error)

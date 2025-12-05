@@ -183,7 +183,7 @@ export async function createBlocker(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/sync')
+    revalidatePath('/dashboard/orchestration/sync')
     return { success: true, data: blocker }
   } catch (error) {
     console.error('createBlocker error:', error)
@@ -233,7 +233,7 @@ export async function updateBlocker(
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/sync')
+    revalidatePath('/dashboard/orchestration/sync')
     return { success: true, data: blocker }
   } catch (error) {
     console.error('updateBlocker error:', error)
@@ -287,7 +287,7 @@ export async function deleteBlocker(id: string): Promise<ActionResult<void>> {
     })
 
     revalidatePath('/dashboard')
-    revalidatePath('/dashboard/sync')
+    revalidatePath('/dashboard/orchestration/sync')
     return { success: true, data: undefined }
   } catch (error) {
     console.error('deleteBlocker error:', error)
