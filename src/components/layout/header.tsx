@@ -13,15 +13,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Target, BarChart3, Calendar, LogOut, Settings, UserPlus } from 'lucide-react'
+import { Target, BarChart3, Calendar, LogOut, Settings, UserPlus, Layers, LayoutDashboard } from 'lucide-react'
+import { RatioIndicator } from '@/components/dashboard/RatioIndicator'
 import { OrganizationSwitcher } from './organization-switcher'
 import { useOrganization } from '@/components/providers/organization-provider'
 import { getCurrentWeek } from '@/lib/week'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Objectifs', href: '/dashboard/objectives', icon: Target },
-  { name: 'Synchronisation', href: '/dashboard/sync', icon: Calendar },
+  { name: 'Orchestration', href: '/dashboard/orchestration', icon: LayoutDashboard },
+  { name: 'Le Plancher', href: '/dashboard/plancher', icon: Layers },
+  { name: 'Les 4 Piliers', href: '/dashboard/piliers', icon: Target },
 ]
 
 type HeaderProps = {
@@ -60,6 +61,11 @@ export function Header({ userEmail }: HeaderProps) {
             />
           </Link>
 
+          {/* Ratio Indicator (C4DENCE v3.1) */}
+          <div className="hidden xl:block ml-4">
+            <RatioIndicator pillarsPercent={25} />
+          </div>
+
           {/* Organization Switcher */}
           <OrganizationSwitcher />
 
@@ -71,11 +77,10 @@ export function Header({ userEmail }: HeaderProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                  }`}
+                    }`}
                 >
                   <item.icon className="h-4 w-4" />
                   {item.name}

@@ -111,6 +111,9 @@ model Profile {
   ownedObjectives Objective[]   @relation("ObjectiveOwner") // Objectifs dont l'utilisateur est responsable
   assignedMeasures LeadMeasure[] @relation("MeasureAssignee") // Indicateurs assignés
   reportedBlockers Blocker[]    @relation("BlockerReporter") // Obstacles signalés
+  
+  // --- C4DENCE v3.1 ---
+  assignedTasks    Task[]
 
   @@schema("c4dence")
   @@map("profiles")
@@ -149,6 +152,11 @@ model Organization {
   memberships Membership[]
   objectives  Objective[]
   invitations Invitation[]
+  
+  // --- C4DENCE v3.1 ---
+  tasks            Task[]
+  timeAllocations  TimeAllocation[]
+  cadenceMode      CadenceMode?
 
   @@schema("c4dence")
   @@map("organizations")
@@ -546,4 +554,126 @@ model Blocker {
 // --------------
 // Les Objectifs utilisent isArchived plutôt que suppression.
 // Les autres entités utilisent CASCADE via foreign keys.
-// Un Objectif archivé reste visible en lecture seule.
+// =============================================================================
+// MODÈLES C4DENCE v3.1 (PLANCHER + ORCHESTRATION)
+// =============================================================================
+
+/// Task — Tâche opérationnelle du Plancher
+///
+/// Niveau Opérationnel : Gestion du tourbillon quotidien
+/// Kanban à 4 colonnes : À TRIER -> À FAIRE -> EN COURS -> FAIT
+model Task {
+  id             String       @id @default(uuid())
+  title          String
+  description    String?
+  
+  // --- Triage (Matrice Urgence x Impact) ---
+  urgency        Urgency?     // HIGH, LOW
+  businessImpact BusinessImpact? // HIGH, LOW
+  category       TaskCategory? // AUTO-CALCULÉ: IMMEDIATE, PLAN, DELEGATE, BACKLOG
+  
+  // --- Flux Kanban ---
+  status         TaskStatus   @default(TO_TRIAGE)
+  assignedToId   String?      @map("assigned_to_id")
+  assignedTo     Profile?     @relation(fields: [assignedToId], references: [id])
+  
+  // --- Métadonnées ---
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  completedAt    DateTime?    @map("completed_at")
+  
+  @@index([organizationId])
+  @@index([assignedToId])
+  @@index([status])
+  @@schema("c4dence")
+  @@map("tasks")
+}
+
+enum Urgency {
+  HIGH  // Dans les prochaines heures
+  LOW   // Peut attendre quelques jours
+  
+  @@schema("c4dence")
+}
+
+enum BusinessImpact {
+  HIGH  // Bloque revenus, clients, employés
+  LOW   // Inconvénient, entreprise continue
+  
+  @@schema("c4dence")
+}
+
+enum TaskCategory {
+  IMMEDIATE  // Faire maintenant (Haute urgence × Fort impact)
+  PLAN       // Planifier cette semaine (Basse urgence × Fort impact)
+  DELEGATE   // Déléguer ou refuser (Haute urgence × Faible impact)
+  BACKLOG    // Si temps disponible (Basse urgence × Faible impact)
+  
+  @@schema("c4dence")
+}
+
+enum TaskStatus {
+  TO_TRIAGE   // À trier
+  TODO        // À faire
+  IN_PROGRESS // En cours (max 3 par personne)
+  DONE        // Terminé
+  
+  @@schema("c4dence")
+}
+
+/// TimeAllocation — Allocation temps hebdomadaire
+///
+/// Permet de tracker le ratio Plancher / Piliers.
+/// Règle d'or : Minimum 10% sur les Piliers (stratégique).
+model TimeAllocation {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  weekStartDate  DateTime     @map("week_start_date") // Lundi de la semaine (ISO week)
+  
+  // --- Heures par niveau ---
+  floorHours     Float        @map("floor_hours")   // Heures Plancher (opérationnel)
+  pillarsHours   Float        @map("pillars_hours") // Heures Piliers (stratégique)
+  
+  // --- Calculs automatiques (stockés pour historique) ---
+  totalHours     Float        @map("total_hours")   // = floorHours + pillarsHours
+  pillarsPercent Float        @map("pillars_percent") // = (pillarsHours / totalHours) * 100
+  
+  // --- Validation ---
+  meetsMinimum   Boolean      @map("meets_minimum") // = pillarsPercent >= 10
+  
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  
+  @@unique([organizationId, weekStartDate])
+  @@index([organizationId])
+  @@schema("c4dence")
+  @@map("time_allocations")
+}
+
+/// CadenceMode — Mode de cadence choisi par l'organisation
+///
+/// Définit le rythme des réunions (Orchestration).
+model CadenceMode {
+  id             String       @id @default(uuid())
+  organizationId String       @unique @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  mode           Mode         @default(MODE_A)
+  
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  
+  @@schema("c4dence")
+  @@map("cadence_modes")
+}
+
+enum Mode {
+  MODE_A  // Réunion unifiée (45 min/semaine) - Petites équipes 1-3
+  MODE_B  // Réunions séparées (standard) - Équipes 4-10
+  MODE_C  // Daily + Hebdo (intensif) - Grandes équipes 10+ ou crise
+  
+  @@schema("c4dence")
+}
