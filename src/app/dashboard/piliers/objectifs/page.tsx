@@ -65,13 +65,6 @@ const MOCK_OBJECTIVES = [
 export default function PillarsPage() {
     return (
         <div className="container mx-auto p-6 space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Les 4 Piliers</h1>
-                <p className="text-muted-foreground">
-                    Exécution stratégique et objectifs prioritaires.
-                </p>
-            </div>
-
             <PillarsScoreboard objectives={MOCK_OBJECTIVES} />
         </div>
     )

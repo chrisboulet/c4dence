@@ -1,45 +1,44 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { calculateStrategicRatio } from "@/lib/time-allocation"
 import { cn } from "@/lib/utils"
 
 interface TimeAllocationGaugeProps {
     floorHours: number
     pillarsHours: number
+    className?: string
 }
 
-export function TimeAllocationGauge({ floorHours, pillarsHours }: TimeAllocationGaugeProps) {
-    const totalHours = floorHours + pillarsHours
-    const pillarsPercent = totalHours > 0 ? Math.round((pillarsHours / totalHours) * 100) : 0
-    const floorPercent = 100 - pillarsPercent
-
-    const isHealthy = pillarsPercent >= 10
+export function TimeAllocationGauge({ floorHours, pillarsHours, className }: TimeAllocationGaugeProps) {
+    const pillarsPercent = calculateStrategicRatio({ floorHours, pillarsHours })
+    const isWarning = pillarsPercent < 10
 
     return (
-        <Card>
-            <CardHeader className="pb-2">
+        <Card className={cn("w-full", className)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                    Allocation Temps
+                    Allocation Temps Stratégique
                 </CardTitle>
+                <span className={cn("text-2xl font-bold", isWarning ? "text-red-500" : "text-green-500")}>
+                    {pillarsPercent}%
+                </span>
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">🎵 Plancher ({floorPercent}%)</span>
-                        <span className={cn(
-                            "font-medium",
-                            isHealthy ? "text-green-600" : "text-red-600"
-                        )}>
-                            🎯 Piliers ({pillarsPercent}%)
-                        </span>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Plancher ({floorHours}h)</span>
+                        <span>Piliers ({pillarsHours}h)</span>
                     </div>
-
-                    <Progress value={pillarsPercent} className="h-2" />
-
-                    {!isHealthy && (
-                        <p className="text-xs text-red-500 mt-2 font-medium">
-                            ⚠️ Attention : Temps stratégique insuffisant (&lt;10%)
-                        </p>
-                    )}
+                    <Progress
+                        value={pillarsPercent}
+                        className={cn("h-2", isWarning ? "bg-red-100" : "bg-green-100")}
+                        indicatorClassName={isWarning ? "bg-red-500" : "bg-green-500"}
+                    />
+                    <p className="text-xs text-muted-foreground pt-2">
+                        {isWarning
+                            ? "⚠️ Attention : Le temps stratégique est sous la barre des 10%."
+                            : "✅ Excellent : Le temps stratégique est protégé."}
+                    </p>
                 </div>
             </CardContent>
         </Card>

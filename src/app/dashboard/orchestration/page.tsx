@@ -2,12 +2,23 @@ import { FloorStatusCard } from "@/components/dashboard/orchestration/FloorStatu
 import { PillarsStatusCard } from "@/components/dashboard/orchestration/PillarsStatusCard"
 import { TimeAllocationGauge } from "@/components/dashboard/orchestration/TimeAllocationGauge"
 import { Separator } from "@/components/ui/separator"
+import { getTimeAllocation } from "@/lib/data/time-allocation"
+import { getCurrentOrganizationId } from "@/lib/data/organization"
 
-export default function OrchestrationPage() {
-    // Mock data for initial implementation
+export default async function OrchestrationPage() {
+    const organizationId = await getCurrentOrganizationId()
+
+    // Default values if no org or data
+    let allocation = { floorHours: 0, pillarsHours: 0 }
+
+    if (organizationId) {
+        const data = await getTimeAllocation(organizationId)
+        allocation = data
+    }
+
+    // Mock data for other cards (Phase 9/10)
     const floorStatus = 'CONTROLLED'
     const pillarsStatus = 'AT_RISK'
-    const allocation = { floor: 35, pillars: 5 } // 40h total
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -32,8 +43,8 @@ export default function OrchestrationPage() {
                 <FloorStatusCard status={floorStatus} />
                 <PillarsStatusCard status={pillarsStatus} />
                 <TimeAllocationGauge
-                    floorHours={allocation.floor}
-                    pillarsHours={allocation.pillars}
+                    floorHours={allocation.floorHours}
+                    pillarsHours={allocation.pillarsHours}
                 />
             </div>
 
@@ -53,3 +64,4 @@ export default function OrchestrationPage() {
         </div>
     )
 }
+

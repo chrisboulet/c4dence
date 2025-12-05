@@ -1,10 +1,20 @@
+import { startOfWeek, getISOWeek, getYear } from 'date-fns'
+
 /**
  * Obtient le numéro de semaine ISO actuel
  */
-export function getCurrentWeek(): { year: number; weekNumber: number } {
+export function getCurrentWeek() {
   const now = new Date()
-  const startOfYear = new Date(now.getFullYear(), 0, 1)
-  const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
-  const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7)
-  return { year: now.getFullYear(), weekNumber }
+  return {
+    year: getYear(now),
+    weekNumber: getISOWeek(now)
+  }
 }
+
+/**
+ * Obtient la date de début (lundi) de la semaine actuelle
+ */
+export function getCurrentWeekStartDate(): Date {
+  return startOfWeek(new Date(), { weekStartsOn: 1 }) // 1 = Lundi
+}
+

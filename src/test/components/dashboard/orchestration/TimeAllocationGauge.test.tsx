@@ -3,18 +3,18 @@ import { describe, it, expect } from 'vitest'
 import { TimeAllocationGauge } from '@/components/dashboard/orchestration/TimeAllocationGauge'
 
 describe('TimeAllocationGauge', () => {
-    it('renders correct percentages', () => {
+    it('renders the correct percentages', () => {
         render(<TimeAllocationGauge floorHours={36} pillarsHours={4} />)
-        // 36 + 4 = 40h total
-        // Floor = 90%, Pillars = 10%
-        expect(screen.getByText(/90%/)).toBeInTheDocument()
+        // 4 / 40 = 10%
         expect(screen.getByText(/10%/)).toBeInTheDocument()
+        // Floor hours should be displayed in text
+        expect(screen.getByText(/36h/)).toBeInTheDocument()
     })
 
-    it('shows warning when pillars < 10%', () => {
+    it('shows warning when under 10%', () => {
         render(<TimeAllocationGauge floorHours={38} pillarsHours={2} />)
-        // 38 + 2 = 40h total
-        // Pillars = 5% (< 10%)
+        // 2 / 40 = 5%
         expect(screen.getByText(/Attention/)).toBeInTheDocument()
+        expect(screen.getByText(/5%/)).toBeInTheDocument()
     })
 })
