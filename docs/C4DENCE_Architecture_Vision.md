@@ -1651,7 +1651,7 @@ ALTER TABLE c4dence.blockers
 | `WigStatus` enum | `ObjectiveStatus` enum |
 | `CadenceDay` enum | `SyncDay` enum |
 | `wigId` | `objectiveId` |
-| `/dashboard/wigs/` | `/dashboard/objectives/` |
+| `/dashboard/wigs/` | `/dashboard/piliers/objectifs/` |
 
 **Terminologie UI (Français)**:
 | Ancien | Nouveau |

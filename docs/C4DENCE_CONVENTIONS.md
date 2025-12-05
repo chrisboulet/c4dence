@@ -38,7 +38,7 @@ const DEFAULT_SYNC_DAY = 'MONDAY'
 
 // kebab-case — Fichiers, dossiers, CSS classes
 src/components/objective/objective-card.tsx
-src/app/dashboard/objectives/[id]/page.tsx
+src/app/dashboard/piliers/objectifs/[id]/page.tsx
 className="objective-card-header"
 
 // snake_case — Colonnes base de données (Prisma)
@@ -84,18 +84,27 @@ src/
 │   ├── (auth)/               # Route group — pages auth
 │   │   ├── login/
 │   │   └── onboarding/
-│   ├── (dashboard)/          # Route group — pages protégées
+│   ├── dashboard/            # Routes protégées (layout partagé)
 │   │   ├── layout.tsx        # Layout avec header
-│   │   └── dashboard/
-│   │       ├── page.tsx          # Dashboard principal
-│   │       ├── objectives/       # Objectifs stratégiques
-│   │       │   ├── page.tsx
-│   │       │   └── [id]/
-│   │       │       └── page.tsx
-│   │       ├── sync/             # Réunion de synchronisation
-│   │       │   └── page.tsx
-│   │       ├── members/          # Gestion des membres
-│   │       └── settings/
+│   │   ├── orchestration/    # Dashboard central
+│   │   │   ├── page.tsx      # Vue d'ensemble
+│   │   │   └── sync/         # Réunion de synchronisation
+│   │   │       └── page.tsx
+│   │   ├── plancher/         # Niveau opérationnel
+│   │   │   ├── page.tsx      # Redirect vers /flux
+│   │   │   ├── flux/         # Kanban
+│   │   │   ├── triage/       # Matrice
+│   │   │   └── metriques/    # Stats
+│   │   ├── piliers/          # Niveau stratégique
+│   │   │   ├── page.tsx      # Redirect vers /objectifs
+│   │   │   ├── objectifs/    # Objectifs Prioritaires
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── indicateurs/  # Indicateurs Prédictifs
+│   │   │   └── scoreboard/   # Tableau de Score
+│   │   ├── members/          # Gestion des membres
+│   │   └── settings/
 │   ├── actions/              # Server Actions centralisées
 │   │   ├── objective.ts
 │   │   ├── lead-measure.ts
@@ -151,9 +160,9 @@ src/
 
 ```typescript
 // ✅ BON — Composants spécifiques colocalisés avec underscore
-src/app/(dashboard)/dashboard/objectives/[id]/
+src/app/dashboard/piliers/objectifs/[id]/
 ├── page.tsx                    // Server Component principal
-├── actions.ts                  // Server Actions
+├── actions.ts                  // Server Actions (optionnel, voir /app/actions)
 ├── loading.tsx                 // Loading state
 ├── error.tsx                   // Error boundary
 └── _components/                // Underscore = ignoré par le router
@@ -204,15 +213,17 @@ import type { ObjectiveWithMeasures } from '@/types'
 
 ```typescript
 // ✅ PAR DÉFAUT — Server Component (pas de directive)
-// src/app/(dashboard)/dashboard/objectives/[id]/page.tsx
+// src/app/dashboard/piliers/objectifs/[id]/page.tsx
 import { prisma } from '@/lib/prisma'
 import { createServerClient } from '@/lib/supabase/server'
 import { ObjectiveDetail } from '@/components/objective/objective-detail'
 
-export default async function ObjectivePage({ params }: { params: { id: string } }) {
+export default async function ObjectivePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params // Next.js 16 async params
+
   // Fetch direct avec Prisma — pas de useEffect, pas de useState
   const objective = await prisma.objective.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       leadMeasures: {
         include: { weeklyMeasures: true }
@@ -220,7 +231,7 @@ export default async function ObjectivePage({ params }: { params: { id: string }
     }
   })
 
-  if (!objective) redirect('/dashboard')
+  if (!objective) redirect('/dashboard/piliers/objectifs')
 
   return <ObjectiveDetail objective={objective} />
 }
@@ -344,7 +355,7 @@ export async function updateMeasureAction(
     })
     
     // 5. Revalidation du cache
-    revalidatePath(`/dashboard/objectives/${leadMeasure.objectiveId}`)
+    revalidatePath(`/dashboard/piliers/objectifs/${leadMeasure.objectiveId}`)
     
     return { success: true, data: { id: result.id } }
     
