@@ -15,8 +15,13 @@ export default async function OrchestrationPage() {
     let allocation = { floorHours: 0, pillarsHours: 0 }
 
     if (organizationId) {
-        const data = await getTimeAllocation(organizationId)
-        allocation = data
+        try {
+            const data = await getTimeAllocation(organizationId)
+            allocation = data
+        } catch (error) {
+            // Table time_allocations not yet migrated - use defaults
+            console.log('TimeAllocation table not found, using defaults')
+        }
     }
 
     // Mock data for other cards (Phase 9/10)
