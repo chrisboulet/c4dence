@@ -20,7 +20,7 @@ export async function getTasks(organizationId: string): Promise<ActionResult<Tas
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, organizationId, 'objective:read')
+    const permission = await checkPermission(user.id, organizationId, 'task:read')
     if (!permission.allowed) {
       return { success: false, error: 'Accès non autorisé' }
     }
@@ -67,7 +67,7 @@ export async function createTask(formData: FormData): Promise<ActionResult<Task>
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, organizationId, 'objective:create')
+    const permission = await checkPermission(user.id, organizationId, 'task:create')
     if (!permission.allowed) {
       return { success: false, error: 'Accès non autorisé' }
     }
@@ -110,7 +110,7 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus): Prom
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, existing.organizationId, 'objective:update')
+    const permission = await checkPermission(user.id, existing.organizationId, 'task:update')
     if (!permission.allowed) {
       return { success: false, error: 'Accès non autorisé' }
     }
@@ -152,7 +152,7 @@ export async function updateTask(taskId: string, formData: FormData): Promise<Ac
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, existing.organizationId, 'objective:update')
+    const permission = await checkPermission(user.id, existing.organizationId, 'task:update')
     if (!permission.allowed) {
       return { success: false, error: 'Accès non autorisé' }
     }
@@ -201,7 +201,7 @@ export async function deleteTask(taskId: string): Promise<ActionResult<void>> {
     }
 
     // Vérifier la permission
-    const permission = await checkPermission(user.id, existing.organizationId, 'objective:delete')
+    const permission = await checkPermission(user.id, existing.organizationId, 'task:delete')
     if (!permission.allowed) {
       return { success: false, error: 'Accès non autorisé' }
     }

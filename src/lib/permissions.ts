@@ -27,6 +27,11 @@ export type Permission =
   | 'member:remove'
   // Organization settings
   | 'org:update'
+  // Task permissions
+  | 'task:create'
+  | 'task:update'
+  | 'task:delete'
+  | 'task:read'
 
 /**
  * Matrice des permissions par rôle
@@ -56,6 +61,12 @@ const permissionMatrix: Record<Permission, MemberRole[]> = {
   'engagement:create': ['OWNER', 'ADMIN', 'MEMBER'],
   'engagement:update-own': ['OWNER', 'ADMIN', 'MEMBER'],
   'engagement:read': ['OWNER', 'ADMIN', 'MEMBER'],
+
+  // Task permissions
+  'task:create': ['OWNER', 'ADMIN', 'MEMBER'],
+  'task:update': ['OWNER', 'ADMIN', 'MEMBER'],
+  'task:delete': ['OWNER', 'ADMIN', 'MEMBER'],
+  'task:read': ['OWNER', 'ADMIN', 'MEMBER'],
 
   // Member management
   'member:invite': ['OWNER', 'ADMIN'],
