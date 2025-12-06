@@ -64,13 +64,13 @@ export function AddTaskDialog({ open, onOpenChange, organizationId, onTaskAdded 
 
     setIsSubmitting(false)
 
-    if (result.success && result.data) {
+    if (result.success) {
       toast.success('Tâche créée')
       onTaskAdded(result.data)
       form.reset()
       onOpenChange(false)
     } else {
-      toast.error(result.error || 'Erreur lors de la création')
+      toast.error(result.error)
     }
   }
 

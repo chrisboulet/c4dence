@@ -37,7 +37,7 @@ export function DeleteTaskDialog({ open, onOpenChange, task, onTaskDeleted }: De
       onTaskDeleted(task.id)
       onOpenChange(false)
     } else {
-      toast.error(result.error || 'Erreur lors de la suppression')
+      toast.error(result.error)
     }
   }
 

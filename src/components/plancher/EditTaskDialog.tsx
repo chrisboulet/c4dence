@@ -63,12 +63,12 @@ export function EditTaskDialog({ open, onOpenChange, task, onTaskUpdated }: Edit
 
     setIsSubmitting(false)
 
-    if (result.success && result.data) {
+    if (result.success) {
       toast.success('Tâche modifiée')
       onTaskUpdated(result.data)
       onOpenChange(false)
     } else {
-      toast.error(result.error || 'Erreur lors de la modification')
+      toast.error(result.error)
     }
   }
 

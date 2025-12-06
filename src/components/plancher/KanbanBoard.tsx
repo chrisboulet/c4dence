@@ -68,7 +68,7 @@ export function KanbanBoard({ initialTasks, organizationId }: KanbanBoardProps) 
       setTasks(prev => prev.map(t =>
         t.id === taskId ? { ...t, status: task.status } : t
       ))
-      toast.error(result.error || 'Erreur lors de la mise à jour')
+      toast.error(result.error)
     } else {
       toast.success('Tâche déplacée')
     }
