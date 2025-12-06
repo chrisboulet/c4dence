@@ -17,6 +17,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Prisma 7** ORM with PostgreSQL (Supabase)
 - **Supabase Auth** (Google + Microsoft 365 OAuth)
 - **Tailwind CSS 4** + **shadcn/ui** + **Tremor** charts
+- **@dnd-kit** for drag & drop (Kanban board)
+- **react-hook-form** + **Zod** for form validation
 - **Vitest** for testing
 - **Resend** for transactional emails
 
@@ -63,7 +65,11 @@ The database uses a **custom PostgreSQL schema** named `c4dence` (configured in 
 - **Engagement**: Weekly commitments during Synchronization meetings (Pilier 4)
 - **Blocker**: Obstacles reported during meetings
 - **Invitation**: Email invitations to join organizations
-- **Task**, **TimeAllocation**, **CadenceMode**: Operational layer (v3.1 - Plancher + Orchestration)
+- **Task**: Operational tasks with Kanban workflow
+  - Statuses: TO_TRIAGE, TODO, IN_PROGRESS, DONE
+  - Fields: title, description, urgency (HIGH/LOW), businessImpact (HIGH/LOW), category (IMMEDIATE/PLAN/DELEGATE/BACKLOG)
+  - Relations: Organization, Profile (assignedTo optional)
+- **TimeAllocation**, **CadenceMode**: Orchestration metrics (v3.1)
 
 **IMPORTANT**: The database uses **ISO week numbers** (1-53) for all weekly tracking. Use `src/lib/week.ts` utilities:
 - `getCurrentWeek()` → `{ year, weekNumber }`
@@ -144,11 +150,31 @@ export async function createObjective(formData: FormData) {
 }
 ```
 
+**ActionResult Type Pattern**:
+All Server Actions return a discriminated union type:
+```typescript
+export type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string }
+
+// Usage in components (TypeScript guarantees type safety)
+const result = await createTask(formData)
+
+if (result.success) {
+  // TypeScript knows result.data exists here
+  onTaskAdded(result.data)
+} else {
+  // TypeScript knows result.error exists here
+  toast.error(result.error)
+}
+```
+
 **Existing actions**:
 - `src/app/actions/objective.ts` - Objective CRUD
 - `src/app/actions/lead-measure.ts` - LeadMeasure CRUD + WeeklyMeasure recording
 - `src/app/actions/engagement.ts` - Engagement CRUD
 - `src/app/actions/blocker.ts` - Blocker CRUD
+- `src/app/actions/task.ts` - Task CRUD + status updates (for Kanban drag & drop)
 - `src/app/actions/organization.ts` - Org management + member invitations
 - `src/app/actions/admin.ts` - Super Admin operations
 
@@ -159,6 +185,8 @@ Use **`@/*`** for all imports (configured in `tsconfig.json`):
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { LeadMeasureCard } from '@/components/dashboard/piliers/LeadMeasureCard'
+import { KanbanBoard } from '@/components/plancher/KanbanBoard'
+import { getTasks } from '@/app/actions/task'
 ```
 
 ### Styling
@@ -171,6 +199,56 @@ import { LeadMeasureCard } from '@/components/dashboard/piliers/LeadMeasureCard'
   - Gold `#fcdc76` - Warning / At Risk
   - Lime `#9bef8e` - Success secondary
 
+### Kanban Implementation (Plancher/Flux)
+
+The Kanban board at `/dashboard/plancher/flux` provides drag-and-drop task management with 4 columns:
+
+**Architecture**:
+```typescript
+// Main component (src/components/plancher/KanbanBoard.tsx)
+<KanbanBoard initialTasks={tasks} organizationId={orgId} />
+  ├─ <KanbanColumn />  // Droppable zone (4 columns: TO_TRIAGE, TODO, IN_PROGRESS, DONE)
+  │   └─ <TaskCard />  // Draggable card with edit/delete options
+  ├─ <AddTaskDialog /> // Create new task (react-hook-form + Zod)
+  ├─ <EditTaskDialog /> // Edit existing task
+  └─ <DeleteTaskDialog /> // Delete confirmation
+```
+
+**Key Features**:
+- **Drag & Drop**: Uses `@dnd-kit/core` + `@dnd-kit/sortable`
+- **Optimistic Updates**: UI updates immediately, rollback on server error
+- **Permission Checks**: All task actions verify `objective:create/update/delete` permissions
+- **Type Safety**: ActionResult<Task> with discriminated union pattern
+
+**Usage Pattern**:
+```typescript
+// Server Component (page.tsx)
+const tasks = await getTasks(organizationId)
+return <KanbanBoard initialTasks={tasks} organizationId={organizationId} />
+
+// Client Component handles drag & drop
+const handleDragEnd = async (event) => {
+  // 1. Optimistic update
+  setTasks(prev => updateTaskStatus(prev, taskId, newStatus))
+
+  // 2. Server action
+  const result = await updateTaskStatus(taskId, newStatus)
+
+  // 3. Rollback on error
+  if (!result.success) {
+    setTasks(prev => rollback(prev, taskId, oldStatus))
+    toast.error(result.error)
+  }
+}
+```
+
+**Task Actions** (`src/app/actions/task.ts`):
+- `getTasks(organizationId)` - Fetch all tasks with assignedTo profile
+- `createTask(formData)` - Create with TO_TRIAGE default status
+- `updateTaskStatus(taskId, status)` - For drag & drop moves
+- `updateTask(taskId, formData)` - Edit title/description
+- `deleteTask(taskId)` - Remove task
+
 ### Directory Structure
 
 ```
@@ -179,16 +257,31 @@ src/
 │   ├── (auth)/                # Auth routes (login, callback, onboarding, invite)
 │   ├── admin/                 # Super Admin module (restricted access)
 │   ├── dashboard/             # Protected app routes
+│   │   ├── page.tsx          # Redirects to /dashboard/orchestration
+│   │   ├── layout.tsx        # Shared layout with Header
+│   │   ├── orchestration/    # Orchestration & overview
+│   │   │   ├── page.tsx     # Dashboard principal
+│   │   │   └── sync/        # Weekly synchronization meeting
 │   │   ├── piliers/          # Strategic layer (Objectives, LeadMeasures)
+│   │   │   ├── page.tsx     # Redirects to /objectifs
+│   │   │   ├── objectifs/   # Priority Objectives
+│   │   │   │   ├── page.tsx # Objectives list
+│   │   │   │   └── [id]/    # Objective detail
+│   │   │   ├── indicateurs/ # Lead Measures overview
+│   │   │   └── scoreboard/  # Scoreboard (Pilier 3)
 │   │   ├── plancher/         # Operational layer (Tasks, Triage)
-│   │   ├── orchestration/    # Synchronization meetings
+│   │   │   ├── page.tsx     # Redirects to /flux
+│   │   │   ├── flux/        # Kanban board (implemented)
+│   │   │   ├── triage/      # Eisenhower matrix
+│   │   │   └── metriques/   # Metrics & analytics
 │   │   ├── members/          # Member management
 │   │   └── settings/         # Organization settings
 │   └── actions/              # Server Actions (mutations)
 ├── components/
 │   ├── ui/                   # shadcn/ui components
 │   ├── layout/               # Header, navigation
-│   ├── dashboard/            # Feature-specific components
+│   ├── dashboard/            # Feature-specific components by section
+│   ├── plancher/             # Kanban components (KanbanBoard, TaskCard, etc.)
 │   └── providers/            # React Context providers
 ├── lib/
 │   ├── prisma.ts            # Prisma client singleton
@@ -196,7 +289,7 @@ src/
 │   ├── permissions.ts       # Permission checking utilities
 │   ├── week.ts              # ISO week utilities
 │   ├── email.ts             # Resend email service
-│   └── schemas.ts           # Zod validation schemas (if exists)
+│   └── schemas.ts           # Zod validation schemas
 └── types/                   # TypeScript type definitions
 ```
 
