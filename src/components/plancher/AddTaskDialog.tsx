@@ -53,24 +53,38 @@ export function AddTaskDialog({ open, onOpenChange, organizationId, onTaskAdded 
   })
 
   const onSubmit = async (data: TaskFormData) => {
+    // Debug: Trace start
+    console.log('Soumission du formulaire...', data)
+
+    if (!organizationId) {
+      toast.error('Erreur: Organisation ID manquant')
+      return
+    }
+
     setIsSubmitting(true)
 
-    const formData = new FormData()
-    formData.append('title', data.title)
-    formData.append('description', data.description || '')
-    formData.append('organizationId', organizationId)
+    try {
+      const formData = new FormData()
+      formData.append('title', data.title)
+      formData.append('description', data.description || '')
+      formData.append('organizationId', organizationId)
 
-    const result = await createTask(formData)
+      const result = await createTask(formData)
 
-    setIsSubmitting(false)
-
-    if (result.success) {
-      toast.success('Tâche créée')
-      onTaskAdded(result.data)
-      form.reset()
-      onOpenChange(false)
-    } else {
-      toast.error(result.error)
+      if (result.success) {
+        toast.success('Tâche créée avec succès')
+        onTaskAdded(result.data)
+        form.reset()
+        onOpenChange(false)
+      } else {
+        console.error('Erreur serveur:', result.error)
+        toast.error(result.error || "Erreur inconnue lors de la création")
+      }
+    } catch (e) {
+      console.error('Erreur client:', e)
+      toast.error('Une erreur inattendue est survenue')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
