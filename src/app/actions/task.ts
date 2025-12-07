@@ -88,6 +88,8 @@ export async function createTask(formData: FormData): Promise<ActionResult<Task>
       else category = 'BACKLOG'
     }
 
+    console.log('createTask inputs:', { title, organizationId, assignedToId, urgency, businessImpact, dueDateStr })
+
     const task = await prisma.task.create({
       data: {
         title,
@@ -114,8 +116,12 @@ export async function createTask(formData: FormData): Promise<ActionResult<Task>
     revalidatePath('/dashboard/plancher/flux')
     return { success: true, data: task }
   } catch (error) {
-    console.error('createTask error:', error)
-    return { success: false, error: 'Erreur lors de la création de la tâche' }
+    console.error('createTask FULL ERROR:', error)
+    if (error instanceof Error) {
+      console.error('createTask Error Message:', error.message)
+      console.error('createTask Error Stack:', error.stack)
+    }
+    return { success: false, error: `Erreur interne: ${error instanceof Error ? error.message : 'Inconnue'}` }
   }
 }
 
