@@ -49,6 +49,9 @@ export async function getTasks(organizationId: string): Promise<ActionResult<Tas
 /**
  * Crée une nouvelle tâche
  */
+/**
+ * Crée une nouvelle tâche
+ */
 export async function createTask(formData: FormData): Promise<ActionResult<Task>> {
   try {
     const supabase = await createClient()
@@ -61,6 +64,10 @@ export async function createTask(formData: FormData): Promise<ActionResult<Task>
     const title = formData.get('title') as string
     const description = formData.get('description') as string | null
     const organizationId = formData.get('organizationId') as string
+    const assignedToId = formData.get('assignedToId') as string | null
+    const urgency = formData.get('urgency') as 'HIGH' | 'LOW' | null
+    const businessImpact = formData.get('businessImpact') as 'HIGH' | 'LOW' | null
+    const dueDateStr = formData.get('dueDate') as string | null
 
     if (!title || !organizationId) {
       return { success: false, error: 'Titre et organisation requis' }
@@ -72,13 +79,36 @@ export async function createTask(formData: FormData): Promise<ActionResult<Task>
       return { success: false, error: 'Accès non autorisé' }
     }
 
+    // Calcul automatique de la catégorie si urgence et impact sont fournis
+    let category: 'IMMEDIATE' | 'PLAN' | 'DELEGATE' | 'BACKLOG' | undefined
+    if (urgency && businessImpact) {
+      if (urgency === 'HIGH' && businessImpact === 'HIGH') category = 'IMMEDIATE'
+      else if (urgency === 'LOW' && businessImpact === 'HIGH') category = 'PLAN'
+      else if (urgency === 'HIGH' && businessImpact === 'LOW') category = 'DELEGATE'
+      else category = 'BACKLOG'
+    }
+
     const task = await prisma.task.create({
       data: {
         title,
         description: description || undefined,
         organizationId,
+        assignedToId: assignedToId || undefined,
+        urgency: urgency || undefined,
+        businessImpact: businessImpact || undefined,
+        category,
+        dueDate: dueDateStr ? new Date(dueDateStr) : undefined,
         status: 'TO_TRIAGE',
       },
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          }
+        }
+      }
     })
 
     revalidatePath('/dashboard/plancher/flux')
@@ -159,9 +189,22 @@ export async function updateTask(taskId: string, formData: FormData): Promise<Ac
 
     const title = formData.get('title') as string
     const description = formData.get('description') as string | null
+    const assignedToId = formData.get('assignedToId') as string | null
+    const urgency = formData.get('urgency') as 'HIGH' | 'LOW' | null
+    const businessImpact = formData.get('businessImpact') as 'HIGH' | 'LOW' | null
+    const dueDateStr = formData.get('dueDate') as string | null
 
     if (!title) {
       return { success: false, error: 'Titre requis' }
+    }
+
+    // Calcul automatique de la catégorie si urgence et impact sont fournis
+    let category = existing.category
+    if (urgency && businessImpact) {
+      if (urgency === 'HIGH' && businessImpact === 'HIGH') category = 'IMMEDIATE'
+      else if (urgency === 'LOW' && businessImpact === 'HIGH') category = 'PLAN'
+      else if (urgency === 'HIGH' && businessImpact === 'LOW') category = 'DELEGATE'
+      else category = 'BACKLOG'
     }
 
     const task = await prisma.task.update({
@@ -169,7 +212,21 @@ export async function updateTask(taskId: string, formData: FormData): Promise<Ac
       data: {
         title,
         description: description || undefined,
+        assignedToId: assignedToId || undefined,
+        urgency: urgency || undefined,
+        businessImpact: businessImpact || undefined,
+        category,
+        dueDate: dueDateStr ? new Date(dueDateStr) : undefined,
       },
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          }
+        }
+      }
     })
 
     revalidatePath('/dashboard/plancher/flux')

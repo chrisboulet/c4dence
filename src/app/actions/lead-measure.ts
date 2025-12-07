@@ -3,10 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import prisma from '@/lib/prisma'
-import { checkObjectiveAccess } from '@/lib/permissions'
+import { checkPermission, checkObjectiveAccess } from '@/lib/permissions'
 import type { ActionResult, CreateLeadMeasureInput, RecordWeeklyMeasureInput } from '@/types'
 import type { LeadMeasure, WeeklyMeasure } from '@prisma/client'
 
+/**
+ * Récupère les Lead Measures d'un Objectif
+ * Tous les membres peuvent lire
+ */
 /**
  * Récupère les Lead Measures d'un Objectif
  * Tous les membres peuvent lire
@@ -46,6 +50,50 @@ export async function getLeadMeasures(objectiveId: string): Promise<ActionResult
     return { success: true, data: leadMeasures }
   } catch (error) {
     console.error('getLeadMeasures error:', error)
+    return { success: false, error: 'Erreur lors de la récupération des mesures' }
+  }
+}
+
+/**
+ * Récupère toutes les Lead Measures de l'organisation
+ */
+export async function getAllLeadMeasures(organizationId: string): Promise<ActionResult<(LeadMeasure & { objective: { name: string }, assignedTo: { fullName: string | null; avatarUrl: string | null } | null })[]>> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non authentifié' }
+    }
+
+    const permission = await checkPermission(user.id, organizationId, 'objective:read')
+    if (!permission.allowed) {
+      return { success: false, error: 'Accès non autorisé' }
+    }
+
+    const leadMeasures = await prisma.leadMeasure.findMany({
+      where: {
+        objective: {
+          organizationId: organizationId
+        }
+      },
+      include: {
+        objective: {
+          select: { name: true }
+        },
+        assignedTo: {
+          select: {
+            fullName: true,
+            avatarUrl: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return { success: true, data: leadMeasures }
+  } catch (error) {
+    console.error('getAllLeadMeasures error:', error)
     return { success: false, error: 'Erreur lors de la récupération des mesures' }
   }
 }

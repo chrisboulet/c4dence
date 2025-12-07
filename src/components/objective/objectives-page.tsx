@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { Plus, Target, ArrowRight, TrendingUp, AlertTriangle, XCircle } from 'lucide-react'
+
+import { Plus, Target, TrendingUp, AlertTriangle, XCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ObjectiveList } from './objective-list'
 import { ObjectiveForm } from './objective-form'
 import { useOrganization } from '@/components/providers/organization-provider'
 import { getObjectives } from '@/app/actions/objective'
@@ -137,75 +136,11 @@ export function ObjectivesPage() {
                 <Skeleton key={i} className="h-24 w-full" />
               ))}
             </div>
-          ) : objectives.length === 0 ? (
-            <div className="text-center py-12">
-              <Target className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-medium">Aucun Objectif créé</h3>
-              <p className="text-muted-foreground mt-1">
-                Commencez par créer votre premier objectif stratégique
-              </p>
-              <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Créer un Objectif
-              </Button>
-            </div>
           ) : (
-            <div className="space-y-4">
-              {objectives.map((objective) => {
-                const statusConfig = getStatusConfig(objective.status)
-                const StatusIcon = statusConfig.icon
-                const progress = objective.targetValue !== objective.startValue
-                  ? ((objective.currentValue - objective.startValue) / (objective.targetValue - objective.startValue)) * 100
-                  : 100
-
-                return (
-                  <Link key={objective.id} href={`/dashboard/piliers/objectifs/${objective.id}`}>
-                    <Card className="hover:bg-secondary/50 transition-colors cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          <div className={`p-3 rounded-xl bg-secondary ${statusConfig.color}`}>
-                            <StatusIcon className="h-5 w-5" />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold truncate">{objective.name}</h3>
-                              <Badge variant={statusConfig.variant}>
-                                {statusConfig.label}
-                              </Badge>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                              <div className="flex-1">
-                                <Progress
-                                  value={Math.min(Math.max(progress, 0), 100)}
-                                  className="h-2"
-                                />
-                              </div>
-                              <span className="text-sm font-medium w-12 text-right">
-                                {Math.round(progress)}%
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                              <span>
-                                Actuel: {formatValue(objective.currentValue, objective.unit)}
-                              </span>
-                              <span>→</span>
-                              <span>
-                                Cible: {formatValue(objective.targetValue, objective.unit)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                )
-              })}
-            </div>
+            <ObjectiveList
+              objectives={objectives}
+              onRefresh={() => currentOrg && fetchObjectives(currentOrg.organizationId)}
+            />
           )}
         </CardContent>
       </Card>
